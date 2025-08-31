@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Editor Storage</title>
+</head>
+<body>
+    <h1>Clear Editor Storage</h1>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <div id="result"></div>
+    <script>
+        function clearStorage() {
+            try {
+                localStorage.removeItem('editor-store');
+                document.getElementById('result').innerHTML = '<p style="color: green;">Storage cleared successfully! You can close this page.</p>';
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + e.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>
