@@ -19,14 +19,8 @@ const validHandles: Record<string, PageType> = {
   'habitaciones': PageType.CUSTOM
 };
 
-interface PageProps {
-  params: {
-    handle: string;
-  };
-}
-
-export default function Page({ params }: PageProps) {
-  const { handle } = params;
+export default async function Page({ params }: { params: Promise<{ handle: string }> }) {
+  const { handle } = await params;
   
   // Check if handle is valid for Website Builder pages
   const pageType = validHandles[handle];

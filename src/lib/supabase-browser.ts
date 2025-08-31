@@ -1,8 +1,3 @@
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+export function createClient(): any {
+  return { auth: { async signInWithPassword(){return {data:null,error:{message:'Supabase disabled'}}}, async signUp(){return {data:null,error:{message:'Supabase disabled'}}}, async signOut(){} } };
 }
