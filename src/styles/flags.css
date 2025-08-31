@@ -1,0 +1,58 @@
+/* Flag icons - Using CSS flags instead of external library */
+.fi {
+  display: inline-block;
+  width: 1.33333em;
+  height: 1em;
+  background-size: contain;
+  background-position: 50%;
+  background-repeat: no-repeat;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+/* North America */
+.fi-us { background-image: url('https://flagcdn.com/w20/us.png'); }
+.fi-ca { background-image: url('https://flagcdn.com/w20/ca.png'); }
+.fi-mx { background-image: url('https://flagcdn.com/w20/mx.png'); }
+
+/* Caribbean */
+.fi-do { background-image: url('https://flagcdn.com/w20/do.png'); }
+.fi-pr { background-image: url('https://flagcdn.com/w20/pr.png'); }
+.fi-cu { background-image: url('https://flagcdn.com/w20/cu.png'); }
+.fi-jm { background-image: url('https://flagcdn.com/w20/jm.png'); }
+.fi-ht { background-image: url('https://flagcdn.com/w20/ht.png'); }
+.fi-tt { background-image: url('https://flagcdn.com/w20/tt.png'); }
+.fi-bb { background-image: url('https://flagcdn.com/w20/bb.png'); }
+
+/* Central America */
+.fi-gt { background-image: url('https://flagcdn.com/w20/gt.png'); }
+.fi-sv { background-image: url('https://flagcdn.com/w20/sv.png'); }
+.fi-hn { background-image: url('https://flagcdn.com/w20/hn.png'); }
+.fi-ni { background-image: url('https://flagcdn.com/w20/ni.png'); }
+.fi-cr { background-image: url('https://flagcdn.com/w20/cr.png'); }
+.fi-pa { background-image: url('https://flagcdn.com/w20/pa.png'); }
+.fi-bz { background-image: url('https://flagcdn.com/w20/bz.png'); }
+
+/* South America */
+.fi-ar { background-image: url('https://flagcdn.com/w20/ar.png'); }
+.fi-br { background-image: url('https://flagcdn.com/w20/br.png'); }
+.fi-cl { background-image: url('https://flagcdn.com/w20/cl.png'); }
+.fi-co { background-image: url('https://flagcdn.com/w20/co.png'); }
+.fi-ec { background-image: url('https://flagcdn.com/w20/ec.png'); }
+.fi-py { background-image: url('https://flagcdn.com/w20/py.png'); }
+.fi-pe { background-image: url('https://flagcdn.com/w20/pe.png'); }
+.fi-uy { background-image: url('https://flagcdn.com/w20/uy.png'); }
+.fi-ve { background-image: url('https://flagcdn.com/w20/ve.png'); }
+.fi-bo { background-image: url('https://flagcdn.com/w20/bo.png'); }
+.fi-gy { background-image: url('https://flagcdn.com/w20/gy.png'); }
+.fi-sr { background-image: url('https://flagcdn.com/w20/sr.png'); }
+.fi-gf { background-image: url('https://flagcdn.com/w20/gf.png'); }
+
+/* Europe */
+.fi-es { background-image: url('https://flagcdn.com/w20/es.png'); }
+.fi-fr { background-image: url('https://flagcdn.com/w20/fr.png'); }
+.fi-de { background-image: url('https://flagcdn.com/w20/de.png'); }
+.fi-it { background-image: url('https://flagcdn.com/w20/it.png'); }
+.fi-pt { background-image: url('https://flagcdn.com/w20/pt.png'); }
+.fi-gb { background-image: url('https://flagcdn.com/w20/gb.png'); }

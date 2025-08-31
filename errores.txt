@@ -1,0 +1,3 @@
+Type error: Type 'GlobalThemeConfig | undefined' is not assignable to type 'GlobalThemeConfig | null'.
+  Type 'undefined' is not assignable to type 'GlobalThemeConfig | null'.
+[0m [90m 467 |[39m             pageType[33m=[39m{selectedPageType [36mas[39m string}[0m
