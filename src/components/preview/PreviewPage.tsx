@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api-url';
 import { PageType } from '@/types/editor.types';
 import PreviewHeader from './PreviewHeader';
 import PreviewFooter from './PreviewFooter';
@@ -76,15 +77,16 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       }
 
       try {
-        // Load structural components (header, footer, etc.)
-        // Use the published endpoint which allows anonymous access
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
+        const apiUrl = getApiUrl();
         const structuralUrl = `${apiUrl}/structural-components/company/${companyId}/published`;
+        const themeUrl = `${apiUrl}/global-theme-config/company/${companyId}/published`;
         console.log('Fetching structural components from:', structuralUrl);
         
-        const structuralResponse = await fetch(structuralUrl);
-        console.log('Structural response status:', structuralResponse.status);
-        
+        const [structuralResponse, themeResponse] = await Promise.all([
+          fetch(structuralUrl, { cache: 'no-store' }),
+          fetch(themeUrl, { cache: 'no-store' })
+        ]);
+
         if (structuralResponse.ok) {
           const data = await structuralResponse.json();
           console.log('Raw structural data:', data);
@@ -126,11 +128,6 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
           console.error('Failed to load structural components:', structuralResponse.statusText);
         }
 
-        // Load global theme configuration (use published endpoint for anonymous access)
-        const themeResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/global-theme-config/company/${companyId}/published`
-        );
-        
         if (themeResponse.ok) {
           const data = await themeResponse.json();
           setGlobalTheme(data);

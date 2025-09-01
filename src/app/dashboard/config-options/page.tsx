@@ -60,12 +60,12 @@ export default function ConfigOptionsPage() {
 
   const optionTypes = [
     { value: 'amenity', label: t('config.types.amenity', 'Amenidades'), icon: SparklesIcon },
-    { value: 'room_type', label: t('config.types.roomType', 'Tipos de Habitacion'), icon: HomeIcon },
+    { value: 'room_type', label: t('config.types.roomType', 'Tipos de Habitación'), icon: HomeIcon },
     { value: 'view_type', label: t('config.types.viewType', 'Tipos de Vista'), icon: EyeIcon },
     { value: 'common_spaces', label: t('config.types.commonSpaces', 'Espacios Comunes'), icon: HomeIcon },
     { value: 'house_rules', label: t('config.types.houseRules', 'Reglas de la Casa'), icon: Cog6ToothIcon },
     { value: 'safety_property', label: t('config.types.safetyProperty', 'Seguridad y Propiedad'), icon: Cog6ToothIcon },
-    { value: 'cancellation_policies', label: t('config.types.cancellationPolicies', 'Politicas de Cancelacion'), icon: Cog6ToothIcon },
+    { value: 'cancellation_policies', label: t('config.types.cancellationPolicies', 'Políticas de Cancelación'), icon: Cog6ToothIcon },
     { value: 'icons', label: t('config.types.icons', 'Iconos'), icon: SparklesIcon },
     { value: 'policy_type', label: t('config.types.policyType', 'Tipos de Política'), icon: Cog6ToothIcon }
   ];

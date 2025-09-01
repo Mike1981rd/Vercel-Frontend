@@ -46,7 +46,7 @@ export function FooterMenuBlock({ settings, isEditor, colorScheme, headingTypogr
       
       // Try the correct endpoint structure
       // First try to get the full menu with its items
-      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${menuId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -90,7 +90,7 @@ export function FooterMenuBlock({ settings, isEditor, colorScheme, headingTypogr
         } else {
           console.log('No items found in menu data, trying items endpoint');
           // Try the items endpoint as fallback
-          const itemsResponse = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}/items`, {
+          const itemsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${menuId}/items`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

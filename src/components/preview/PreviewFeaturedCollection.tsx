@@ -126,15 +126,15 @@ export default function PreviewFeaturedCollection({
         
         switch(finalConfig.activeType) {
           case 'collections':
-            endpoint = 'http://localhost:5266/api/Collections';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Collections`;
             selectedIds = finalConfig.selectedCollections || [];
             break;
           case 'products':
-            endpoint = 'http://localhost:5266/api/Products';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Products`;
             selectedIds = finalConfig.selectedProducts || [];
             break;
           case 'rooms':
-            endpoint = 'http://localhost:5266/api/Rooms';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Rooms`;
             selectedIds = finalConfig.selectedRooms || [];
             break;
         }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import IconPicker from './IconPicker';
@@ -22,6 +23,7 @@ export default function QuickAddOffcanvas({
   onAdd,
   existingOptions = []
 }: QuickAddOffcanvasProps) {
+  const router = useRouter();
   const { t, language } = useI18n();
   const { error: showError, success: showSuccess } = useToast();
   
@@ -320,7 +322,7 @@ export default function QuickAddOffcanvas({
         <div className="pt-4 border-t dark:border-gray-700 flex justify-between">
           <button
             type="button"
-            onClick={() => window.location.href = '/dashboard/config-options'}
+            onClick={() => router.push('/dashboard/config-options')}
             className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
           >
             {t('config.manageAll', 'Gestionar todas')}

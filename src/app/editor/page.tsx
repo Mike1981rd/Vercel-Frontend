@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { StructuralComponentsProvider } from '@/contexts/StructuralComponentsContext';
 import toast from 'react-hot-toast';
 import { 
@@ -28,8 +29,10 @@ import { useEditorTranslations } from '@/hooks/useEditorTranslations';
 import { useStructuralComponents } from '@/hooks/useStructuralComponents';
 import { useCompany } from '@/hooks/useCompany';
 import { StructuralComponentsSync } from '@/components/editor/StructuralComponentsSync';
+import { getApiEndpoint } from '@/lib/api-url';
 
 function EditorPageContent() {
+  const router = useRouter();
   const { 
     selectedPageId: storePageId, 
     selectedPageType,
@@ -528,7 +531,15 @@ function EditorPageContent() {
                       handle = 'habitaciones';
                       break;
                   }
-                  window.open(`/${handle}`, '_blank');
+                  try {
+                    // Best-effort prefetch (if supported)
+                    // @ts-ignore
+                    if (router.prefetch) {
+                      // @ts-ignore
+                      router.prefetch(`/${handle}`);
+                    }
+                  } catch {}
+                  setTimeout(() => window.open(`/${handle}`, '_blank'), 50);
                 }}
                 className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
                 title={t('editor.actions.preview', 'Vista Previa')}
@@ -561,9 +572,8 @@ function EditorPageContent() {
                     await handleSave();
                   }
                   // Then publish
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
                   const response = await fetch(
-                    `${apiUrl}/structural-components/company/${company?.id || 1}/publish`,
+                    getApiEndpoint(`/structural-components/company/${company?.id || 1}/publish`),
                     {
                       method: 'POST',
                       headers: {

@@ -59,7 +59,7 @@ export default function OrdersPage() {
         ...(selectedDeliveryStatus !== 'all' && { deliveryStatus: selectedDeliveryStatus }),
       });
 
-      const response = await fetch(`http://localhost:5266/api/orders?${params}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders?${params}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -80,7 +80,7 @@ export default function OrdersPage() {
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5266/api/orders/metrics', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/metrics`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -109,7 +109,7 @@ export default function OrdersPage() {
     if (!orderToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5266/api/orders/${orderToDelete}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${orderToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

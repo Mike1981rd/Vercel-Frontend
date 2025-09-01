@@ -93,7 +93,7 @@ const animationStyles = `
       transform: translateX(0);
     }
     to {
-      transform: translateX(-33%);  /* Ajustado para loop mas compacto */
+      transform: translateX(-33%);  /* Ajustado para loop más compacto */
     }
   }
   
@@ -546,7 +546,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
                 </div>
               </div>
               <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-600 dark:text-gray-400">
-                &copy; 2025 Your Company. All rights reserved.
+                © 2025 Your Company. All rights reserved.
               </div>
             </div>
           </div>
@@ -1020,7 +1020,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
             <div className="flex-1 flex items-center justify-center text-gray-400 bg-gray-50">
               <div className="text-center">
                 <div className="text-lg mb-2">No hay secciones visibles</div>
-                <div className="text-sm">Las secciones estructurales estan configuradas pero ocultas</div>
+                <div className="text-sm">Las secciones estructurales están configuradas pero ocultas</div>
               </div>
             </div>
           ) : (
@@ -1035,7 +1035,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
                 {templateSections.length === 0 ? (
                   <div className="h-[400px] flex items-center justify-center text-gray-400 bg-gray-50">
                     <div className="text-center">
-                      <div className="text-lg mb-2">Area de contenido vacia</div>
+                      <div className="text-lg mb-2">Área de contenido vacía</div>
                       <div className="text-sm">Agrega secciones de contenido desde la barra lateral</div>
                     </div>
                   </div>
