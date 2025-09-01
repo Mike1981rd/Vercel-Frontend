@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import IconPicker from './IconPicker';
@@ -21,6 +22,7 @@ export default function QuickAddModal({
   onAdd,
   existingOptions = []
 }: QuickAddModalProps) {
+  const router = useRouter();
   const { t, language } = useI18n();
   const { error: showError, success: showSuccess } = useToast();
   
@@ -321,7 +323,7 @@ export default function QuickAddModal({
             <div className="px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-xl flex justify-between">
               <button
                 type="button"
-                onClick={() => window.location.href = '/dashboard/config-options'}
+                onClick={() => router.push('/dashboard/config-options')}
                 className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
               >
                 {t('config.manageAll', 'Gestionar todas')}
