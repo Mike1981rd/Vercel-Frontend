@@ -82,7 +82,7 @@ export function NotificationsTab() {
   const fetchNotificationSettings = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5266/api/NotificationSettings', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NotificationSettings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -132,7 +132,7 @@ export function NotificationsTab() {
         }))
       }
 
-      const response = await fetch('http://localhost:5266/api/NotificationSettings/bulk-update', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NotificationSettings/bulk-update`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
