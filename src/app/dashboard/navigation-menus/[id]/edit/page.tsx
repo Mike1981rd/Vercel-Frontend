@@ -2,12 +2,8 @@
 
 import NavigationMenuForm from '@/components/navigation-menus/NavigationMenuForm';
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default function EditNavigationMenuPage({ params }: PageProps) {
-  const menuId = parseInt(params.id);
+export default function EditNavigationMenuPage({ params }: any) {
+  const menuId = parseInt(String(params?.id || 'NaN'), 10);
 
   return <NavigationMenuForm menuId={menuId} />;
 }
