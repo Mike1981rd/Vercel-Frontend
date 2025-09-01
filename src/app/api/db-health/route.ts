@@ -1,23 +1,13 @@
-import { createClient } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-
 export async function GET() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'
   try {
-    const supabase = createClient()
-    
-    // Verify connection with a simple query to Companies table
-    const { data, error } = await supabase
-      .from('Companies')
-      .select('Id')
-      .limit(1)
-    
-    if (error) {
-      throw error
-    }
-    
-    return NextResponse.json({ ok: true })
-  } catch (error) {
-    console.error('Database health check failed:', error)
-    return NextResponse.json({ ok: false, error: 'Database connection failed' }, { status: 500 })
+    const res = await fetch(`${apiUrl.replace(/\/$/, '')}/health`, { cache: 'no-store' })
+    if (!res.ok) return NextResponse.json({ ok: false }, { status: 502 })
+    const data = await res.json().catch(() => null)
+    const ok = !!data && (data.status === 'healthy' || data.database?.connected === true)
+    return NextResponse.json({ ok })
+  } catch {
+    return NextResponse.json({ ok: false }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { usePrimaryColor } from '@/contexts/PrimaryColorContext';
 import { ReviewRow } from './ReviewRow';
@@ -61,6 +62,7 @@ export function ReviewsTable({
 }: ReviewsTableProps) {
   const { t } = useI18n();
   const { primaryColor } = usePrimaryColor();
+  const router = useRouter();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -195,7 +197,7 @@ export function ReviewsTable({
             {/* Action Buttons */}
             <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
               <button
-                onClick={() => window.location.href = `/dashboard/reviews/${review.id}`}
+                onClick={() => router.push(`/dashboard/reviews/${review.id}`)}
                 className="flex-1 px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 {t('common.edit', 'Edit')}

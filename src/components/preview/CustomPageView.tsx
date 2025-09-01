@@ -57,7 +57,7 @@ export default function CustomPageView({ slug }: CustomPageViewProps) {
   // Fetch structural components
   const fetchStructuralComponents = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://172.25.64.1:5266/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
       const response = await fetch(`${apiUrl}/structural-components/company/${companyId}/published`);
       
       if (response.ok) {
@@ -82,7 +82,7 @@ export default function CustomPageView({ slug }: CustomPageViewProps) {
   // Fetch global theme
   const fetchGlobalTheme = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://172.25.64.1:5266/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
       const response = await fetch(`${apiUrl}/global-theme-config/company/${companyId}/published`);
       
       if (response.ok) {
@@ -111,7 +111,7 @@ export default function CustomPageView({ slug }: CustomPageViewProps) {
         // First, try to fetch as a custom page (Paginas)
         try {
           const pageResponse = await fetch(
-            `http://172.25.64.1:5266/api/paginas/slug/${slug}?companyId=${companyId}`,
+            `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api')}/paginas/slug/${slug}?companyId=${companyId}`,
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ export default function CustomPageView({ slug }: CustomPageViewProps) {
         if (policyTypes.includes(policyType)) {
           try {
             const policyResponse = await fetch(
-              `http://172.25.64.1:5266/api/policies/type/${policyType}?companyId=${companyId}`,
+              `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api')}/policies/type/${policyType}?companyId=${companyId}`,
               {
                 headers: {
                   'Content-Type': 'application/json',

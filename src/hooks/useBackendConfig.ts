@@ -22,7 +22,7 @@ const BACKENDS: Record<string, BackendConfig> = {
   },
   local: {
     provider: 'local',
-    apiUrl: process.env.NEXT_PUBLIC_LOCAL_API_URL || 'http://172.25.64.1:5266/api',
+    apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api',
     name: 'Local',
     color: '#22C55E'
   }

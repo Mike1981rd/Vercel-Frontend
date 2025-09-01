@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import RoomsList from '@/components/habitaciones/RoomsList';
 import { PlusCircleIcon } from '@heroicons/react/24/outline';
 
@@ -87,7 +88,7 @@ export default function HabitacionesPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/rooms', {
+      const response = await fetch(getApiEndpoint('/rooms'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -125,7 +126,7 @@ export default function HabitacionesPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5266/api/rooms/${room.id}`, {
+      const response = await fetch(getApiEndpoint(`/rooms/${room.id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -165,7 +166,7 @@ export default function HabitacionesPage() {
       const token = localStorage.getItem('token');
       const newStatus = !room.isActive;
       
-      const response = await fetch(`http://localhost:5266/api/rooms/${room.id}`, {
+      const response = await fetch(getApiEndpoint(`/rooms/${room.id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
