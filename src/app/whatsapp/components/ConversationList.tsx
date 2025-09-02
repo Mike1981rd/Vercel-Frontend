@@ -20,6 +20,7 @@ export default function ConversationList({
   theme 
 }: ConversationListProps) {
   const { t } = useI18n();
+  const DEBUG = false;
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const lastNonEmptyRef = useRef<Conversation[] | null>(null);
@@ -85,24 +86,24 @@ export default function ConversationList({
     try {
       const token = localStorage.getItem('token');
       const endpoint = getApiEndpoint('/whatsapp/conversations?page=1&pageSize=100');
-      console.log('Loading conversations from:', endpoint);
+      if (DEBUG) console.log('Loading conversations from:', endpoint);
       
       const res = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token || ''}` },
         cache: 'no-store',
       });
       
-      console.log('Conversations response status:', res.status);
+      if (DEBUG) console.log('Conversations response status:', res.status);
       
       if (res.ok) {
         const data = await res.json();
-        console.log('Conversations response data:', data);
+        if (DEBUG) console.log('Conversations response data:', data);
         
         // The API returns data.data which is a WhatsAppConversationListDto with a Conversations property
         if (data?.data?.Conversations || data?.data?.conversations) {
           const conversationsList = data.data.Conversations || data.data.conversations;
-          console.log('Found conversations list:', conversationsList);
-          if (process.env.NODE_ENV !== 'production' && Array.isArray(conversationsList) && conversationsList.length > 0) {
+          if (DEBUG) console.log('Found conversations list:', conversationsList);
+          if (DEBUG && Array.isArray(conversationsList) && conversationsList.length > 0) {
             console.log('[ConversationList] Raw first conversation:', conversationsList[0]);
           }
           
@@ -143,14 +144,14 @@ export default function ConversationList({
               avatar: (rawAvatar && String(rawAvatar).trim().length > 0) ? String(rawAvatar) : null,
             } as Conversation;
           });
-          console.log('Formatted conversations:', formattedConversations);
+          if (DEBUG) console.log('Formatted conversations:', formattedConversations);
           // Hide closed/archived conversations from the list
           const activeConversations = formattedConversations.filter((c: any) => c.status !== 'closed' && c.status !== 'archived');
           if (activeConversations.length > 0) {
             if (mountedRef.current) setConversations(activeConversations);
             lastNonEmptyRef.current = activeConversations;
           } else if (lastNonEmptyRef.current && lastNonEmptyRef.current.length > 0) {
-            console.log('[ConversationList] Empty response ignored to prevent flicker');
+            if (DEBUG) console.log('[ConversationList] Empty response ignored to prevent flicker');
             if (mountedRef.current) setConversations(lastNonEmptyRef.current);
           } else {
             // Primera carga y vacío: forzar sync backend y reintentar
@@ -170,7 +171,7 @@ export default function ConversationList({
             }
           }
         } else {
-          console.log('No conversations found in response; keeping current state');
+          if (DEBUG) console.log('No conversations found in response; keeping current state');
         }
       } else {
         console.error('Failed to load conversations, status:', res.status);

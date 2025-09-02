@@ -36,6 +36,7 @@ export default function MessageView({
   messagesCacheRef
 }: MessageViewProps) {
   const { t } = useI18n();
+  const DEBUG = false;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -53,10 +54,15 @@ export default function MessageView({
   const currentMessagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
-    // Instant show from cache if exists
+    // Reset per-conversation state to avoid cross-contamination
+    prevFingerprintRef.current = null;
+    stickToBottomRef.current = true;
     if (messagesCacheRef?.current?.[conversation.id]) {
       setMessages(messagesCacheRef.current[conversation.id]);
       setLoading(false);
+    } else {
+      setMessages([]);
+      setLoading(true);
     }
     loadMessages();
     if (intervalRef.current) {
@@ -132,9 +138,7 @@ export default function MessageView({
       const token = localStorage.getItem('token');
       // Prefer messages endpoint first for fastest history display
       const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
-        }
+        if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
           cache: 'no-store',
@@ -150,9 +154,7 @@ export default function MessageView({
               : Array.isArray(data?.messages)
                 ? data.messages
                 : [];
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
-          }
+          if (DEBUG) console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
           if (Array.isArray(raw) && raw.length > 0) {
             // Build previous timestamps map to avoid generating new timestamps on each poll
             const prevTsMap = new Map<string, number>();
@@ -179,8 +181,10 @@ export default function MessageView({
             // Preserve any optimistic local messages newer than server payload
             const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
             // Build merged list using current state as base for preserved temps
-            const prevList = currentMessagesRef.current || messages;
-            // Start with all previously visible messages to avoid dropping when server returns a subset
+            const prevListAll = currentMessagesRef.current || messages;
+            // Restrict to this conversation only
+            const prevList = prevListAll.filter(m => m.conversationId === conversation.id);
+            // Start with all previously visible messages of this conversation to avoid dropping when server returns a subset
             const byId = new Map<string, Message>();
             for (const m of prevList) byId.set(String(m.id), m);
             // Overlay with server messages (authoritative)
@@ -199,6 +203,34 @@ export default function MessageView({
             }
 
             let merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+            // Deduplicate messages that are semantically the same but have different IDs between polls
+            const norm = (s: string) => (s || '').trim().replace(/\s+/g, ' ').slice(0, 200);
+            const statusRank = (s?: string) => s === 'read' ? 3 : s === 'delivered' ? 2 : s === 'sent' ? 1 : 0;
+            const bucket = (t: Date) => Math.floor(t.getTime() / 10000); // 10s bucket
+            const contentMap = new Map<string, Message>();
+            const result: Message[] = [];
+            for (const m of merged) {
+              const key = `${conversation.id}|${m.isFromMe ? 'o' : 'i'}|${norm(m.content)}|${bucket(m.timestamp)}`;
+              const existing = contentMap.get(key);
+              if (!existing) {
+                contentMap.set(key, m);
+                result.push(m);
+              } else {
+                // Prefer non-temp id, richer status, and with media if available
+                const isTempExisting = typeof existing.id === 'string' && existing.id.startsWith('temp_');
+                const isTempNew = typeof m.id === 'string' && m.id.startsWith('temp_');
+                const existingScore = statusRank(existing.status) + (existing.mediaUrl ? 1 : 0) + (isTempExisting ? 0 : 2);
+                const newScore = statusRank(m.status) + (m.mediaUrl ? 1 : 0) + (isTempNew ? 0 : 2);
+                if (newScore > existingScore) {
+                  // Replace in both structures
+                  const idx = result.indexOf(existing);
+                  if (idx >= 0) result[idx] = m;
+                  contentMap.set(key, m);
+                }
+              }
+            }
+            merged = result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             // Safety cap to last 500 messages to avoid unbounded growth
             if (merged.length > 500) merged = merged.slice(merged.length - 500);
             // Compute fingerprint to detect real changes
@@ -229,9 +261,7 @@ export default function MessageView({
             }
           } else {
             // Keep existing messages to avoid flicker
-            if (process.env.NODE_ENV !== 'production') {
-              console.log('[MessageView] Empty response ignored to prevent flicker');
-            }
+            if (DEBUG) console.log('[MessageView] Empty response ignored to prevent flicker');
           }
         } else {
           const err = await res.text();
