@@ -39,6 +39,21 @@ export default function ConversationList({
     if (!intervalRef.current) {
       intervalRef.current = window.setInterval(loadConversations, 30000); // Poll every 30s (performance)
     }
+    // Listen for conversation closed events to update the list immediately
+    const onClosed = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { id?: string } | undefined;
+        const closedId = detail?.id;
+        if (!closedId) return;
+        setConversations(prev => prev.filter(c => c.id !== closedId));
+        if (lastNonEmptyRef.current) {
+          lastNonEmptyRef.current = lastNonEmptyRef.current.filter(c => c.id !== closedId);
+        }
+        // Trigger a background refresh to reflect backend state
+        setTimeout(() => { if (mountedRef.current) loadConversations(); }, 300);
+      } catch {}
+    };
+    window.addEventListener('whatsapp:conversationClosed', onClosed as EventListener);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -46,6 +61,7 @@ export default function ConversationList({
       }
       // no abort on cleanup to avoid AbortError in dev strict mode
       mountedRef.current = false;
+      window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
     };
   }, []);
 
@@ -104,15 +120,20 @@ export default function ConversationList({
               source: source,
               sessionId: conv.sessionId,
               customerEmail: conv.customerEmail,
+              // keep status if backend provides it so we can filter client-side
+              // @ts-expect-error extend shape
+              status: conv.status || conv.Status || undefined,
               unreadCount: conv.unreadCount || 0,
               isOnline: conv.isOnline || false,
               avatar: (rawAvatar && String(rawAvatar).trim().length > 0) ? String(rawAvatar) : null,
             } as Conversation;
           });
           console.log('Formatted conversations:', formattedConversations);
-          if (formattedConversations.length > 0) {
-            if (mountedRef.current) setConversations(formattedConversations);
-            lastNonEmptyRef.current = formattedConversations;
+          // Hide closed/archived conversations from the list
+          const activeConversations = formattedConversations.filter((c: any) => c.status !== 'closed' && c.status !== 'archived');
+          if (activeConversations.length > 0) {
+            if (mountedRef.current) setConversations(activeConversations);
+            lastNonEmptyRef.current = activeConversations;
           } else if (lastNonEmptyRef.current && lastNonEmptyRef.current.length > 0) {
             console.log('[ConversationList] Empty response ignored to prevent flicker');
             if (mountedRef.current) setConversations(lastNonEmptyRef.current);

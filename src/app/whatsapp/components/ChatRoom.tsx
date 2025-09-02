@@ -22,6 +22,7 @@ export interface Conversation {
   source?: string;
   sessionId?: string;
   customerEmail?: string;
+  status?: string;
 }
 
 export interface Message {
