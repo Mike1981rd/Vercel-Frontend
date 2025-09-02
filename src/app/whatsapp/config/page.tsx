@@ -4,10 +4,12 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import WhatsAppNav from '../components/WhatsAppNav';
 import GreenApiConfig from '../components/GreenApiConfig';
+import MediaSettingsForm from '../components/MediaSettings';
 import { ArrowLeft } from 'lucide-react';
 
 export default function WhatsAppConfigPage() {
   const router = useRouter();
+  const [tab, setTab] = React.useState<'connection' | 'media'>(() => 'connection');
 
   return (
     <div className="w-full h-full bg-gray-50 dark:bg-gray-900">
@@ -24,12 +26,8 @@ export default function WhatsAppConfigPage() {
             </button>
             
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Configuración de WhatsApp
-              </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                Conecta tu cuenta de WhatsApp Business
-              </p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Configuración de WhatsApp</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Conecta tu cuenta de WhatsApp Business y ajusta multimedia</p>
             </div>
           </div>
 
@@ -46,9 +44,21 @@ export default function WhatsAppConfigPage() {
         <WhatsAppNav />
       </div>
 
+      {/* Tabs */}
+      <div className="px-6 mt-4">
+        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <button onClick={() => setTab('connection')} className={`px-4 py-2 text-sm ${tab === 'connection' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'}`}>Conexión</button>
+          <button onClick={() => setTab('media')} className={`px-4 py-2 text-sm ${tab === 'media' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200'}`}>Multimedia</button>
+        </div>
+      </div>
+
       {/* Configuration Form with padding */}
       <div className="p-6">
-        <GreenApiConfig />
+        {tab === 'connection' ? (
+          <GreenApiConfig />
+        ) : (
+          <MediaSettingsForm />
+        )}
       </div>
     </div>
   );

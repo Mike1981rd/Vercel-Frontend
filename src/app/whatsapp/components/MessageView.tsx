@@ -14,6 +14,7 @@ import { getApiEndpoint } from '@/lib/api-url';
 import type { Conversation, Message } from './ChatRoom';
 import { Avatar } from '@/components/ui/Avatar';
 import type { ChatTheme } from './ThemeSelector';
+import { loadMediaSettings, defaultMediaSettings, type MediaSettings } from './MediaSettings';
 
 interface MessageViewProps {
   conversation: Conversation;
@@ -46,6 +47,9 @@ export default function MessageView({
   const lastSentRef = useRef<{ content: string; at: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const stickToBottomRef = useRef<boolean>(true);
+  const userScrollTsRef = useRef<number>(Date.now());
+  const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
+  const prevFingerprintRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Instant show from cache if exists
@@ -84,6 +88,7 @@ export default function MessageView({
       const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       // Consider near bottom if within 80px
       stickToBottomRef.current = distanceFromBottom < 80;
+      userScrollTsRef.current = Date.now();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     // Initialize state
@@ -91,6 +96,21 @@ export default function MessageView({
     return () => {
       el.removeEventListener('scroll', onScroll as any);
     };
+  }, []);
+
+  // Load media settings
+  useEffect(() => {
+    setMediaSettings(loadMediaSettings());
+    const onUpdated = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as MediaSettings | undefined;
+        setMediaSettings(detail || loadMediaSettings());
+      } catch {
+        setMediaSettings(loadMediaSettings());
+      }
+    };
+    window.addEventListener('whatsapp:mediaSettingsUpdated', onUpdated as EventListener);
+    return () => window.removeEventListener('whatsapp:mediaSettingsUpdated', onUpdated as EventListener);
   }, []);
 
   // Load messages from API (mocks only when NEXT_PUBLIC_USE_MOCKS==='true')
@@ -103,6 +123,9 @@ export default function MessageView({
     const controller = new AbortController();
     abortRef.current = controller;
     try {
+      // Preserve scroll position if user is reading older messages
+      const el = messagesContainerRef.current;
+      const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
       // Prefer messages endpoint first for fastest history display
       const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
@@ -145,41 +168,59 @@ export default function MessageView({
             });
             // Preserve any optimistic local messages newer than server payload
             const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
-            setMessages(prev => {
-              // Build server list map by id
-              const byId = new Map<string, Message>();
-              for (const m of formatted) byId.set(String(m.id), m);
+            // Build merged list using current state as base for preserved temps
+            const prevList = messages;
+            const byId = new Map<string, Message>();
+            for (const m of formatted) byId.set(String(m.id), m);
 
-              // Filter preserved: keep only temps that do NOT have a near-equal server match
-              const preserved = prev.filter(m => {
-                const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
-                const isNewer = m.timestamp.getTime() > maxServerTs;
-                if (!isTemp && !isNewer) return false;
-                if (isTemp) {
-                  // If server has an outbound message with same content within ~90s, drop temp
-                  const hasNearMatch = formatted.some(s => {
-                    if (!s.isFromMe) return false;
-                    const sameContent = (s.content || '').trim() === (m.content || '').trim();
-                    const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
-                    return sameContent && dt <= 90000;
-                  });
-                  if (hasNearMatch) return false;
-                }
-                return true;
-              });
-
-              // Merge: prefer server version; add preserved if not colliding by id
-              for (const m of preserved) {
-                const key = String(m.id);
-                if (!byId.has(key)) byId.set(key, m);
+            // Filter preserved: keep only temps that do NOT have a near-equal server match
+            const preserved = prevList.filter(m => {
+              const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
+              const isNewer = m.timestamp.getTime() > maxServerTs;
+              if (!isTemp && !isNewer) return false;
+              if (isTemp) {
+                // If server has an outbound message with same content within ~90s, drop temp
+                const hasNearMatch = formatted.some(s => {
+                  if (!s.isFromMe) return false;
+                  const sameContent = (s.content || '').trim() === (m.content || '').trim();
+                  const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
+                  return sameContent && dt <= 90000;
+                });
+                if (hasNearMatch) return false;
               }
-
-              const merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-              if (messagesCacheRef) {
-                messagesCacheRef.current[conversation.id] = merged;
-              }
-              return merged;
+              return true;
             });
+
+            // Merge: prefer server version; add preserved if not colliding by id
+            for (const m of preserved) {
+              const key = String(m.id);
+              if (!byId.has(key)) byId.set(key, m);
+            }
+
+            const merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            // Compute fingerprint to detect real changes
+            const fingerprint = merged.map(m => `${String(m.id)}|${m.timestamp.getTime()}|${m.status || ''}`).join(',');
+            if (prevFingerprintRef.current === fingerprint) {
+              if (process.env.NODE_ENV !== 'production') {
+                // eslint-disable-next-line no-console
+                console.log('[MessageView] No changes detected; skipping UI update');
+              }
+              // Still keep cache fresh
+              if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
+              return; // do not update state or scroll
+            }
+            prevFingerprintRef.current = fingerprint;
+            if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
+            setMessages(merged);
+            // Restore scroll offset for readers not at bottom
+            if (el && !stickToBottomRef.current) {
+              // Next tick to allow layout update
+              setTimeout(() => {
+                const newBottom = el.scrollHeight - prevBottomDistance;
+                // Ensure within bounds
+                el.scrollTop = Math.max(0, newBottom - el.clientHeight);
+              }, 0);
+            }
             if (messagesCacheRef) {
               // messagesCacheRef is updated in setMessages above
             }
@@ -505,7 +546,7 @@ export default function MessageView({
                       key={message.id}
                       className={`flex ${message.isFromMe ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className="relative">
+                      <div className="relative group">
                         <div
                           className={`inline-block min-w-[120px] max-w-[70%] sm:max-w-[60%] px-4 py-2 rounded-2xl ${
                             message.isFromMe
@@ -520,14 +561,26 @@ export default function MessageView({
                                 <img
                                   src={message.mediaUrl}
                                   alt={message.content || 'image'}
-                                  className="rounded-lg object-contain w-auto h-auto max-w-[120px] sm:max-w-[140px] max-h-32"
+                                  className="w-auto h-auto"
+                                  style={{
+                                    maxWidth: `${mediaSettings.imageMaxWidth}px`,
+                                    maxHeight: `${mediaSettings.imageMaxHeight}px`,
+                                    objectFit: mediaSettings.fit,
+                                    borderRadius: `${mediaSettings.borderRadius}px`,
+                                  }}
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
                                 <video
                                   src={message.mediaUrl}
                                   controls
                                   playsInline
-                                  className="rounded-lg object-contain w-[120px] sm:w-[140px] h-auto max-h-32"
+                                  className="h-auto"
+                                  style={{
+                                    width: `${mediaSettings.videoMaxWidth}px`,
+                                    maxHeight: `${mediaSettings.videoMaxHeight}px`,
+                                    objectFit: mediaSettings.fit,
+                                    borderRadius: `${mediaSettings.borderRadius}px`,
+                                  }}
                                 />
                               ) : (
                                 <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
@@ -548,10 +601,10 @@ export default function MessageView({
                             {message.isFromMe && renderMessageStatus(message.status)}
                           </div>
                         </div>
-                        {/* Delete message button (only removes from UI list) */}
+                        {/* Delete button: visible on hover (desktop only) to avoid accidental taps */}
                         <button
                           onClick={() => handleDeleteMessage(String(message.id))}
-                          className="absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          className="hidden md:flex absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Eliminar"
                           aria-label="Eliminar mensaje"
                         >
