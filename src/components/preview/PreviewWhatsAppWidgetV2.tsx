@@ -96,7 +96,19 @@ export default function PreviewWhatsAppWidgetV2({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId] = useState(() => {
+    try {
+      const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || 'default';
+      const key = `wb_widget_session_v1_${companyId}`;
+      const existing = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+      if (existing && existing.startsWith('session_')) return existing;
+      const sid = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      if (typeof window !== 'undefined') localStorage.setItem(key, sid);
+      return sid;
+    } catch {
+      return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+  });
   const [lastPollTime, setLastPollTime] = useState<Date>(new Date());
   const lastPollRef = useRef<Date>(new Date());
   const seenServerIdsRef = useRef<Set<string>>(new Set());
