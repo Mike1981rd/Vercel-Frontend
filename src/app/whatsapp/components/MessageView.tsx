@@ -50,6 +50,7 @@ export default function MessageView({
   const userScrollTsRef = useRef<number>(Date.now());
   const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
   const prevFingerprintRef = useRef<string | null>(null);
+  const currentMessagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
     // Instant show from cache if exists
@@ -78,6 +79,8 @@ export default function MessageView({
   useEffect(() => {
     // Scroll to bottom when messages change only if user is near bottom
     scrollToBottom(false);
+    // Keep a live ref to latest messages to avoid stale closures in polling
+    currentMessagesRef.current = messages;
   }, [messages]);
 
   // Track user scroll to avoid snapping to bottom when user is reading older messages
@@ -151,15 +154,22 @@ export default function MessageView({
             console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
           }
           if (Array.isArray(raw) && raw.length > 0) {
+            // Build previous timestamps map to avoid generating new timestamps on each poll
+            const prevTsMap = new Map<string, number>();
+            for (const m of messages) prevTsMap.set(String(m.id), m.timestamp.getTime());
+
             const formatted: Message[] = raw.map((msg: any) => {
               const dir = (msg.direction || '').toLowerCase();
               const from = msg.from || msg.From;
               const isOutbound = dir === 'outbound' || (from && from !== conversation.contactPhone);
+              const rawId = msg.id || msg.messageId;
+              const tsValue = msg.timestamp || msg.createdAt || msg.sentAt || msg.date;
+              const stableTs = tsValue ? new Date(tsValue).getTime() : (prevTsMap.get(String(rawId)) || 0);
               return {
-                id: msg.id || msg.messageId,
+                id: rawId,
                 conversationId: conversation.id,
                 content: msg.body || msg.content || msg.message || msg.text || '',
-                timestamp: new Date(msg.timestamp || msg.createdAt || msg.sentAt || msg.date || Date.now()),
+                timestamp: new Date(stableTs || Date.now()),
                 isFromMe: isOutbound,
                 status: msg.status || 'sent',
                 type: msg.messageType || msg.type || 'text',
@@ -169,35 +179,28 @@ export default function MessageView({
             // Preserve any optimistic local messages newer than server payload
             const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
             // Build merged list using current state as base for preserved temps
-            const prevList = messages;
+            const prevList = currentMessagesRef.current || messages;
+            // Start with all previously visible messages to avoid dropping when server returns a subset
             const byId = new Map<string, Message>();
+            for (const m of prevList) byId.set(String(m.id), m);
+            // Overlay with server messages (authoritative)
             for (const m of formatted) byId.set(String(m.id), m);
-
-            // Filter preserved: keep only temps that do NOT have a near-equal server match
-            const preserved = prevList.filter(m => {
+            // Remove temp messages that have a near-equal server match to avoid duplicates
+            for (const m of prevList) {
               const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
-              const isNewer = m.timestamp.getTime() > maxServerTs;
-              if (!isTemp && !isNewer) return false;
-              if (isTemp) {
-                // If server has an outbound message with same content within ~90s, drop temp
-                const hasNearMatch = formatted.some(s => {
-                  if (!s.isFromMe) return false;
-                  const sameContent = (s.content || '').trim() === (m.content || '').trim();
-                  const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
-                  return sameContent && dt <= 90000;
-                });
-                if (hasNearMatch) return false;
-              }
-              return true;
-            });
-
-            // Merge: prefer server version; add preserved if not colliding by id
-            for (const m of preserved) {
-              const key = String(m.id);
-              if (!byId.has(key)) byId.set(key, m);
+              if (!isTemp) continue;
+              const hasNearMatch = formatted.some(s => {
+                if (!s.isFromMe) return false;
+                const sameContent = (s.content || '').trim() === (m.content || '').trim();
+                const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
+                return sameContent && dt <= 90000;
+              });
+              if (hasNearMatch) byId.delete(String(m.id));
             }
 
-            const merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            let merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+            // Safety cap to last 500 messages to avoid unbounded growth
+            if (merged.length > 500) merged = merged.slice(merged.length - 500);
             // Compute fingerprint to detect real changes
             const fingerprint = merged.map(m => `${String(m.id)}|${m.timestamp.getTime()}|${m.status || ''}`).join(',');
             if (prevFingerprintRef.current === fingerprint) {
