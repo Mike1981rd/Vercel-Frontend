@@ -42,6 +42,8 @@ export default function MessageView({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
   const inFlightRef = useRef<boolean>(false);
+  const sendInFlightRef = useRef<boolean>(false);
+  const lastSentRef = useRef<{ content: string; at: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const stickToBottomRef = useRef<boolean>(true);
 
@@ -141,9 +143,45 @@ export default function MessageView({
                 mediaUrl: msg.mediaUrl || msg.mediaURL || null,
               } as Message;
             });
-            setMessages(formatted);
+            // Preserve any optimistic local messages newer than server payload
+            const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
+            setMessages(prev => {
+              // Build server list map by id
+              const byId = new Map<string, Message>();
+              for (const m of formatted) byId.set(String(m.id), m);
+
+              // Filter preserved: keep only temps that do NOT have a near-equal server match
+              const preserved = prev.filter(m => {
+                const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
+                const isNewer = m.timestamp.getTime() > maxServerTs;
+                if (!isTemp && !isNewer) return false;
+                if (isTemp) {
+                  // If server has an outbound message with same content within ~90s, drop temp
+                  const hasNearMatch = formatted.some(s => {
+                    if (!s.isFromMe) return false;
+                    const sameContent = (s.content || '').trim() === (m.content || '').trim();
+                    const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
+                    return sameContent && dt <= 90000;
+                  });
+                  if (hasNearMatch) return false;
+                }
+                return true;
+              });
+
+              // Merge: prefer server version; add preserved if not colliding by id
+              for (const m of preserved) {
+                const key = String(m.id);
+                if (!byId.has(key)) byId.set(key, m);
+              }
+
+              const merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+              if (messagesCacheRef) {
+                messagesCacheRef.current[conversation.id] = merged;
+              }
+              return merged;
+            });
             if (messagesCacheRef) {
-              messagesCacheRef.current[conversation.id] = formatted;
+              // messagesCacheRef is updated in setMessages above
             }
           } else {
             // Keep existing messages to avoid flicker
@@ -184,6 +222,14 @@ export default function MessageView({
 
   const handleSendMessage = async (content: string) => {
     try {
+      // Prevent duplicates: ignore same content within 60s window
+      const now = Date.now();
+      if (lastSentRef.current && lastSentRef.current.content === content && (now - lastSentRef.current.at) < 60000) {
+        return;
+      }
+      if (sendInFlightRef.current) return;
+      sendInFlightRef.current = true;
+
       const token = localStorage.getItem('token');
       
       // Check if this is a widget conversation or WhatsApp conversation
@@ -195,7 +241,9 @@ export default function MessageView({
       if (isWidgetConversation) {
         // For widget conversations, use the widget response endpoint
         endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/respond`);
-        payload = { response: content };
+        // Backend expects WidgetResponseDto with 'message' field
+        const clientMessageId = `cm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        payload = { message: content, clientMessageId };
       } else {
         // For WhatsApp conversations, use the regular send endpoint
         endpoint = getApiEndpoint('/whatsapp/send');
@@ -215,9 +263,11 @@ export default function MessageView({
       });
 
       if (res.ok) {
+        lastSentRef.current = { content, at: now };
         // Add message to local state immediately for better UX
         const newMessage: Message = {
-          id: Date.now().toString(),
+          // Mark as temporary so it can be de-duplicated when server echoes it
+          id: `temp_${Date.now()}`,
           conversationId: conversation.id,
           content,
           timestamp: new Date(),
@@ -236,6 +286,9 @@ export default function MessageView({
       console.error('Error sending message:', error);
       alert('Error al enviar mensaje');
     }
+    finally {
+      sendInFlightRef.current = false;
+    }
   };
 
   const handleCloseConversation = async () => {
@@ -246,19 +299,28 @@ export default function MessageView({
     try {
       const token = localStorage.getItem('token');
       const endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/close`);
-      
+      const body = {
+        sessionId: conversation.sessionId || '',
+        status: 'closed'
+      };
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token || ''}`
-        }
+          'Authorization': `Bearer ${token || ''}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
       });
 
       if (res.ok) {
         alert('Conversación cerrada exitosamente');
-        // Reload messages to reflect the closed status
+        // Notificar a otros componentes (lista) para que refresquen y/o remuevan la conversación
+        try {
+          window.dispatchEvent(new CustomEvent('whatsapp:conversationClosed', { detail: { id: conversation.id } }));
+        } catch {}
+        // Recargar mensajes por si el backend marca estado
         loadMessages();
-        // Optionally, trigger a callback to refresh the conversation list
+        // Volver atrás para salir del detalle de la conversación
         if (onBack) {
           onBack();
         }
@@ -341,6 +403,15 @@ export default function MessageView({
     messageIncoming: 'bg-white',
     messageOutgoing: 'bg-green-500',
     messageOutgoingText: 'text-white'
+  };
+
+  // Delete a message locally (UI-only)
+  const handleDeleteMessage = (id: string) => {
+    setMessages(prev => prev.filter(m => String(m.id) !== String(id)));
+    if (messagesCacheRef) {
+      const cache = messagesCacheRef.current[conversation.id] || [];
+      messagesCacheRef.current[conversation.id] = cache.filter(m => String(m.id) !== String(id));
+    }
   };
 
   return (
@@ -434,47 +505,58 @@ export default function MessageView({
                       key={message.id}
                       className={`flex ${message.isFromMe ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div
-                        className={`max-w-[70%] sm:max-w-[60%] px-4 py-2 rounded-2xl ${
-                          message.isFromMe
-                            ? `${themeColors.messageOutgoing} ${themeColors.messageOutgoingText} rounded-br-sm`
-                            : `${themeColors.messageIncoming} ${themeColors.messageText} rounded-bl-sm shadow-sm`
-                        }`}
-                      >
-                        {message.mediaUrl ? (
-                          <div className="mb-2">
-                            {message.type?.toLowerCase().includes('image') ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={message.mediaUrl}
-                                alt={message.content || 'image'}
-                                className="rounded-lg object-contain w-auto h-auto max-w-[120px] sm:max-w-[140px] max-h-32"
-                              />
-                            ) : message.type?.toLowerCase().includes('video') ? (
-                              <video
-                                src={message.mediaUrl}
-                                controls
-                                playsInline
-                                className="rounded-lg object-contain w-[120px] sm:w-[140px] h-auto max-h-32"
-                              />
-                            ) : (
-                              <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
-                                Descargar archivo
-                              </a>
-                            )}
+                      <div className="relative">
+                        <div
+                          className={`inline-block min-w-[120px] max-w-[70%] sm:max-w-[60%] px-4 py-2 rounded-2xl ${
+                            message.isFromMe
+                              ? `${themeColors.messageOutgoing} ${themeColors.messageOutgoingText} rounded-br-sm`
+                              : `${themeColors.messageIncoming} ${themeColors.messageText} rounded-bl-sm shadow-sm`
+                          }`}
+                        >
+                          {message.mediaUrl ? (
+                            <div className="mb-2">
+                              {message.type?.toLowerCase().includes('image') ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={message.mediaUrl}
+                                  alt={message.content || 'image'}
+                                  className="rounded-lg object-contain w-auto h-auto max-w-[120px] sm:max-w-[140px] max-h-32"
+                                />
+                              ) : message.type?.toLowerCase().includes('video') ? (
+                                <video
+                                  src={message.mediaUrl}
+                                  controls
+                                  playsInline
+                                  className="rounded-lg object-contain w-[120px] sm:w-[140px] h-auto max-h-32"
+                                />
+                              ) : (
+                                <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
+                                  Descargar archivo
+                                </a>
+                              )}
+                            </div>
+                          ) : null}
+                          {message.content && (
+                            <p className="text-sm whitespace-pre-wrap break-normal">
+                              {message.content}
+                            </p>
+                          )}
+                          <div className={`flex items-center justify-end mt-1 space-x-1 opacity-70`}>
+                            <span className="text-xs">
+                              {formatTime(message.timestamp)}
+                            </span>
+                            {message.isFromMe && renderMessageStatus(message.status)}
                           </div>
-                        ) : null}
-                        {message.content && (
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {message.content}
-                          </p>
-                        )}
-                        <div className={`flex items-center justify-end mt-1 space-x-1 opacity-70`}>
-                          <span className="text-xs">
-                            {formatTime(message.timestamp)}
-                          </span>
-                          {message.isFromMe && renderMessageStatus(message.status)}
                         </div>
+                        {/* Delete message button (only removes from UI list) */}
+                        <button
+                          onClick={() => handleDeleteMessage(String(message.id))}
+                          className="absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          title="Eliminar"
+                          aria-label="Eliminar mensaje"
+                        >
+                          ×
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -502,7 +584,7 @@ export default function MessageView({
 
       {/* Message Input */}
       <div className={`flex-shrink-0 border-t ${themeColors.border}`}>
-        <MessageInput onSendMessage={handleSendMessage} theme={theme} />
+        <MessageInput onSendMessage={handleSendMessage} theme={theme} isSending={sendInFlightRef.current} />
       </div>
     </div>
   );
