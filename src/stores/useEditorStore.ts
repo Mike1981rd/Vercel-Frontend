@@ -39,7 +39,7 @@ interface EditorStore extends EditorState {
   canRedo: () => boolean;
 }
 
-const initialState: EditorState & { isGlobalSettingsOpen: boolean; history: any[]; historyIndex: number } = {
+const initialState: EditorState & { isGlobalSettingsOpen: boolean; isWhatsAppWidgetOpen: boolean; history: any[]; historyIndex: number } = {
   selectedPageId: null,
   selectedPageType: null,
   sections: {

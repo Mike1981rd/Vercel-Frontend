@@ -5,7 +5,8 @@ import {
   ArrowLeft, 
   MoreVertical, 
   Check,
-  CheckCheck
+  CheckCheck,
+  X
 } from 'lucide-react';
 import MessageInput from './MessageInput';
 import { useI18n } from '@/contexts/I18nContext';
@@ -184,17 +185,33 @@ export default function MessageView({
   const handleSendMessage = async (content: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(getApiEndpoint('/whatsapp/send'), {
+      
+      // Check if this is a widget conversation or WhatsApp conversation
+      const isWidgetConversation = conversation.source === 'widget';
+      
+      let endpoint: string;
+      let payload: any;
+      
+      if (isWidgetConversation) {
+        // For widget conversations, use the widget response endpoint
+        endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/respond`);
+        payload = { response: content };
+      } else {
+        // For WhatsApp conversations, use the regular send endpoint
+        endpoint = getApiEndpoint('/whatsapp/send');
+        payload = {
+          to: conversation.contactPhone,
+          body: content
+        };
+      }
+      
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token || ''}`,
           'Content-Type': 'application/json'
         },
-        // Backend expects SendWhatsAppMessageDto: { to, body, mediaUrl?, messageType? }
-        body: JSON.stringify({
-          to: conversation.contactPhone,
-          body: content
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
@@ -218,6 +235,39 @@ export default function MessageView({
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Error al enviar mensaje');
+    }
+  };
+
+  const handleCloseConversation = async () => {
+    if (!confirm('¿Estás seguro de que deseas cerrar esta conversación?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/close`);
+      
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token || ''}`
+        }
+      });
+
+      if (res.ok) {
+        alert('Conversación cerrada exitosamente');
+        // Reload messages to reflect the closed status
+        loadMessages();
+        // Optionally, trigger a callback to refresh the conversation list
+        if (onBack) {
+          onBack();
+        }
+      } else {
+        alert('Error al cerrar la conversación');
+      }
+    } catch (error) {
+      console.error('Error closing conversation:', error);
+      alert('Error al cerrar la conversación');
     }
   };
 
@@ -313,26 +363,47 @@ export default function MessageView({
             className={`flex items-center space-x-2 ${themeColors.hover} rounded-lg px-2 py-1 transition-colors`}
           >
             <Avatar name={conversation.contactName} src={conversation.avatar || undefined} size="sm" />
-            <span className={`text-sm font-medium ${themeColors.inputText}`}>
-              {conversation.contactName}
-            </span>
+            <div className="text-left">
+              <span className={`text-sm font-medium ${themeColors.inputText} block`}>
+                {conversation.contactName}
+              </span>
+              {conversation.source === 'widget' && (
+                <span className={`text-xs ${themeColors.inputText} opacity-60`}>
+                  Widget Chat
+                </span>
+              )}
+            </div>
           </button>
         </div>
 
-        {/* Single action button for more options */}
-        <button 
-          onClick={onShowDetails || onContactClick}
-          className={`p-1.5 ${themeColors.hover} rounded-lg transition-colors`}
-          aria-label="Más opciones"
-        >
-          <MoreVertical className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
-        </button>
+        <div className="flex items-center space-x-1">
+          {/* Close conversation button - only for widget conversations */}
+          {conversation.source === 'widget' && (
+            <button 
+              onClick={handleCloseConversation}
+              className={`p-1.5 ${themeColors.hover} rounded-lg transition-colors`}
+              aria-label="Cerrar conversación"
+              title="Cerrar conversación"
+            >
+              <X className={`h-5 w-5 ${themeColors.inputText} opacity-60 hover:opacity-100`} />
+            </button>
+          )}
+          
+          {/* More options button */}
+          <button 
+            onClick={onShowDetails || onContactClick}
+            className={`p-1.5 ${themeColors.hover} rounded-lg transition-colors`}
+            aria-label="Más opciones"
+          >
+            <MoreVertical className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
+          </button>
+        </div>
       </div>
 
       {/* Messages Area */}
       <div 
         ref={messagesContainerRef}
-        className={`flex-1 overflow-y-auto p-4 ${themeColors.chatBackground} ${themeColors.scrollbar || ''}`}
+        className={`flex-1 overflow-y-auto p-4 ${themeColors.chatBackground} ${(themeColors as any).scrollbar || ''}`}
         style={{
           backgroundImage: theme?.id === 'dark' ? 'none' : `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}

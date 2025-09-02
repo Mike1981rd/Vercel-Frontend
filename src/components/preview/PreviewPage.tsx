@@ -8,7 +8,7 @@ import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
 import PreviewImageBanner from './PreviewImageBanner';
-import PreviewWhatsAppWidget from './PreviewWhatsAppWidget';
+import PreviewWhatsAppWidgetV2 from './PreviewWhatsAppWidgetV2';
 
 interface PreviewPageProps {
   pageType: PageType;
@@ -228,7 +228,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
 
       {/* WhatsApp Widget - if configured */}
       {structuralComponents.whatsAppWidget && (
-        <PreviewWhatsAppWidget
+        <PreviewWhatsAppWidgetV2
           config={structuralComponents.whatsAppWidget}
           theme={globalTheme}
           deviceView={editorDeviceView}

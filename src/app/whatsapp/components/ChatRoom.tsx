@@ -18,7 +18,10 @@ export interface Conversation {
   lastMessageTime: Date;
   unreadCount: number;
   isOnline?: boolean;
-  avatar?: string;
+  avatar?: string | null;
+  source?: string;
+  sessionId?: string;
+  customerEmail?: string;
 }
 
 export interface Message {

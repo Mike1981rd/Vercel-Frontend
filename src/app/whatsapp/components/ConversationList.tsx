@@ -91,13 +91,19 @@ export default function ConversationList({
               '';
 
             const name = conv.customerName || conv.contactName || conv.customerProfile?.name || conv.customerProfile?.Name || 'Unknown';
+            const source = conv.source || 'whatsapp';
+            const isWidget = source === 'widget';
+            
             return {
               // Use backend internal GUID for routing
               id: conv.id,
-              contactName: name,
+              contactName: isWidget && conv.customerEmail ? `${name} (${conv.customerEmail})` : name,
               contactPhone: conv.customerPhone || conv.phoneNumber || '',
               lastMessage: conv.lastMessagePreview || conv.lastMessage || '',
               lastMessageTime: new Date(conv.lastMessageAt || conv.updatedAt || conv.createdAt),
+              source: source,
+              sessionId: conv.sessionId,
+              customerEmail: conv.customerEmail,
               unreadCount: conv.unreadCount || 0,
               isOnline: conv.isOnline || false,
               avatar: (rawAvatar && String(rawAvatar).trim().length > 0) ? String(rawAvatar) : null,
@@ -302,15 +308,24 @@ export default function ConversationList({
                 {/* Content */}
                 <div className="flex-1 ml-3 text-left">
                   <div className="flex items-baseline justify-between">
-                    <h3 className={`text-sm font-medium ${themeColors.inputText}`}>
-                      {conversation.contactName}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-sm font-medium ${themeColors.inputText}`}>
+                        {conversation.contactName}
+                      </h3>
+                      {conversation.source === 'widget' && (
+                        <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">
+                          Widget
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-xs ${themeColors.inputText} opacity-60`}>
                       {formatTime(conversation.lastMessageTime)}
                     </span>
                   </div>
                   <p className={`text-xs ${themeColors.inputText} opacity-50 mt-0.5`}>
-                    {conversation.contactPhone}
+                    {conversation.source === 'widget' 
+                      ? (conversation.customerEmail || 'Chat del sitio web')
+                      : conversation.contactPhone}
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <p className={`text-sm ${themeColors.inputText} opacity-70 truncate pr-2`}>
