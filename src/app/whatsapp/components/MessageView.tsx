@@ -317,7 +317,7 @@ export default function MessageView({
         endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/respond`);
         // Backend expects WidgetResponseDto with 'message' field
         const clientMessageId = `cm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        payload = { message: content, clientMessageId };
+        payload = { message: content, clientMessageId, sessionId: conversation.sessionId || undefined };
       } else {
         // For WhatsApp conversations, use the regular send endpoint
         endpoint = getApiEndpoint('/whatsapp/send');
