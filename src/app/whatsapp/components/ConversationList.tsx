@@ -25,6 +25,7 @@ export default function ConversationList({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const lastNonEmptyRef = useRef<Conversation[] | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const syncIntervalRef = useRef<number | null>(null);
   const inFlightRef = useRef<boolean>(false);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef<boolean>(false);
@@ -43,6 +44,20 @@ export default function ConversationList({
     // Refresh on window focus (user returns to tab)
     const onFocus = () => loadConversations();
     window.addEventListener('focus', onFocus);
+    // Periodic deep sync with backend to surface new threads from external sources
+    const startSync = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(getApiEndpoint('/whatsapp/conversations/sync'), {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token || ''}` },
+        });
+      } catch {}
+    };
+    if (!syncIntervalRef.current) {
+      // Every 60s, request a backend sync in background
+      syncIntervalRef.current = window.setInterval(startSync, 60000);
+    }
     // Listen for conversation closed events to update the list immediately
     const onClosed = (e: Event) => {
       try {
@@ -81,6 +96,10 @@ export default function ConversationList({
       window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
       window.removeEventListener('whatsapp:conversationOpened', onOpened as EventListener);
       window.removeEventListener('focus', onFocus);
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+        syncIntervalRef.current = null;
+      }
     };
   }, []);
 

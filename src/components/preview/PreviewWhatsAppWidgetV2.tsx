@@ -100,6 +100,7 @@ export default function PreviewWhatsAppWidgetV2({
   const [lastPollTime, setLastPollTime] = useState<Date>(new Date());
   const lastPollRef = useRef<Date>(new Date());
   const seenServerIdsRef = useRef<Set<string>>(new Set());
+  const lastServerTsRef = useRef<number>(0);
   const lastSentRef = useRef<{ body: string; at: number } | null>(null);
   const [conversationClosed, setConversationClosed] = useState(false);
   
@@ -171,8 +172,11 @@ export default function PreviewWhatsAppWidgetV2({
       try {
         // Always take the latest poll time from ref to avoid stale closures
         const currentPollTime = lastPollRef.current;
+        // Build since parameter from last server timestamp with small slack to avoid missing edge cases
+        const sinceMs = Math.max(0, (lastServerTsRef.current || currentPollTime.getTime()) - 1500);
+        const sinceIso = new Date(sinceMs).toISOString();
         const res = await fetch(
-          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${currentPollTime.toISOString()}`),
+          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${sinceIso}`),
           { method: 'GET' }
         );
         
@@ -229,9 +233,17 @@ export default function PreviewWhatsAppWidgetV2({
               return toAdd.length ? [...updated, ...toAdd] : updated;
             });
 
-            const now = new Date();
-            setLastPollTime(now);
-            lastPollRef.current = now;
+            // Avanzar cursor de polling al último timestamp de servidor visto
+            const maxServerTs = Math.max(
+              lastServerTsRef.current,
+              ...newMessages.map(nm => nm.timestamp.getTime())
+            );
+            if (isFinite(maxServerTs) && maxServerTs > lastServerTsRef.current) {
+              lastServerTsRef.current = maxServerTs;
+              const last = new Date(maxServerTs);
+              setLastPollTime(last);
+              lastPollRef.current = last;
+            }
             
             // Check if conversation was closed
             const closingMessage = newMessages.find((msg: any) => 
