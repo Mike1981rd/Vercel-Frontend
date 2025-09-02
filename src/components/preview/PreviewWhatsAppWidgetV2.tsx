@@ -200,7 +200,8 @@ export default function PreviewWhatsAppWidgetV2({
             const newMessages = data.data.map((msg: any) => ({
               id: String(msg.id),
               body: msg.body,
-              isFromMe: msg.isFromMe,
+              // In widget UI, "me" is the customer; invert server flag (server true=agent outbound)
+              isFromMe: !msg.isFromMe,
               timestamp: new Date(msg.timestamp),
               status: msg.status,
               agentName: msg.agentName
