@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+// Progress component not available - removed import
 import { Badge } from '@/components/ui/badge';
 import {
   LineChart,
@@ -309,7 +309,12 @@ export default function WhatsAppAnalyticsPage() {
                         <span>{item.range}</span>
                         <span className="font-medium">{item.count} mensajes ({item.percentage}%)</span>
                       </div>
-                      <Progress value={item.percentage} className="h-2" />
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

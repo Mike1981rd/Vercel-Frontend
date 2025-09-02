@@ -20,7 +20,8 @@ import {
   Grid,
   LayoutGrid,
   Box,
-  Bed
+  Bed,
+  MessageCircle
 } from 'lucide-react';
 import { EditorLayout } from '@/components/editor/EditorLayout';
 import { useEditorStore } from '@/stores/useEditorStore';
@@ -389,6 +390,18 @@ function EditorPageContent() {
               title={t('editor.panels.globalSettings', 'Configuración Global')}
             >
               <Settings className="w-4 h-4 text-gray-600" />
+            </button>
+            
+            {/* WhatsApp Widget */}
+            <button 
+              onClick={() => {
+                const store = useEditorStore.getState();
+                store.toggleWhatsAppWidget();
+              }}
+              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+              title={t('editor.panels.whatsappWidget', 'WhatsApp Widget')}
+            >
+              <MessageCircle className="w-4 h-4 text-gray-600" />
             </button>
           </div>
 

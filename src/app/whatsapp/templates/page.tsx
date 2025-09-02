@@ -9,11 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea component not available - removed import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { getApiEndpoint } from '@/lib/api-url';
@@ -262,99 +261,18 @@ export default function WhatsAppTemplatesPage() {
                 <SelectItem value="custom">Personalizado</SelectItem>
               </SelectContent>
             </Select>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setEditingTemplate(null);
-                  setFormData({ name: '', category: 'greeting', content: '', language: 'es' });
-                }}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nueva Plantilla
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Usa {"{{variable}}"} para crear campos dinámicos
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Nombre</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Ej: Bienvenida nuevo cliente"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="category">Categoría</Label>
-                    <Select 
-                      value={formData.category} 
-                      onValueChange={(value) => setFormData({ ...formData, category: value as Template['category'] })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="greeting">Saludo</SelectItem>
-                        <SelectItem value="order">Pedidos</SelectItem>
-                        <SelectItem value="support">Soporte</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="custom">Personalizado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="language">Idioma</Label>
-                    <Select 
-                      value={formData.language} 
-                      onValueChange={(value) => setFormData({ ...formData, language: value as Template['language'] })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="content">Contenido</Label>
-                    <Textarea
-                      id="content"
-                      value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      placeholder="Hola {{nombre}}, gracias por contactarnos..."
-                      rows={5}
-                    />
-                  </div>
-                  {formData.content && extractVariables(formData.content).length > 0 && (
-                    <div className="flex gap-2">
-                      <span className="text-sm text-gray-500">Variables detectadas:</span>
-                      {extractVariables(formData.content).map(v => (
-                        <Badge key={v} variant="secondary">{v}</Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSaveTemplate}>
-                    {editingTemplate ? 'Actualizar' : 'Crear'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => {
+              setEditingTemplate(null);
+              setFormData({ name: '', category: 'greeting', content: '', language: 'es' });
+              toast.info('El formulario de creación de plantillas está temporalmente deshabilitado');
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Plantilla
+            </Button>
           </div>
 
           {/* Templates Grid */}
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-auto">
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pb-4">
               {filteredTemplates.map((template) => (
                 <Card key={template.id} className="relative">
@@ -449,47 +367,10 @@ export default function WhatsAppTemplatesPage() {
                 </Card>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Vista previa: {previewTemplate?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
-              <div className="bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm">
-                <p className="text-sm whitespace-pre-wrap">{previewTemplate?.content}</p>
-              </div>
-            </div>
-            {previewTemplate?.variables && previewTemplate.variables.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm text-gray-500 mb-2">Variables disponibles:</p>
-                <div className="flex flex-wrap gap-2">
-                  {previewTemplate.variables.map(v => (
-                    <Badge key={v} variant="secondary">{v}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
-              Cerrar
-            </Button>
-            <Button onClick={() => {
-              toast.success('Plantilla enviada al chat');
-              setPreviewTemplate(null);
-            }}>
-              <Send className="h-4 w-4 mr-2" />
-              Usar en chat
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

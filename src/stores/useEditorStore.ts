@@ -27,6 +27,8 @@ interface EditorStore extends EditorState {
   setIsDirty: (dirty: boolean) => void;
   toggleGlobalSettings: () => void;
   isGlobalSettingsOpen: boolean;
+  toggleWhatsAppWidget: () => void;
+  isWhatsAppWidgetOpen: boolean;
   // Undo/Redo
   history: any[];
   historyIndex: number;
@@ -52,6 +54,7 @@ const initialState: EditorState & { isGlobalSettingsOpen: boolean; history: any[
   isDirty: false,
   isSaving: false,
   isGlobalSettingsOpen: false,
+  isWhatsAppWidgetOpen: false,
   history: [],
   historyIndex: -1
 };
@@ -518,6 +521,16 @@ export const useEditorStore = create<EditorStore>()(
         toggleGlobalSettings: () => {
           set((state) => ({ 
             isGlobalSettingsOpen: !state.isGlobalSettingsOpen,
+            isConfigPanelOpen: false,
+            selectedSectionId: null,
+            isWhatsAppWidgetOpen: false
+          }));
+        },
+
+        toggleWhatsAppWidget: () => {
+          set((state) => ({ 
+            isWhatsAppWidgetOpen: !state.isWhatsAppWidgetOpen,
+            isGlobalSettingsOpen: false,
             isConfigPanelOpen: false,
             selectedSectionId: null
           }));

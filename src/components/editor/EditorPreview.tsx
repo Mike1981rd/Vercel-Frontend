@@ -37,6 +37,7 @@ import PreviewRoomMap from '@/components/preview/PreviewRoomMap';
 import PreviewRoomCalendar from '@/components/preview/PreviewRoomCalendar';
 import PreviewRoomHostCard from '@/components/preview/PreviewRoomHostCard';
 import PreviewRoomThings from '@/components/preview/modules/RoomThingsPreview';
+import PreviewWhatsAppWidget from '@/components/preview/PreviewWhatsAppWidget';
 
 type DeviceView = 'desktop' | 'tablet' | 'mobile';
 
@@ -1015,7 +1016,8 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
       <div className="flex-1 bg-white h-full flex flex-col">
       {/* Preview Area */}
       <div className="flex-1 overflow-y-auto flex justify-center bg-gray-100">
-        <div className={`bg-white ${getPreviewWidth()} min-h-full shadow-lg flex flex-col relative`}>
+        <div className={`${getPreviewWidth()} min-h-full relative`}>
+          <div className="bg-white shadow-lg flex flex-col min-h-full relative">
           {!hasContent ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 bg-gray-50">
               <div className="text-center">
@@ -1050,13 +1052,24 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
               </div>
             </>
           )}
-
+          
+          {/* WhatsApp Widget */}
+          {structuralComponents?.whatsAppWidget && (
+            <PreviewWhatsAppWidget
+              config={structuralComponents.whatsAppWidget}
+              theme={normalizedThemeConfig}
+              deviceView={deviceView}
+              isEditor={true}
+            />
+          )}
+          
           {/* Aside sections like cart drawer would be rendered as overlays */}
           {asideSections.map(section => (
             <div key={section.id} className="hidden">
               {/* Cart drawer and search drawer are hidden by default, shown on interaction */}
             </div>
           ))}
+          </div>
         </div>
       </div>
     </div>

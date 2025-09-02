@@ -24,6 +24,7 @@ import { SectionItem } from './SectionItem';
 import { AddSectionModal } from './AddSectionModal';
 import { ConfigPanel } from './ConfigPanel';
 import { GlobalSettingsPanel } from './GlobalSettingsPanel';
+import { WhatsAppWidgetPanel } from './WhatsAppWidgetPanel';
 import { DraggableSection } from './dragDrop/DraggableSection';
 import { DragOverlay } from './dragDrop/DragOverlay';
 import { AnnouncementChildren } from './AnnouncementChildren';
@@ -49,7 +50,7 @@ interface SectionGroup {
 }
 
 export function EditorSidebarWithDnD() {
-  const { sections, selectedSectionId, isConfigPanelOpen, isGlobalSettingsOpen } = useEditorStore();
+  const { sections, selectedSectionId, isConfigPanelOpen, isGlobalSettingsOpen, isWhatsAppWidgetOpen } = useEditorStore();
   const { t } = useEditorTranslations();
   const { activeSection, handlers, dragState } = useSectionDragDrop();
   
@@ -219,6 +220,11 @@ export function EditorSidebarWithDnD() {
   // Show Global Settings Panel if active
   if (isGlobalSettingsOpen) {
     return <GlobalSettingsPanel />;
+  }
+
+  // Show WhatsApp Widget Panel if active
+  if (isWhatsAppWidgetOpen) {
+    return <WhatsAppWidgetPanel />;
   }
 
   // Show Config Panel if a section is selected

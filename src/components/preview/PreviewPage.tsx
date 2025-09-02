@@ -8,6 +8,7 @@ import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
 import PreviewImageBanner from './PreviewImageBanner';
+import PreviewWhatsAppWidget from './PreviewWhatsAppWidget';
 
 interface PreviewPageProps {
   pageType: PageType;
@@ -21,6 +22,7 @@ interface StructuralComponents {
   announcementBar?: any;
   imageBanner?: any;
   cartDrawer?: any;
+  whatsAppWidget?: any;
 }
 
 export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageProps) {
@@ -100,6 +102,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
             announcementBar: data.announcementBarConfig ? JSON.parse(data.announcementBarConfig) : null,
             imageBanner: data.imageBannerConfig ? JSON.parse(data.imageBannerConfig) : null,
             cartDrawer: data.cartDrawerConfig ? JSON.parse(data.cartDrawerConfig) : null,
+            whatsAppWidget: data.whatsAppWidgetConfig ? JSON.parse(data.whatsAppWidgetConfig) : null,
           };
 
           // Fallback: try to fetch published ImageBanner config directly if not present in DTO
@@ -217,6 +220,16 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       {structuralComponents.footer && (
         <PreviewFooter 
           config={structuralComponents.footer} 
+          theme={globalTheme}
+          deviceView={editorDeviceView}
+          isEditor={false}
+        />
+      )}
+
+      {/* WhatsApp Widget - if configured */}
+      {structuralComponents.whatsAppWidget && (
+        <PreviewWhatsAppWidget
+          config={structuralComponents.whatsAppWidget}
           theme={globalTheme}
           deviceView={editorDeviceView}
           isEditor={false}
