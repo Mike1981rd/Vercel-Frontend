@@ -209,33 +209,28 @@ export default function PreviewWhatsAppWidgetV2({
             // Debug: Log messages to see what's coming from server
             console.log('[Widget] New messages from server:', newMessages);
             
-            // Filter duplicates semánticos y reemplazar temporales por versiones servidor
+            // Unión por ID + reemplazo de temporales
             setMessages(prev => {
-              // 1) Reemplazar temporales por server cuando coinciden en contenido y dirección
-              let updated = prev.map(msg => {
-                if (msg.id.startsWith('temp_') && msg.isFromMe) {
-                  const serverVersion = newMessages.find(
-                    nm => nm.isFromMe && (nm.body || '').trim() === (msg.body || '').trim() && !String(nm.id).startsWith('temp_')
-                  );
-                  return serverVersion ? serverVersion : msg;
+              const byId = new Map<string, Message>();
+              for (const m of prev) byId.set(String(m.id), m);
+              // Reemplazar temporales por la versión de servidor (mismo contenido y dirección)
+              for (const srv of newMessages) {
+                for (const [id, m] of Array.from(byId.entries())) {
+                  if (String(id).startsWith('temp_') && m.isFromMe && srv.isFromMe) {
+                    if ((srv.body || '').trim() === (m.body || '').trim()) {
+                      byId.delete(id);
+                      byId.set(String(srv.id), srv);
+                    }
+                  }
                 }
-                return msg;
-              });
-
-              // 2) Construir mapa por contenido/dirección/ventana temporal para evitar duplicados con IDs distintos
-              // 3) Agregar solo mensajes realmente nuevos (ni por ID ni por similitud)
-              const existingIds = new Set(updated.map(m => String(m.id)));
-              const toAdd = newMessages.filter(nm => {
-                const idStr = String(nm.id);
-                if (existingIds.has(idStr)) return false;
-                if (seenServerIdsRef.current.has(idStr)) return false;
-                return true;
-              });
-
-              // Marcar como vistos los nuevos IDs para evitar re-add en siguientes polls
-              for (const m of toAdd) seenServerIdsRef.current.add(String(m.id));
-
-              return toAdd.length ? [...updated, ...toAdd] : updated;
+              }
+              // Agregar cualquier mensaje del servidor que no exista aún
+              for (const srv of newMessages) {
+                const idStr = String(srv.id);
+                if (!byId.has(idStr)) byId.set(idStr, srv);
+                seenServerIdsRef.current.add(idStr);
+              }
+              return Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             });
 
             // Avanzar cursor de polling al último timestamp de servidor visto
