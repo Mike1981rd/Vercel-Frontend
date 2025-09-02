@@ -106,6 +106,22 @@ export default function ChatRoom() {
       } catch {}
     }
     setSelectedConversation(conversation);
+    // Mark as read immediately in UI and notify sidebar
+    try {
+      window.dispatchEvent(new CustomEvent('whatsapp:conversationOpened', { detail: { id: conversation.id } }));
+    } catch {}
+    // Fire-and-forget backend mark-as-read
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(getApiEndpoint(`/whatsapp/conversations/${conversation.id}/read`), {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token || ''}` },
+        });
+      } catch (e) {
+        console.warn('[ChatRoom] mark-as-read failed (non-blocking)', e);
+      }
+    })();
     // On mobile, switch to chat view when selecting a conversation
     if (window.innerWidth < 768) {
       setShowMobileView('chat');

@@ -54,6 +54,19 @@ export default function ConversationList({
       } catch {}
     };
     window.addEventListener('whatsapp:conversationClosed', onClosed as EventListener);
+    // When a conversation is opened, clear its unreadCount immediately
+    const onOpened = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { id?: string } | undefined;
+        const openedId = detail?.id;
+        if (!openedId) return;
+        setConversations(prev => prev.map(c => c.id === openedId ? { ...c, unreadCount: 0 } : c));
+        if (lastNonEmptyRef.current) {
+          lastNonEmptyRef.current = lastNonEmptyRef.current.map(c => c.id === openedId ? { ...c, unreadCount: 0 } as Conversation : c);
+        }
+      } catch {}
+    };
+    window.addEventListener('whatsapp:conversationOpened', onOpened as EventListener);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -62,6 +75,7 @@ export default function ConversationList({
       // no abort on cleanup to avoid AbortError in dev strict mode
       mountedRef.current = false;
       window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
+      window.removeEventListener('whatsapp:conversationOpened', onOpened as EventListener);
     };
   }, []);
 
@@ -113,7 +127,8 @@ export default function ConversationList({
             return {
               // Use backend internal GUID for routing
               id: conv.id,
-              contactName: isWidget && conv.customerEmail ? `${name} (${conv.customerEmail})` : name,
+              // Do not append email in parentheses; show clean name only
+              contactName: name,
               contactPhone: conv.customerPhone || conv.phoneNumber || '',
               lastMessage: conv.lastMessagePreview || conv.lastMessage || '',
               lastMessageTime: new Date(conv.lastMessageAt || conv.updatedAt || conv.createdAt),
