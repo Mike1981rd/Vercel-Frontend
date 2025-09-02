@@ -137,7 +137,7 @@ export default function MessageView({
       const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
       // Prefer messages endpoint first for fastest history display
-      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
+      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=100`);
         if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
@@ -207,7 +207,7 @@ export default function MessageView({
             // Deduplicate messages that are semantically the same but have different IDs between polls
             const norm = (s: string) => (s || '').trim().replace(/\s+/g, ' ').slice(0, 200);
             const statusRank = (s?: string) => s === 'read' ? 3 : s === 'delivered' ? 2 : s === 'sent' ? 1 : 0;
-            const bucket = (t: Date) => Math.floor(t.getTime() / 10000); // 10s bucket
+            const bucket = (t: Date) => Math.floor(t.getTime() / 3000); // 3s bucket para evitar colapsar demasiados
             const contentMap = new Map<string, Message>();
             const result: Message[] = [];
             for (const m of merged) {

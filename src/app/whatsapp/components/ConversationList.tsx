@@ -36,10 +36,13 @@ export default function ConversationList({
     mountedRef.current = true;
     // Initial load
     loadConversations();
-    // Guard against double effect in React StrictMode
+    // Guard against double effect in React StrictMode; poll every 10s for recency
     if (!intervalRef.current) {
-      intervalRef.current = window.setInterval(loadConversations, 30000); // Poll every 30s (performance)
+      intervalRef.current = window.setInterval(loadConversations, 10000);
     }
+    // Refresh on window focus (user returns to tab)
+    const onFocus = () => loadConversations();
+    window.addEventListener('focus', onFocus);
     // Listen for conversation closed events to update the list immediately
     const onClosed = (e: Event) => {
       try {
@@ -77,6 +80,7 @@ export default function ConversationList({
       mountedRef.current = false;
       window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
       window.removeEventListener('whatsapp:conversationOpened', onOpened as EventListener);
+      window.removeEventListener('focus', onFocus);
     };
   }, []);
 

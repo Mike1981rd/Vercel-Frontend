@@ -98,6 +98,9 @@ export default function PreviewWhatsAppWidgetV2({
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [lastPollTime, setLastPollTime] = useState<Date>(new Date());
+  const lastPollRef = useRef<Date>(new Date());
+  const seenServerIdsRef = useRef<Set<string>>(new Set());
+  const lastSentRef = useRef<{ body: string; at: number } | null>(null);
   const [conversationClosed, setConversationClosed] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -166,8 +169,10 @@ export default function PreviewWhatsAppWidgetV2({
 
     const pollMessages = async () => {
       try {
+        // Always take the latest poll time from ref to avoid stale closures
+        const currentPollTime = lastPollRef.current;
         const res = await fetch(
-          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${lastPollTime.toISOString()}`),
+          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${currentPollTime.toISOString()}`),
           { method: 'GET' }
         );
         
@@ -175,7 +180,7 @@ export default function PreviewWhatsAppWidgetV2({
           const data = await res.json();
           if (data.data && data.data.length > 0) {
             const newMessages = data.data.map((msg: any) => ({
-              id: msg.id,
+              id: String(msg.id),
               body: msg.body,
               isFromMe: msg.isFromMe,
               timestamp: new Date(msg.timestamp),
@@ -183,8 +188,50 @@ export default function PreviewWhatsAppWidgetV2({
               agentName: msg.agentName
             }));
             
-            setMessages(prev => [...prev, ...newMessages]);
-            setLastPollTime(new Date());
+            // Debug: Log messages to see what's coming from server
+            console.log('[Widget] New messages from server:', newMessages);
+            
+            // Filter duplicates semánticos y reemplazar temporales por versiones servidor
+            setMessages(prev => {
+              // 1) Reemplazar temporales por server cuando coinciden en contenido y dirección
+              let updated = prev.map(msg => {
+                if (msg.id.startsWith('temp_') && msg.isFromMe) {
+                  const serverVersion = newMessages.find(
+                    nm => nm.isFromMe && (nm.body || '').trim() === (msg.body || '').trim() && !String(nm.id).startsWith('temp_')
+                  );
+                  return serverVersion ? serverVersion : msg;
+                }
+                return msg;
+              });
+
+              // 2) Construir mapa por contenido/dirección/ventana temporal para evitar duplicados con IDs distintos
+              const norm = (s: string) => (s || '').trim().replace(/\s+/g, ' ');
+              const within = (a: Date, b: Date) => Math.abs(a.getTime() - b.getTime()) <= 3000; // 3s
+              const existsSimilar = (arr: Message[], candidate: Message) => arr.some(m => (
+                m.isFromMe === candidate.isFromMe &&
+                norm(m.body) === norm(candidate.body) &&
+                within(m.timestamp, candidate.timestamp)
+              ));
+
+              // 3) Agregar solo mensajes realmente nuevos (ni por ID ni por similitud)
+              const existingIds = new Set(updated.map(m => String(m.id)));
+              const toAdd = newMessages.filter(nm => {
+                const idStr = String(nm.id);
+                if (existingIds.has(idStr)) return false;
+                if (seenServerIdsRef.current.has(idStr)) return false;
+                if (existsSimilar(updated, nm)) return false;
+                return true;
+              });
+
+              // Marcar como vistos los nuevos IDs para evitar re-add en siguientes polls
+              for (const m of toAdd) seenServerIdsRef.current.add(String(m.id));
+
+              return toAdd.length ? [...updated, ...toAdd] : updated;
+            });
+
+            const now = new Date();
+            setLastPollTime(now);
+            lastPollRef.current = now;
             
             // Check if conversation was closed
             const closingMessage = newMessages.find((msg: any) => 
@@ -200,6 +247,11 @@ export default function PreviewWhatsAppWidgetV2({
       }
     };
 
+    // Clear any existing interval before setting a new one
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+
     // Poll immediately
     pollMessages();
     
@@ -209,9 +261,10 @@ export default function PreviewWhatsAppWidgetV2({
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = undefined;
       }
     };
-  }, [showChat, showChatContent, sessionId, lastPollTime, conversationClosed]);
+  }, [showChat, showChatContent, sessionId, conversationClosed]); // Removed lastPollTime from dependencies
 
   // Validate form
   const validateForm = () => {
@@ -248,11 +301,16 @@ export default function PreviewWhatsAppWidgetV2({
   // Send message
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || conversationClosed) return;
+    // Evitar doble envío del mismo texto en 60s
+    const now = Date.now();
+    if (lastSentRef.current && lastSentRef.current.body === inputMessage.trim() && (now - lastSentRef.current.at) < 60000) {
+      return;
+    }
 
     const messageToSend = inputMessage.trim();
     setInputMessage('');
     
-    // Add message to UI immediately
+    // Add message to UI inmediatamente con id temporal
     const tempMessage: Message = {
       id: `temp_${Date.now()}`,
       body: messageToSend,
@@ -261,8 +319,11 @@ export default function PreviewWhatsAppWidgetV2({
       status: 'sending'
     };
     
+    console.log('[Widget] Adding local message:', tempMessage);
     setMessages(prev => [...prev, tempMessage]);
     setIsTyping(true);
+    // Pre-marcar temp id como visto para que si el servidor ecoa pronto, no se agregue doble
+    seenServerIdsRef.current.add(tempMessage.id);
 
     try {
       const payload = {
@@ -271,7 +332,8 @@ export default function PreviewWhatsAppWidgetV2({
         customerEmail: formData.email || undefined,
         sessionId,
         pageUrl: window.location.href,
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
+        clientMessageId: tempMessage.id
       };
 
       const res = await fetch(getApiEndpoint('/whatsapp/widget/message'), {
@@ -281,6 +343,7 @@ export default function PreviewWhatsAppWidgetV2({
       });
 
       if (res.ok) {
+        lastSentRef.current = { body: messageToSend, at: now };
         // Update message status
         setMessages(prev => 
           prev.map(msg => 
@@ -435,9 +498,10 @@ export default function PreviewWhatsAppWidgetV2({
                     <div
                       className={`max-w-[70%] rounded-lg px-4 py-2 ${
                         message.isFromMe
-                          ? 'bg-green-500 text-white'
+                          ? 'text-white'
                           : 'bg-gray-100 text-gray-800'
                       }`}
+                      style={message.isFromMe ? { backgroundColor: widgetConfig.primaryColor } : {}}
                     >
                       {message.agentName && !message.isFromMe && (
                         <div className="text-xs opacity-70 mb-1">{message.agentName}</div>
