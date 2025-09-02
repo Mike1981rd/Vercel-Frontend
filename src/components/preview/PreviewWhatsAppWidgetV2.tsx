@@ -209,15 +209,17 @@ export default function PreviewWhatsAppWidgetV2({
             // Debug: Log messages to see what's coming from server
             console.log('[Widget] New messages from server:', newMessages);
             
-            // Unión por ID + reemplazo de temporales
+            // Unión por ID + reemplazo de temporales + dedupe semántico en ventana corta
             setMessages(prev => {
               const byId = new Map<string, Message>();
               for (const m of prev) byId.set(String(m.id), m);
+              const normalize = (s: string) => (s || '').trim().replace(/\s+/g, ' ');
+
               // Reemplazar temporales por la versión de servidor (mismo contenido y dirección)
               for (const srv of newMessages) {
                 for (const [id, m] of Array.from(byId.entries())) {
-                  if (String(id).startsWith('temp_') && m.isFromMe && srv.isFromMe) {
-                    if ((srv.body || '').trim() === (m.body || '').trim()) {
+                  if (String(id).startsWith('temp_') && m.isFromMe === srv.isFromMe) {
+                    if (normalize(srv.body) === normalize(m.body)) {
                       byId.delete(id);
                       byId.set(String(srv.id), srv);
                     }
@@ -230,7 +232,33 @@ export default function PreviewWhatsAppWidgetV2({
                 if (!byId.has(idStr)) byId.set(idStr, srv);
                 seenServerIdsRef.current.add(idStr);
               }
-              return Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+              // Dedupe por (lado + contenido normalizado) en ventana de 5s, preferir no-temp y estado más avanzado
+              const items = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+              const bucket = (t: Date) => Math.floor(t.getTime() / 5000);
+              const statusRank = (s?: string) => s === 'read' ? 3 : s === 'delivered' ? 2 : s === 'sent' ? 1 : 0;
+              const seen = new Map<string, Message>();
+              const result: Message[] = [];
+              for (const m of items) {
+                const key = `${m.isFromMe ? 'o' : 'i'}|${normalize(m.body)}|${bucket(m.timestamp)}`;
+                const ex = seen.get(key);
+                if (!ex) {
+                  seen.set(key, m);
+                  result.push(m);
+                } else {
+                  const exIsTemp = typeof ex.id === 'string' && ex.id.startsWith('temp_');
+                  const mIsTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
+                  const exScore = statusRank(ex.status) + (exIsTemp ? 0 : 2);
+                  const mScore = statusRank(m.status) + (mIsTemp ? 0 : 2);
+                  if (mScore > exScore) {
+                    // Reemplazar el existente en result
+                    const idx = result.indexOf(ex);
+                    if (idx >= 0) result[idx] = m;
+                    seen.set(key, m);
+                  }
+                }
+              }
+              return result;
             });
 
             // Avanzar cursor de polling al último timestamp de servidor visto
