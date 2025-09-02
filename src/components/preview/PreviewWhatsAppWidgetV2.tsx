@@ -173,7 +173,9 @@ export default function PreviewWhatsAppWidgetV2({
         // Always take the latest poll time from ref to avoid stale closures
         const currentPollTime = lastPollRef.current;
         // Build since parameter from last server timestamp with small slack to avoid missing edge cases
-        const sinceMs = Math.max(0, (lastServerTsRef.current || currentPollTime.getTime()) - 1500);
+        // Use a wider slack window (30s) to avoid missing messages with older timestamps
+        const baseMs = lastServerTsRef.current || currentPollTime.getTime();
+        const sinceMs = Math.max(0, baseMs - 30000);
         const sinceIso = new Date(sinceMs).toISOString();
         const res = await fetch(
           getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${sinceIso}`),
@@ -209,21 +211,12 @@ export default function PreviewWhatsAppWidgetV2({
               });
 
               // 2) Construir mapa por contenido/dirección/ventana temporal para evitar duplicados con IDs distintos
-              const norm = (s: string) => (s || '').trim().replace(/\s+/g, ' ');
-              const within = (a: Date, b: Date) => Math.abs(a.getTime() - b.getTime()) <= 3000; // 3s
-              const existsSimilar = (arr: Message[], candidate: Message) => arr.some(m => (
-                m.isFromMe === candidate.isFromMe &&
-                norm(m.body) === norm(candidate.body) &&
-                within(m.timestamp, candidate.timestamp)
-              ));
-
               // 3) Agregar solo mensajes realmente nuevos (ni por ID ni por similitud)
               const existingIds = new Set(updated.map(m => String(m.id)));
               const toAdd = newMessages.filter(nm => {
                 const idStr = String(nm.id);
                 if (existingIds.has(idStr)) return false;
                 if (seenServerIdsRef.current.has(idStr)) return false;
-                if (existsSimilar(updated, nm)) return false;
                 return true;
               });
 
