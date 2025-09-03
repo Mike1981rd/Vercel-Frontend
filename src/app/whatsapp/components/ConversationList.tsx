@@ -192,7 +192,6 @@ export default function ConversationList({
               sessionId: conv.sessionId,
               customerEmail: conv.customerEmail,
               // keep status if backend provides it so we can filter client-side
-              // @ts-expect-error extend shape
               status: conv.status || conv.Status || undefined,
               unreadCount: conv.unreadCount || 0,
               isOnline: conv.isOnline || false,

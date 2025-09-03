@@ -579,7 +579,7 @@ export default function MessageView({
 
       {/* Message Input */}
       <div className={`flex-shrink-0 border-t ${themeColors.border}`}>
-        <MessageInput onSendMessage={handleSendMessage} theme={theme} isSending={sendInFlightRef.current} />
+        <MessageInput onSendMessage={handleSendMessage} theme={theme} />
       </div>
     </div>
   );
