@@ -7,17 +7,20 @@ import { getApiEndpoint } from '@/lib/api-url';
 import type { Conversation } from './ChatRoom';
 import { Avatar } from '@/components/ui/Avatar';
 import type { ChatTheme } from './ThemeSelector';
+import type { Message } from './ChatRoom';
 
 interface ConversationListProps {
   onSelectConversation: (conversation: Conversation) => void;
   selectedConversation: Conversation | null;
   theme?: ChatTheme;
+  messagesCacheRef?: React.MutableRefObject<Record<string, Message[]>>;
 }
 
 export default function ConversationList({ 
   onSelectConversation, 
   selectedConversation,
-  theme 
+  theme,
+  messagesCacheRef 
 }: ConversationListProps) {
   const { t } = useI18n();
   const DEBUG = false;
@@ -257,9 +260,33 @@ export default function ConversationList({
   useEffect(() => {
     if (!loading && !autoSelectedRef.current && filteredConversations.length > 0 && !selectedConversation) {
       autoSelectedRef.current = true;
-      try {
-        onSelectConversation(filteredConversations[0]);
-      } catch {}
+      // Prefetch first conversation's messages for fast initial view
+      const first = filteredConversations[0];
+      (async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const endpoint = getApiEndpoint(`/whatsapp/conversations/${first.id}/messages?page=1&pageSize=20`);
+          const res = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${token || ''}` }, cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            const raw = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.messages) ? data.data.messages : (Array.isArray(data?.messages) ? data.messages : []));
+            if (Array.isArray(raw) && messagesCacheRef) {
+              const mapped: Message[] = raw.map((m: any) => ({
+                id: m.id || m.messageId,
+                conversationId: first.id,
+                content: m.body || m.content || m.text || '',
+                timestamp: new Date(m.timestamp || m.createdAt || m.sentAt || Date.now()),
+                isFromMe: (String(m.direction || '').toLowerCase() === 'outbound'),
+                status: m.status || 'sent',
+                type: m.messageType || m.type || 'text',
+                mediaUrl: m.mediaUrl || m.mediaURL || null,
+              }));
+              messagesCacheRef.current[first.id] = mapped;
+            }
+          }
+        } catch {}
+        try { onSelectConversation(first); } catch {}
+      })();
     }
   }, [loading, filteredConversations, selectedConversation, onSelectConversation]);
 
@@ -370,7 +397,32 @@ export default function ConversationList({
             {filteredConversations.map((conversation) => (
               <button
                 key={conversation.id}
-                onClick={() => onSelectConversation(conversation)}
+                onClick={async () => {
+                  // Prefetch minimal messages to speed up switch
+                  try {
+                    const token = localStorage.getItem('token');
+                    const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
+                    const res = await fetch(endpoint, { headers: { 'Authorization': `Bearer ${token || ''}` }, cache: 'no-store' });
+                    if (res.ok) {
+                      const data = await res.json();
+                      const raw = Array.isArray(data?.data) ? data.data : (Array.isArray(data?.data?.messages) ? data.data.messages : (Array.isArray(data?.messages) ? data.messages : []));
+                      if (Array.isArray(raw) && messagesCacheRef) {
+                        const mapped: Message[] = raw.map((m: any) => ({
+                          id: m.id || m.messageId,
+                          conversationId: conversation.id,
+                          content: m.body || m.content || m.text || '',
+                          timestamp: new Date(m.timestamp || m.createdAt || m.sentAt || Date.now()),
+                          isFromMe: (String(m.direction || '').toLowerCase() === 'outbound'),
+                          status: m.status || 'sent',
+                          type: m.messageType || m.type || 'text',
+                          mediaUrl: m.mediaUrl || m.mediaURL || null,
+                        }));
+                        messagesCacheRef.current[conversation.id] = mapped;
+                      }
+                    }
+                  } catch {}
+                  onSelectConversation(conversation);
+                }}
                 className={`w-full p-4 flex items-start transition-colors ${
                   selectedConversation?.id === conversation.id
                     ? 'bg-blue-600/20 border-l-4 border-blue-500'
