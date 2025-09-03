@@ -14,7 +14,6 @@ import { getApiEndpoint } from '@/lib/api-url';
 import type { Conversation, Message } from './ChatRoom';
 import { Avatar } from '@/components/ui/Avatar';
 import type { ChatTheme } from './ThemeSelector';
-import { loadMediaSettings, defaultMediaSettings, type MediaSettings } from './MediaSettings';
 
 interface MessageViewProps {
   conversation: Conversation;
@@ -36,7 +35,6 @@ export default function MessageView({
   messagesCacheRef
 }: MessageViewProps) {
   const { t } = useI18n();
-  const DEBUG = false;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -48,21 +46,12 @@ export default function MessageView({
   const lastSentRef = useRef<{ content: string; at: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const stickToBottomRef = useRef<boolean>(true);
-  const userScrollTsRef = useRef<number>(Date.now());
-  const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
-  const prevFingerprintRef = useRef<string | null>(null);
-  const currentMessagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
-    // Reset per-conversation state to avoid cross-contamination
-    prevFingerprintRef.current = null;
-    stickToBottomRef.current = true;
+    // Instant show from cache if exists
     if (messagesCacheRef?.current?.[conversation.id]) {
       setMessages(messagesCacheRef.current[conversation.id]);
       setLoading(false);
-    } else {
-      setMessages([]);
-      setLoading(true);
     }
     loadMessages();
     if (intervalRef.current) {
@@ -85,8 +74,6 @@ export default function MessageView({
   useEffect(() => {
     // Scroll to bottom when messages change only if user is near bottom
     scrollToBottom(false);
-    // Keep a live ref to latest messages to avoid stale closures in polling
-    currentMessagesRef.current = messages;
   }, [messages]);
 
   // Track user scroll to avoid snapping to bottom when user is reading older messages
@@ -97,7 +84,6 @@ export default function MessageView({
       const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       // Consider near bottom if within 80px
       stickToBottomRef.current = distanceFromBottom < 80;
-      userScrollTsRef.current = Date.now();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     // Initialize state
@@ -105,21 +91,6 @@ export default function MessageView({
     return () => {
       el.removeEventListener('scroll', onScroll as any);
     };
-  }, []);
-
-  // Load media settings
-  useEffect(() => {
-    setMediaSettings(loadMediaSettings());
-    const onUpdated = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as MediaSettings | undefined;
-        setMediaSettings(detail || loadMediaSettings());
-      } catch {
-        setMediaSettings(loadMediaSettings());
-      }
-    };
-    window.addEventListener('whatsapp:mediaSettingsUpdated', onUpdated as EventListener);
-    return () => window.removeEventListener('whatsapp:mediaSettingsUpdated', onUpdated as EventListener);
   }, []);
 
   // Load messages from API (mocks only when NEXT_PUBLIC_USE_MOCKS==='true')
@@ -132,13 +103,12 @@ export default function MessageView({
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      // Preserve scroll position if user is reading older messages
-      const el = messagesContainerRef.current;
-      const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
       // Prefer messages endpoint first for fastest history display
-      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=100`);
-        if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
+      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
+        }
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
           cache: 'no-store',
@@ -154,27 +124,19 @@ export default function MessageView({
               : Array.isArray(data?.messages)
                 ? data.messages
                 : [];
-          if (DEBUG) console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
+          }
           if (Array.isArray(raw) && raw.length > 0) {
-            // Build previous timestamps map to avoid generating new timestamps on each poll
-            const prevTsMap = new Map<string, number>();
-            for (const m of messages) prevTsMap.set(String(m.id), m.timestamp.getTime());
-
             const formatted: Message[] = raw.map((msg: any) => {
               const dir = (msg.direction || '').toLowerCase();
               const from = msg.from || msg.From;
-              // Use server-provided direction when available; only fallback to from/phone heuristic if missing
-              const isOutbound = dir
-                ? dir === 'outbound'
-                : !!(from && conversation.contactPhone && from !== conversation.contactPhone);
-              const rawId = msg.id || msg.messageId;
-              const tsValue = msg.timestamp || msg.createdAt || msg.sentAt || msg.date;
-              const stableTs = tsValue ? new Date(tsValue).getTime() : (prevTsMap.get(String(rawId)) || 0);
+              const isOutbound = dir === 'outbound' || (from && from !== conversation.contactPhone);
               return {
-                id: rawId,
+                id: msg.id || msg.messageId,
                 conversationId: conversation.id,
                 content: msg.body || msg.content || msg.message || msg.text || '',
-                timestamp: new Date(stableTs || Date.now()),
+                timestamp: new Date(msg.timestamp || msg.createdAt || msg.sentAt || msg.date || Date.now()),
                 isFromMe: isOutbound,
                 status: msg.status || 'sent',
                 type: msg.messageType || msg.type || 'text',
@@ -183,88 +145,49 @@ export default function MessageView({
             });
             // Preserve any optimistic local messages newer than server payload
             const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
-            // Build merged list using current state as base for preserved temps
-            const prevListAll = currentMessagesRef.current || messages;
-            // Restrict to this conversation only
-            const prevList = prevListAll.filter(m => m.conversationId === conversation.id);
-            // Start with all previously visible messages of this conversation to avoid dropping when server returns a subset
-            const byId = new Map<string, Message>();
-            for (const m of prevList) byId.set(String(m.id), m);
-            // Overlay with server messages (authoritative)
-            for (const m of formatted) byId.set(String(m.id), m);
-            // Remove temp messages that have a near-equal server match to avoid duplicates
-            for (const m of prevList) {
-              const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
-              if (!isTemp) continue;
-              const hasNearMatch = formatted.some(s => {
-                if (!s.isFromMe) return false;
-                const sameContent = (s.content || '').trim() === (m.content || '').trim();
-                const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
-                return sameContent && dt <= 90000;
-              });
-              if (hasNearMatch) byId.delete(String(m.id));
-            }
+            setMessages(prev => {
+              // Build server list map by id
+              const byId = new Map<string, Message>();
+              for (const m of formatted) byId.set(String(m.id), m);
 
-            let merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-            // Deduplicate messages that are semantically the same but have different IDs between polls
-            const norm = (s: string) => (s || '').trim().replace(/\s+/g, ' ').slice(0, 200);
-            const statusRank = (s?: string) => s === 'read' ? 3 : s === 'delivered' ? 2 : s === 'sent' ? 1 : 0;
-            const bucket = (t: Date) => Math.floor(t.getTime() / 3000); // 3s bucket para evitar colapsar demasiados
-            const contentMap = new Map<string, Message>();
-            const result: Message[] = [];
-            for (const m of merged) {
-              const key = `${conversation.id}|${m.isFromMe ? 'o' : 'i'}|${norm(m.content)}|${bucket(m.timestamp)}`;
-              const existing = contentMap.get(key);
-              if (!existing) {
-                contentMap.set(key, m);
-                result.push(m);
-              } else {
-                // Prefer non-temp id, richer status, and with media if available
-                const isTempExisting = typeof existing.id === 'string' && existing.id.startsWith('temp_');
-                const isTempNew = typeof m.id === 'string' && m.id.startsWith('temp_');
-                const existingScore = statusRank(existing.status) + (existing.mediaUrl ? 1 : 0) + (isTempExisting ? 0 : 2);
-                const newScore = statusRank(m.status) + (m.mediaUrl ? 1 : 0) + (isTempNew ? 0 : 2);
-                if (newScore > existingScore) {
-                  // Replace in both structures
-                  const idx = result.indexOf(existing);
-                  if (idx >= 0) result[idx] = m;
-                  contentMap.set(key, m);
+              // Filter preserved: keep only temps that do NOT have a near-equal server match
+              const preserved = prev.filter(m => {
+                const isTemp = typeof m.id === 'string' && m.id.startsWith('temp_');
+                const isNewer = m.timestamp.getTime() > maxServerTs;
+                if (!isTemp && !isNewer) return false;
+                if (isTemp) {
+                  // If server has an outbound message with same content within ~90s, drop temp
+                  const hasNearMatch = formatted.some(s => {
+                    if (!s.isFromMe) return false;
+                    const sameContent = (s.content || '').trim() === (m.content || '').trim();
+                    const dt = Math.abs(s.timestamp.getTime() - m.timestamp.getTime());
+                    return sameContent && dt <= 90000;
+                  });
+                  if (hasNearMatch) return false;
                 }
+                return true;
+              });
+
+              // Merge: prefer server version; add preserved if not colliding by id
+              for (const m of preserved) {
+                const key = String(m.id);
+                if (!byId.has(key)) byId.set(key, m);
               }
-            }
-            merged = result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-            // Safety cap to last 500 messages to avoid unbounded growth
-            if (merged.length > 500) merged = merged.slice(merged.length - 500);
-            // Compute fingerprint to detect real changes
-            const fingerprint = merged.map(m => `${String(m.id)}|${m.timestamp.getTime()}|${m.status || ''}`).join(',');
-            if (prevFingerprintRef.current === fingerprint) {
-              if (process.env.NODE_ENV !== 'production') {
-                // eslint-disable-next-line no-console
-                console.log('[MessageView] No changes detected; skipping UI update');
+
+              const merged = Array.from(byId.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+              if (messagesCacheRef) {
+                messagesCacheRef.current[conversation.id] = merged;
               }
-              // Still keep cache fresh
-              if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
-              return; // do not update state or scroll
-            }
-            prevFingerprintRef.current = fingerprint;
-            if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
-            setMessages(merged);
-            // Restore scroll offset for readers not at bottom
-            if (el && !stickToBottomRef.current) {
-              // Next tick to allow layout update
-              setTimeout(() => {
-                const newBottom = el.scrollHeight - prevBottomDistance;
-                // Ensure within bounds
-                el.scrollTop = Math.max(0, newBottom - el.clientHeight);
-              }, 0);
-            }
+              return merged;
+            });
             if (messagesCacheRef) {
               // messagesCacheRef is updated in setMessages above
             }
           } else {
             // Keep existing messages to avoid flicker
-            if (DEBUG) console.log('[MessageView] Empty response ignored to prevent flicker');
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[MessageView] Empty response ignored to prevent flicker');
+            }
           }
         } else {
           const err = await res.text();
@@ -320,7 +243,7 @@ export default function MessageView({
         endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/respond`);
         // Backend expects WidgetResponseDto with 'message' field
         const clientMessageId = `cm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        payload = { message: content, clientMessageId, sessionId: conversation.sessionId || undefined };
+        payload = { message: content, clientMessageId };
       } else {
         // For WhatsApp conversations, use the regular send endpoint
         endpoint = getApiEndpoint('/whatsapp/send');
@@ -343,8 +266,7 @@ export default function MessageView({
         lastSentRef.current = { content, at: now };
         // Add message to local state immediately for better UX
         const newMessage: Message = {
-          // Mark as temporary so it can be de-duplicated when server echoes it
-          id: `temp_${Date.now()}`,
+          id: Date.now().toString(),
           conversationId: conversation.id,
           content,
           timestamp: new Date(),
@@ -391,13 +313,9 @@ export default function MessageView({
 
       if (res.ok) {
         alert('Conversación cerrada exitosamente');
-        // Notificar a otros componentes (lista) para que refresquen y/o remuevan la conversación
-        try {
-          window.dispatchEvent(new CustomEvent('whatsapp:conversationClosed', { detail: { id: conversation.id } }));
-        } catch {}
-        // Recargar mensajes por si el backend marca estado
+        // Reload messages to reflect the closed status
         loadMessages();
-        // Volver atrás para salir del detalle de la conversación
+        // Optionally, trigger a callback to refresh the conversation list
         if (onBack) {
           onBack();
         }
@@ -582,9 +500,9 @@ export default function MessageView({
                       key={message.id}
                       className={`flex ${message.isFromMe ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className="relative group">
+                      <div className="relative">
                         <div
-                          className={`inline-block min-w-[120px] max-w-[70%] sm:max-w-[60%] px-4 py-2 rounded-2xl ${
+                          className={`max-w-[70%] sm:max-w-[60%] px-4 py-2 rounded-2xl ${
                             message.isFromMe
                               ? `${themeColors.messageOutgoing} ${themeColors.messageOutgoingText} rounded-br-sm`
                               : `${themeColors.messageIncoming} ${themeColors.messageText} rounded-bl-sm shadow-sm`
@@ -597,26 +515,14 @@ export default function MessageView({
                                 <img
                                   src={message.mediaUrl}
                                   alt={message.content || 'image'}
-                                  className="w-auto h-auto"
-                                  style={{
-                                    maxWidth: `${mediaSettings.imageMaxWidth}px`,
-                                    maxHeight: `${mediaSettings.imageMaxHeight}px`,
-                                    objectFit: mediaSettings.fit,
-                                    borderRadius: `${mediaSettings.borderRadius}px`,
-                                  }}
+                                  className="rounded-lg object-contain w-auto h-auto max-w-[120px] sm:max-w-[140px] max-h-32"
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
                                 <video
                                   src={message.mediaUrl}
                                   controls
                                   playsInline
-                                  className="h-auto"
-                                  style={{
-                                    width: `${mediaSettings.videoMaxWidth}px`,
-                                    maxHeight: `${mediaSettings.videoMaxHeight}px`,
-                                    objectFit: mediaSettings.fit,
-                                    borderRadius: `${mediaSettings.borderRadius}px`,
-                                  }}
+                                  className="rounded-lg object-contain w-[120px] sm:w-[140px] h-auto max-h-32"
                                 />
                               ) : (
                                 <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
@@ -626,7 +532,7 @@ export default function MessageView({
                             </div>
                           ) : null}
                           {message.content && (
-                            <p className="text-sm whitespace-pre-wrap break-normal">
+                            <p className="text-sm whitespace-pre-wrap break-words">
                               {message.content}
                             </p>
                           )}
@@ -637,10 +543,10 @@ export default function MessageView({
                             {message.isFromMe && renderMessageStatus(message.status)}
                           </div>
                         </div>
-                        {/* Delete button: visible on hover (desktop only) to avoid accidental taps */}
+                        {/* Delete message button (only removes from UI list) */}
                         <button
                           onClick={() => handleDeleteMessage(String(message.id))}
-                          className="hidden md:flex absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 flex items-center justify-center text-xs"
                           title="Eliminar"
                           aria-label="Eliminar mensaje"
                         >

@@ -20,72 +20,25 @@ export default function ConversationList({
   theme 
 }: ConversationListProps) {
   const { t } = useI18n();
-  const DEBUG = false;
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const lastNonEmptyRef = useRef<Conversation[] | null>(null);
   const intervalRef = useRef<number | null>(null);
-  const syncIntervalRef = useRef<number | null>(null);
   const inFlightRef = useRef<boolean>(false);
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef<boolean>(false);
   const firstSyncAttemptedRef = useRef<boolean>(false);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'widget'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const autoSelectedRef = useRef<boolean>(false);
 
   useEffect(() => {
     mountedRef.current = true;
     // Initial load
     loadConversations();
-    // Guard against double effect in React StrictMode; poll every 10s for recency
+    // Guard against double effect in React StrictMode
     if (!intervalRef.current) {
-      intervalRef.current = window.setInterval(loadConversations, 10000);
+      intervalRef.current = window.setInterval(loadConversations, 30000); // Poll every 30s (performance)
     }
-    // Refresh on window focus (user returns to tab)
-    const onFocus = () => loadConversations();
-    window.addEventListener('focus', onFocus);
-    // Periodic deep sync with backend to surface new threads from external sources
-    const startSync = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await fetch(getApiEndpoint('/whatsapp/conversations/sync'), {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token || ''}` },
-        });
-      } catch {}
-    };
-    if (!syncIntervalRef.current) {
-      // Every 60s, request a backend sync in background
-      syncIntervalRef.current = window.setInterval(startSync, 60000);
-    }
-    // Listen for conversation closed events to update the list immediately
-    const onClosed = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as { id?: string } | undefined;
-        const closedId = detail?.id;
-        if (!closedId) return;
-        setConversations(prev => prev.filter(c => c.id !== closedId));
-        if (lastNonEmptyRef.current) {
-          lastNonEmptyRef.current = lastNonEmptyRef.current.filter(c => c.id !== closedId);
-        }
-        // Trigger a background refresh to reflect backend state
-        setTimeout(() => { if (mountedRef.current) loadConversations(); }, 300);
-      } catch {}
-    };
-    window.addEventListener('whatsapp:conversationClosed', onClosed as EventListener);
-    // When a conversation is opened, clear its unreadCount immediately
-    const onOpened = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail as { id?: string } | undefined;
-        const openedId = detail?.id;
-        if (!openedId) return;
-        setConversations(prev => prev.map(c => c.id === openedId ? { ...c, unreadCount: 0 } : c));
-        if (lastNonEmptyRef.current) {
-          lastNonEmptyRef.current = lastNonEmptyRef.current.map(c => c.id === openedId ? { ...c, unreadCount: 0 } as Conversation : c);
-        }
-      } catch {}
-    };
-    window.addEventListener('whatsapp:conversationOpened', onOpened as EventListener);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -93,13 +46,6 @@ export default function ConversationList({
       }
       // no abort on cleanup to avoid AbortError in dev strict mode
       mountedRef.current = false;
-      window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
-      window.removeEventListener('whatsapp:conversationOpened', onOpened as EventListener);
-      window.removeEventListener('focus', onFocus);
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current);
-        syncIntervalRef.current = null;
-      }
     };
   }, []);
 
@@ -109,24 +55,24 @@ export default function ConversationList({
     try {
       const token = localStorage.getItem('token');
       const endpoint = getApiEndpoint('/whatsapp/conversations?page=1&pageSize=100');
-      if (DEBUG) console.log('Loading conversations from:', endpoint);
+      console.log('Loading conversations from:', endpoint);
       
       const res = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token || ''}` },
         cache: 'no-store',
       });
       
-      if (DEBUG) console.log('Conversations response status:', res.status);
+      console.log('Conversations response status:', res.status);
       
       if (res.ok) {
         const data = await res.json();
-        if (DEBUG) console.log('Conversations response data:', data);
+        console.log('Conversations response data:', data);
         
         // The API returns data.data which is a WhatsAppConversationListDto with a Conversations property
         if (data?.data?.Conversations || data?.data?.conversations) {
           const conversationsList = data.data.Conversations || data.data.conversations;
-          if (DEBUG) console.log('Found conversations list:', conversationsList);
-          if (DEBUG && Array.isArray(conversationsList) && conversationsList.length > 0) {
+          console.log('Found conversations list:', conversationsList);
+          if (process.env.NODE_ENV !== 'production' && Array.isArray(conversationsList) && conversationsList.length > 0) {
             console.log('[ConversationList] Raw first conversation:', conversationsList[0]);
           }
           
@@ -151,30 +97,24 @@ export default function ConversationList({
             return {
               // Use backend internal GUID for routing
               id: conv.id,
-              // Do not append email in parentheses; show clean name only
-              contactName: name,
+              contactName: isWidget && conv.customerEmail ? `${name} (${conv.customerEmail})` : name,
               contactPhone: conv.customerPhone || conv.phoneNumber || '',
               lastMessage: conv.lastMessagePreview || conv.lastMessage || '',
               lastMessageTime: new Date(conv.lastMessageAt || conv.updatedAt || conv.createdAt),
               source: source,
               sessionId: conv.sessionId,
               customerEmail: conv.customerEmail,
-              // keep status if backend provides it so we can filter client-side
-              // @ts-expect-error extend shape
-              status: conv.status || conv.Status || undefined,
               unreadCount: conv.unreadCount || 0,
               isOnline: conv.isOnline || false,
               avatar: (rawAvatar && String(rawAvatar).trim().length > 0) ? String(rawAvatar) : null,
             } as Conversation;
           });
-          if (DEBUG) console.log('Formatted conversations:', formattedConversations);
-          // Hide closed/archived conversations from the list
-          const activeConversations = formattedConversations.filter((c: any) => c.status !== 'closed' && c.status !== 'archived');
-          if (activeConversations.length > 0) {
-            if (mountedRef.current) setConversations(activeConversations);
-            lastNonEmptyRef.current = activeConversations;
+          console.log('Formatted conversations:', formattedConversations);
+          if (formattedConversations.length > 0) {
+            if (mountedRef.current) setConversations(formattedConversations);
+            lastNonEmptyRef.current = formattedConversations;
           } else if (lastNonEmptyRef.current && lastNonEmptyRef.current.length > 0) {
-            if (DEBUG) console.log('[ConversationList] Empty response ignored to prevent flicker');
+            console.log('[ConversationList] Empty response ignored to prevent flicker');
             if (mountedRef.current) setConversations(lastNonEmptyRef.current);
           } else {
             // Primera carga y vacío: forzar sync backend y reintentar
@@ -194,7 +134,7 @@ export default function ConversationList({
             }
           }
         } else {
-          if (DEBUG) console.log('No conversations found in response; keeping current state');
+          console.log('No conversations found in response; keeping current state');
         }
       } else {
         console.error('Failed to load conversations, status:', res.status);
@@ -238,10 +178,7 @@ export default function ConversationList({
       const matchesSearch = conv.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            conv.contactPhone.includes(searchQuery) ||
                            conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter =
-        filter === 'all' ||
-        (filter === 'unread' && conv.unreadCount > 0) ||
-        (filter === 'widget' && (conv.source === 'widget'));
+      const matchesFilter = filter === 'all' || (filter === 'unread' && conv.unreadCount > 0);
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
@@ -334,16 +271,6 @@ export default function ConversationList({
             }`}
           >
             No leídas ({conversations.filter(c => c.unreadCount > 0).length})
-          </button>
-          <button
-            onClick={() => setFilter('widget')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'widget'
-                ? 'bg-purple-600 text-white'
-                : `${themeColors.inputText} opacity-70 ${themeColors.hover}`
-            }`}
-          >
-            Widget ({conversations.filter(c => c.source === 'widget').length})
           </button>
         </div>
       </div>

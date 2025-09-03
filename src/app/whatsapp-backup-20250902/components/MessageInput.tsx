@@ -16,17 +16,15 @@ import type { ChatTheme } from './ThemeSelector';
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   theme?: ChatTheme;
-  isSending?: boolean; // disable send during in-flight
 }
 
-export default function MessageInput({ onSendMessage, theme, isSending = false }: MessageInputProps) {
+export default function MessageInput({ onSendMessage, theme }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
-    if (isSending) return;
     if (message.trim()) {
       onSendMessage(message.trim());
       setMessage('');
@@ -38,10 +36,6 @@ export default function MessageInput({ onSendMessage, theme, isSending = false }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (isSending) {
-      e.preventDefault();
-      return;
-    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -154,8 +148,7 @@ export default function MessageInput({ onSendMessage, theme, isSending = false }
         {message.trim() ? (
           <button
             onClick={handleSend}
-            disabled={isSending}
-            className={`p-2 text-white rounded-lg transition-colors ${isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
+            className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
           >
             <Send className="h-5 w-5" />
           </button>
