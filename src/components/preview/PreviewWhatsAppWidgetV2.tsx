@@ -282,7 +282,7 @@ export default function PreviewWhatsAppWidgetV2({
             // Avanzar cursor de polling al último timestamp de servidor visto
             const maxServerTs = Math.max(
               lastServerTsRef.current,
-              ...newMessages.map(nm => nm.timestamp.getTime())
+              ...newMessages.map((nm: any) => nm.timestamp.getTime())
             );
             if (isFinite(maxServerTs) && maxServerTs > lastServerTsRef.current) {
               lastServerTsRef.current = maxServerTs;
