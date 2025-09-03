@@ -44,6 +44,7 @@ export default function MessageView({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
   const inFlightRef = useRef<boolean>(false);
+  const refreshPendingRef = useRef<boolean>(false);
   const sendInFlightRef = useRef<boolean>(false);
   const lastSentRef = useRef<{ content: string; at: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
