@@ -563,11 +563,12 @@ export default function PreviewWhatsAppWidgetV2({
                   >
                     <div
                       className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                        // Cliente (isFromMe) → burbuja claro; Agente → color primario
                         message.isFromMe
-                          ? 'text-white'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-gray-50 text-gray-900'
+                          : 'text-white'
                       }`}
-                      style={message.isFromMe ? { backgroundColor: widgetConfig.primaryColor } : {}}
+                      style={!message.isFromMe ? { backgroundColor: widgetConfig.primaryColor } : {}}
                     >
                       {message.agentName && !message.isFromMe && (
                         <div className="text-xs opacity-70 mb-1">{message.agentName}</div>

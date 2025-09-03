@@ -30,7 +30,7 @@ export default function ConversationList({
   const [loading, setLoading] = useState(true);
   const mountedRef = useRef<boolean>(false);
   const firstSyncAttemptedRef = useRef<boolean>(false);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'widget'>('all');
+  const [filter, setFilter] = useState<'all' | 'widget' | 'unread'>('all');
   const autoSelectedRef = useRef<boolean>(false);
 
   useEffect(() => {
@@ -240,8 +240,8 @@ export default function ConversationList({
                            conv.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter =
         filter === 'all' ||
-        (filter === 'unread' && conv.unreadCount > 0) ||
-        (filter === 'widget' && (conv.source === 'widget'));
+        (filter === 'widget' && (conv.source === 'widget')) ||
+        (filter === 'unread' && conv.unreadCount > 0);
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
@@ -326,16 +326,6 @@ export default function ConversationList({
             Todas ({conversations.length})
           </button>
           <button
-            onClick={() => setFilter('unread')}
-            className={`px-3 py-1 text-sm rounded-full ${
-              filter === 'unread'
-                ? 'bg-blue-600 text-white'
-                : `${themeColors.inputText} opacity-70 ${themeColors.hover}`
-            }`}
-          >
-            No leídas ({conversations.filter(c => c.unreadCount > 0).length})
-          </button>
-          <button
             onClick={() => setFilter('widget')}
             className={`px-3 py-1 text-sm rounded-full ${
               filter === 'widget'
@@ -344,6 +334,16 @@ export default function ConversationList({
             }`}
           >
             Widget ({conversations.filter(c => c.source === 'widget').length})
+          </button>
+          <button
+            onClick={() => setFilter('unread')}
+            className={`px-3 py-1 text-sm rounded-full ${
+              filter === 'unread'
+                ? 'bg-blue-600 text-white'
+                : `${themeColors.inputText} opacity-70 ${themeColors.hover}`
+            }`}
+          >
+            No leídas ({conversations.filter(c => c.unreadCount > 0).length})
           </button>
         </div>
       </div>

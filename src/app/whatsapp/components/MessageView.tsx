@@ -137,7 +137,7 @@ export default function MessageView({
       const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
       // Prefer messages endpoint first for fastest history display
-      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=100`);
+      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
         if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
@@ -160,7 +160,7 @@ export default function MessageView({
             const prevTsMap = new Map<string, number>();
             for (const m of messages) prevTsMap.set(String(m.id), m.timestamp.getTime());
 
-            const formatted: Message[] = raw.map((msg: any) => {
+          const formatted: Message[] = raw.map((msg: any) => {
               const dir = (msg.direction || '').toLowerCase();
               const from = msg.from || msg.From;
               // Use server-provided direction when available; only fallback to from/phone heuristic if missing
@@ -177,10 +177,10 @@ export default function MessageView({
                 timestamp: new Date(stableTs || Date.now()),
                 isFromMe: isOutbound,
                 status: msg.status || 'sent',
-                type: msg.messageType || msg.type || 'text',
+                type: msg.messageType || msg.type || (msg.mediaUrl ? inferTypeFromUrl(String(msg.mediaUrl)) : 'text'),
                 mediaUrl: msg.mediaUrl || msg.mediaURL || null,
               } as Message;
-            });
+          });
             // Preserve any optimistic local messages newer than server payload
             const maxServerTs = formatted.reduce((acc, m) => Math.max(acc, m.timestamp.getTime()), 0);
             // Build merged list using current state as base for preserved temps
@@ -250,6 +250,11 @@ export default function MessageView({
             prevFingerprintRef.current = fingerprint;
             if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
             setMessages(merged);
+            // Notify sidebar to reorder based on recent activity
+            try {
+              const last = merged.length > 0 ? merged[merged.length - 1].timestamp : new Date();
+              window.dispatchEvent(new CustomEvent('whatsapp:conversationUpdated', { detail: { id: conversation.id, lastMessageTime: last } }));
+            } catch {}
             // Restore scroll offset for readers not at bottom
             if (el && !stickToBottomRef.current) {
               // Next tick to allow layout update
@@ -450,6 +455,16 @@ export default function MessageView({
     }
   };
 
+  const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
+
+  const inferTypeFromUrl = (url: string): 'text' | 'image' | 'video' | 'audio' | 'file' => {
+    const u = url.toLowerCase();
+    if (u.match(/\.(png|jpg|jpeg|gif|webp)(\?|$)/)) return 'image';
+    if (u.match(/\.(mp4|webm|mov|m4v)(\?|$)/)) return 'video';
+    if (u.match(/\.(mp3|wav|ogg|m4a)(\?|$)/)) return 'audio';
+    return 'file';
+  };
+
   const getInitials = (name: string): string => {
     return name
       .split(' ')
@@ -597,7 +612,8 @@ export default function MessageView({
                                 <img
                                   src={message.mediaUrl}
                                   alt={message.content || 'image'}
-                                  className="w-auto h-auto"
+                                  className="w-auto h-auto cursor-zoom-in"
+                                  onClick={() => openViewer(message.mediaUrl!, 'image')}
                                   style={{
                                     maxWidth: `${mediaSettings.imageMaxWidth}px`,
                                     maxHeight: `${mediaSettings.imageMaxHeight}px`,
@@ -610,13 +626,20 @@ export default function MessageView({
                                   src={message.mediaUrl}
                                   controls
                                   playsInline
-                                  className="h-auto"
+                                  className="h-auto cursor-zoom-in"
+                                  onClick={() => openViewer(message.mediaUrl!, 'video')}
                                   style={{
                                     width: `${mediaSettings.videoMaxWidth}px`,
                                     maxHeight: `${mediaSettings.videoMaxHeight}px`,
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                />
+                              ) : message.type?.toLowerCase().includes('audio') ? (
+                                <audio
+                                  src={message.mediaUrl}
+                                  controls
+                                  className="w-64"
                                 />
                               ) : (
                                 <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
