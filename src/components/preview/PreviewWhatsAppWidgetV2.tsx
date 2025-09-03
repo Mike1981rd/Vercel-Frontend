@@ -472,7 +472,7 @@ export default function PreviewWhatsAppWidgetV2({
       };
       await fetch(getApiEndpoint('/whatsapp/widget/message'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       // Show locally as fromMe
-      const tempMessage: Message = { id: `temp_${Date.now()}`, body: mediaUrl, isFromMe: true, timestamp: new Date(), status: 'sent' };
+      const tempMessage: Message = { id: `temp_${Date.now()}`, body: mediaUrl, isFromMe: true, timestamp: new Date(), status: 'sent', messageType: mediaType, mediaUrl };
       setMessages(prev => [...prev, tempMessage]);
     } catch (err) {
       console.error('Attach error:', err);
@@ -620,10 +620,10 @@ export default function PreviewWhatsAppWidgetV2({
                         <div className="text-xs opacity-70 mb-1">{message.agentName}</div>
                       )}
                       <div className="text-sm">
-                        {(!message.isFromMe && message.mediaUrl && (message.messageType || '').toLowerCase().includes('image')) ? (
+                        {(message.mediaUrl && (message.messageType || '').toLowerCase().includes('image')) ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={message.mediaUrl} alt="imagen" className="max-w-[240px] rounded-md" />
-                        ) : (!message.isFromMe && message.mediaUrl && (message.messageType || '').toLowerCase().includes('video')) ? (
+                        ) : (message.mediaUrl && (message.messageType || '').toLowerCase().includes('video')) ? (
                           <video src={message.mediaUrl} controls className="max-w-[240px] rounded-md" />
                         ) : (
                           message.body
