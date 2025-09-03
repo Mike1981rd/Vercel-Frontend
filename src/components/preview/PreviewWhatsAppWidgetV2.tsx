@@ -111,6 +111,7 @@ export default function PreviewWhatsAppWidgetV2({
   });
   const [lastPollTime, setLastPollTime] = useState<Date>(new Date());
   const lastPollRef = useRef<Date>(new Date());
+  const conversationIdRef = useRef<string | null>(null);
   const seenServerIdsRef = useRef<Set<string>>(new Set());
   const lastServerTsRef = useRef<number>(0);
   const lastSentRef = useRef<{ body: string; at: number } | null>(null);
@@ -118,6 +119,16 @@ export default function PreviewWhatsAppWidgetV2({
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout>();
+
+  // Load stored conversationId on mount
+  useEffect(() => {
+    try {
+      const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || 'default';
+      const key = `wb_widget_conversation_v1_${companyId}`;
+      const stored = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+      if (stored) conversationIdRef.current = stored;
+    } catch {}
+  }, []);
 
   // Mobile resize handler
   useEffect(() => {
@@ -189,8 +200,9 @@ export default function PreviewWhatsAppWidgetV2({
         const baseMs = lastServerTsRef.current || currentPollTime.getTime();
         const sinceMs = Math.max(0, baseMs - 30000);
         const sinceIso = new Date(sinceMs).toISOString();
+        const convoParam = conversationIdRef.current ? `&conversationId=${encodeURIComponent(conversationIdRef.current)}` : '';
         const res = await fetch(
-          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${sinceIso}`),
+          getApiEndpoint(`/whatsapp/widget/session/${sessionId}/messages?since=${sinceIso}${convoParam}`),
           { method: 'GET' }
         );
         
@@ -384,6 +396,19 @@ export default function PreviewWhatsAppWidgetV2({
       });
 
       if (res.ok) {
+        // Try to persist conversationId from server response for stable polling
+        try {
+          const data = await res.json();
+          const newConversationId = data?.data?.conversationId || data?.conversationId;
+          if (newConversationId) {
+            conversationIdRef.current = String(newConversationId);
+            try {
+              const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || 'default';
+              const key = `wb_widget_conversation_v1_${companyId}`;
+              localStorage.setItem(key, conversationIdRef.current);
+            } catch {}
+          }
+        } catch {}
         lastSentRef.current = { body: messageToSend, at: now };
         // Update message status
         setMessages(prev => 
