@@ -95,6 +95,7 @@ export default function PreviewWhatsAppWidgetV2({
   const [formErrors, setFormErrors] = useState({ name: '', email: '' });
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId] = useState(() => {
     try {
@@ -436,6 +437,47 @@ export default function PreviewWhatsAppWidgetV2({
     }
   };
 
+  const handleAttachClick = () => {
+    fileInputRef.current?.setAttribute('accept', 'image/*,video/*');
+    fileInputRef.current?.click();
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      // Upload to backend
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(getApiEndpoint('/MediaUpload/media').replace('/api', '/api'), { method: 'POST', body: form });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      const mediaUrl = data?.url as string;
+      const mediaType = (data?.type as string) || 'document';
+      // Send inbound widget message with media
+      const payload = {
+        message: mediaUrl,
+        sessionId,
+        pageUrl: typeof window !== 'undefined' ? window.location.href : '',
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+        clientMessageId: `temp_${Date.now()}`,
+        mediaUrl,
+        messageType: mediaType,
+        customerName: formData.name || undefined,
+        customerEmail: formData.email || undefined,
+      };
+      await fetch(getApiEndpoint('/whatsapp/widget/message'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      // Show locally as fromMe
+      const tempMessage: Message = { id: `temp_${Date.now()}`, body: mediaUrl, isFromMe: true, timestamp: new Date(), status: 'sent' };
+      setMessages(prev => [...prev, tempMessage]);
+    } catch (err) {
+      console.error('Attach error:', err);
+      alert('Error al adjuntar archivo');
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   // Handle close chat
   const handleCloseChat = () => {
     setShowChat(false);
@@ -606,7 +648,13 @@ export default function PreviewWhatsAppWidgetV2({
                 </div>
               ) : (
                 <div className="p-4 border-t bg-white flex-shrink-0">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-end">
+                    <input ref={fileInputRef} type="file" className="hidden" onChange={onFileChange} />
+                    <button onClick={handleAttachClick} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200" title="Adjuntar">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 11-2.83-2.83l8.49-8.49" />
+                      </svg>
+                    </button>
                     <input
                       type="text"
                       value={inputMessage}

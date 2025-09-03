@@ -723,7 +723,40 @@ export default function MessageView({
 
       {/* Message Input */}
       <div className={`flex-shrink-0 border-t ${themeColors.border}`}>
-        <MessageInput onSendMessage={handleSendMessage} theme={theme} isSending={sendInFlightRef.current} />
+        <MessageInput onSendMessage={handleSendMessage} onSendMedia={async (file: File) => {
+          try {
+            const token = localStorage.getItem('token');
+            const form = new FormData();
+            form.append('file', file);
+            // Upload to media endpoint (image/video)
+            const uploadRes = await fetch(getApiEndpoint('/MediaUpload/media').replace('/api', '/api'), {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token || ''}` },
+              body: form,
+            });
+            if (!uploadRes.ok) throw new Error('Upload failed');
+            const upload = await uploadRes.json();
+            const mediaUrl = upload?.url as string;
+            const mediaType = (upload?.type as string) || 'document';
+
+            if (conversation.source === 'widget') {
+              // Send to widget conversation respond
+              const endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/respond`);
+              const clientMessageId = `cm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              const payload = { message: mediaUrl, messageType: mediaType, mediaUrl, clientMessageId, sessionId: conversation.sessionId || undefined };
+              await fetch(endpoint, { method: 'POST', headers: { 'Authorization': `Bearer ${token || ''}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            } else {
+              // WhatsApp provider send with media
+              const endpoint = getApiEndpoint('/whatsapp/send');
+              const payload = { to: conversation.contactPhone, body: '', mediaUrl, messageType: mediaType };
+              await fetch(endpoint, { method: 'POST', headers: { 'Authorization': `Bearer ${token || ''}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            }
+            // Trigger refresh
+            loadMessages(true);
+          } catch (e) {
+            alert('Error adjuntando archivo');
+          }
+        }} theme={theme} isSending={sendInFlightRef.current} />
       </div>
       {viewer.open && viewer.url && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center" onClick={closeViewer}>
