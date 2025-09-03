@@ -89,6 +89,19 @@ export default function ConversationList({
       } catch {}
     };
     window.addEventListener('whatsapp:conversationOpened', onOpened as EventListener);
+    // Reorder list immediately on conversation updates (message sent/received)
+    const onUpdated = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { id?: string; lastMessageTime?: string | Date } | undefined;
+        const id = detail?.id;
+        if (!id) return;
+        setConversations(prev => {
+          const updated = prev.map(c => c.id === id ? { ...c, lastMessageTime: detail?.lastMessageTime ? new Date(detail.lastMessageTime as any) : new Date() } : c);
+          return updated.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+        });
+      } catch {}
+    };
+    window.addEventListener('whatsapp:conversationUpdated', onUpdated as EventListener);
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -98,6 +111,7 @@ export default function ConversationList({
       mountedRef.current = false;
       window.removeEventListener('whatsapp:conversationClosed', onClosed as EventListener);
       window.removeEventListener('whatsapp:conversationOpened', onOpened as EventListener);
+      window.removeEventListener('whatsapp:conversationUpdated', onUpdated as EventListener);
       window.removeEventListener('focus', onFocus);
       if (syncIntervalRef.current) {
         clearInterval(syncIntervalRef.current);
