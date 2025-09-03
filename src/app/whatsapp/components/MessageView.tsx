@@ -477,8 +477,6 @@ export default function MessageView({
     }
   };
 
-  const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
-
   const inferTypeFromUrl = (url: string): 'text' | 'image' | 'video' | 'audio' | 'file' => {
     const u = url.toLowerCase();
     if (u.match(/\.(png|jpg|jpeg|gif|webp)(\?|$)/)) return 'image';
