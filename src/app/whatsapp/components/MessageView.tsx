@@ -6,7 +6,7 @@ import {
   MoreVertical, 
   Check,
   CheckCheck,
-  X
+  Trash2
 } from 'lucide-react';
 import MessageInput from './MessageInput';
 import { useI18n } from '@/contexts/I18nContext';
@@ -409,11 +409,20 @@ export default function MessageView({
     
     try {
       const token = localStorage.getItem('token');
-      const endpoint = getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/close`);
-      const body = {
-        sessionId: conversation.sessionId || '',
-        status: 'closed'
-      };
+      // Use different endpoint based on conversation source
+      const endpoint = conversation.source === 'widget' 
+        ? getApiEndpoint(`/whatsapp/widget/conversation/${conversation.id}/close`)
+        : getApiEndpoint(`/whatsapp/conversations/${conversation.id}/close`);
+      
+      const body = conversation.source === 'widget' 
+        ? {
+            sessionId: conversation.sessionId || '',
+            status: 'closed'
+          }
+        : {
+            status: 'closed'
+          };
+      
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -424,19 +433,21 @@ export default function MessageView({
       });
 
       if (res.ok) {
-        alert('Conversación cerrada exitosamente');
-        // Notificar a otros componentes (lista) para que refresquen y/o remuevan la conversación
+        // No alert - smooth transition
+        // Notify other components to remove conversation with animation
         try {
           window.dispatchEvent(new CustomEvent('whatsapp:conversationClosed', { detail: { id: conversation.id } }));
         } catch {}
-        // Recargar mensajes por si el backend marca estado
-        loadMessages();
-        // Volver atrás para salir del detalle de la conversación
-        if (onBack) {
-          onBack();
-        }
+        
+        // Small delay for visual feedback before going back
+        setTimeout(() => {
+          if (onBack) {
+            onBack();
+          }
+        }, 200);
       } else {
-        alert('Error al cerrar la conversación');
+        // Optional: Use a toast notification instead of alert
+        console.error('Error al cerrar la conversación');
       }
     } catch (error) {
       console.error('Error closing conversation:', error);
@@ -524,12 +535,43 @@ export default function MessageView({
     messageOutgoingText: 'text-white'
   };
 
-  // Delete a message locally (UI-only)
-  const handleDeleteMessage = (id: string) => {
-    setMessages(prev => prev.filter(m => String(m.id) !== String(id)));
-    if (messagesCacheRef) {
-      const cache = messagesCacheRef.current[conversation.id] || [];
-      messagesCacheRef.current[conversation.id] = cache.filter(m => String(m.id) !== String(id));
+  // Delete a message (soft delete)
+  const handleDeleteMessage = async (id: string) => {
+    try {
+      // For WhatsApp messages, call API to persist deletion
+      if (conversation.source === 'whatsapp' || conversation.source === 'widget') {
+        const token = localStorage.getItem('token');
+        const response = await fetch(getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages/${id}`), {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token || ''}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete message');
+        }
+      }
+
+      // Update UI immediately - show as deleted like WhatsApp
+      setMessages(prev => prev.map(m => 
+        String(m.id) === String(id)
+          ? { ...m, content: '🗑️ Este mensaje fue eliminado', isDeleted: true }
+          : m
+      ));
+
+      // Update cache
+      if (messagesCacheRef) {
+        const cache = messagesCacheRef.current[conversation.id] || [];
+        messagesCacheRef.current[conversation.id] = cache.map(m => 
+          String(m.id) === String(id)
+            ? { ...m, content: '🗑️ Este mensaje fue eliminado', isDeleted: true }
+            : m
+        );
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      // Optionally show error toast/notification
     }
   };
 
@@ -567,15 +609,15 @@ export default function MessageView({
         </div>
 
         <div className="flex items-center space-x-1">
-          {/* Close conversation button - only for widget conversations */}
-          {conversation.source === 'widget' && (
+          {/* Close conversation button - for both widget and whatsapp conversations */}
+          {(conversation.source === 'widget' || conversation.source === 'whatsapp') && (
             <button 
               onClick={handleCloseConversation}
-              className={`p-1.5 ${themeColors.hover} rounded-lg transition-colors`}
-              aria-label="Cerrar conversación"
-              title="Cerrar conversación"
+              className={`p-1.5 ${themeColors.hover} rounded-lg transition-all group hover:bg-red-50 dark:hover:bg-red-900/20`}
+              aria-label="Eliminar conversación"
+              title="Eliminar conversación"
             >
-              <X className={`h-5 w-5 ${themeColors.inputText} opacity-60 hover:opacity-100`} />
+              <Trash2 className={`h-4 w-4 ${themeColors.inputText} opacity-60 group-hover:opacity-100 group-hover:text-red-500 transition-all`} />
             </button>
           )}
           
@@ -676,7 +718,7 @@ export default function MessageView({
                             </div>
                           ) : null}
                           {message.content && (
-                            <p className="text-sm whitespace-pre-wrap break-normal">
+                            <p className={`text-sm whitespace-pre-wrap break-normal ${message.isDeleted ? 'italic opacity-60' : ''}`}>
                               {message.content}
                             </p>
                           )}
@@ -684,18 +726,20 @@ export default function MessageView({
                             <span className="text-xs">
                               {formatTime(message.timestamp)}
                             </span>
-                            {message.isFromMe && renderMessageStatus(message.status)}
+                            {message.isFromMe && !message.isDeleted && renderMessageStatus(message.status)}
                           </div>
                         </div>
-                        {/* Delete button: visible on hover (desktop only) to avoid accidental taps */}
-                        <button
-                          onClick={() => handleDeleteMessage(String(message.id))}
-                          className="hidden md:flex absolute -top-2 -right-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full w-5 h-5 items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Eliminar"
-                          aria-label="Eliminar mensaje"
-                        >
-                          ×
-                        </button>
+                        {/* Delete button: visible on hover for WhatsApp messages, always hidden for deleted messages */}
+                        {!message.isDeleted && (conversation.source === 'whatsapp' || conversation.source === 'widget') && (
+                          <button
+                            onClick={() => handleDeleteMessage(String(message.id))}
+                            className="absolute -top-2 -right-2 bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-600 rounded-full w-6 h-6 flex items-center justify-center text-sm md:opacity-0 md:group-hover:opacity-100 transition-all shadow-sm"
+                            title="Eliminar mensaje"
+                            aria-label="Eliminar mensaje"
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

@@ -26,6 +26,7 @@ export default function ConversationList({
   const DEBUG = false;
   const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [closingConversations, setClosingConversations] = useState<Set<string>>(new Set());
   const lastNonEmptyRef = useRef<Conversation[] | null>(null);
   const intervalRef = useRef<number | null>(null);
   const syncIntervalRef = useRef<number | null>(null);
@@ -68,12 +69,25 @@ export default function ConversationList({
         const detail = (e as CustomEvent).detail as { id?: string } | undefined;
         const closedId = detail?.id;
         if (!closedId) return;
-        setConversations(prev => prev.filter(c => c.id !== closedId));
-        if (lastNonEmptyRef.current) {
-          lastNonEmptyRef.current = lastNonEmptyRef.current.filter(c => c.id !== closedId);
-        }
+        
+        // Add to closing set for animation
+        setClosingConversations(prev => new Set(prev).add(closedId));
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          setConversations(prev => prev.filter(c => c.id !== closedId));
+          setClosingConversations(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(closedId);
+            return newSet;
+          });
+          if (lastNonEmptyRef.current) {
+            lastNonEmptyRef.current = lastNonEmptyRef.current.filter(c => c.id !== closedId);
+          }
+        }, 300); // Match animation duration
+        
         // Trigger a background refresh to reflect backend state
-        setTimeout(() => { if (mountedRef.current) loadConversations(); }, 300);
+        setTimeout(() => { if (mountedRef.current) loadConversations(); }, 600);
       } catch {}
     };
     window.addEventListener('whatsapp:conversationClosed', onClosed as EventListener);
@@ -409,7 +423,9 @@ export default function ConversationList({
           </div>
         ) : (
           <>
-            {filteredConversations.map((conversation) => (
+            {filteredConversations.map((conversation) => {
+              const isClosing = closingConversations.has(conversation.id);
+              return (
               <button
                 key={conversation.id}
                 onClick={async () => {
@@ -438,10 +454,12 @@ export default function ConversationList({
                   } catch {}
                   onSelectConversation(conversation);
                 }}
-                className={`w-full p-4 flex items-start transition-colors ${
+                className={`w-full p-4 flex items-start transition-all duration-300 ease-out ${
                   selectedConversation?.id === conversation.id
                     ? 'bg-blue-600/20 border-l-4 border-blue-500'
                     : themeColors.hover
+                } ${
+                  isClosing ? 'opacity-0 scale-95 max-h-0 overflow-hidden' : 'opacity-100 scale-100'
                 }`}
               >
                 {/* Avatar */}
@@ -486,7 +504,8 @@ export default function ConversationList({
                   </div>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </>
         )}
       </div>

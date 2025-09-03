@@ -34,6 +34,7 @@ export interface Message {
   status?: 'sent' | 'delivered' | 'read';
   type: 'text' | 'image' | 'file' | 'location';
   mediaUrl?: string;
+  isDeleted?: boolean;
 }
 
 export default function ChatRoom() {
