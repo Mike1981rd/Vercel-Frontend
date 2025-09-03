@@ -42,7 +42,8 @@ export default function ConversationList({
     loadConversations();
     // Guard against double effect in React StrictMode; poll every 10s for recency
     if (!intervalRef.current) {
-      intervalRef.current = window.setInterval(loadConversations, 10000);
+      // Poll more frequently to align ordering with device
+      intervalRef.current = window.setInterval(loadConversations, 5000);
     }
     // Refresh on window focus (user returns to tab)
     const onFocus = () => loadConversations();
