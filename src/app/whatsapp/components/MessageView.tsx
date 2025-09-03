@@ -52,6 +52,10 @@ export default function MessageView({
   const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
   const prevFingerprintRef = useRef<string | null>(null);
   const currentMessagesRef = useRef<Message[]>([]);
+  // Media viewer overlay (image/video)
+  const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
+  const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
+  const closeViewer = () => setViewer({ open: false, url: null, type: null });
 
   useEffect(() => {
     // Reset per-conversation state to avoid cross-contamination
@@ -106,6 +110,24 @@ export default function MessageView({
       el.removeEventListener('scroll', onScroll as any);
     };
   }, []);
+
+  // Reload messages promptly when sidebar reports recent activity on this conversation
+  useEffect(() => {
+    const onUpdated = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { id?: string; lastMessageTime?: string | Date } | undefined;
+        if (!detail?.id || detail.id !== conversation.id) return;
+        // Quick check: if incoming timestamp is newer than our last, reload
+        const lastLocal = currentMessagesRef.current.length > 0 ? currentMessagesRef.current[currentMessagesRef.current.length - 1].timestamp.getTime() : 0;
+        const incomingTs = detail.lastMessageTime ? new Date(detail.lastMessageTime as any).getTime() : Date.now();
+        if (incomingTs > lastLocal) {
+          setTimeout(() => loadMessages(), 150); // small debounce
+        }
+      } catch {}
+    };
+    window.addEventListener('whatsapp:conversationUpdated', onUpdated as EventListener);
+    return () => window.removeEventListener('whatsapp:conversationUpdated', onUpdated as EventListener);
+  }, [conversation.id]);
 
   // Load media settings
   useEffect(() => {
@@ -698,6 +720,20 @@ export default function MessageView({
       <div className={`flex-shrink-0 border-t ${themeColors.border}`}>
         <MessageInput onSendMessage={handleSendMessage} theme={theme} isSending={sendInFlightRef.current} />
       </div>
+      {viewer.open && viewer.url && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center" onClick={closeViewer}>
+          <div className="max-w-4xl max-h-[90vh] p-2" onClick={(e) => e.stopPropagation()}>
+            {viewer.type === 'image' && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewer.url} alt="media" className="max-w-full max-h-[88vh] rounded-md" />
+            )}
+            {viewer.type === 'video' && (
+              <video src={viewer.url} controls autoPlay className="max-w-full max-h-[88vh] rounded-md" />
+            )}
+          </div>
+          <button className="absolute top-4 right-4 text-white text-2xl" onClick={closeViewer} aria-label="Cerrar">×</button>
+        </div>
+      )}
     </div>
   );
 }

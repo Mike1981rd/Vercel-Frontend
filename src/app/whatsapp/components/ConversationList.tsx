@@ -173,6 +173,13 @@ export default function ConversationList({
           if (activeConversations.length > 0) {
             if (mountedRef.current) setConversations(activeConversations);
             lastNonEmptyRef.current = activeConversations;
+            // Notificar que la conversación seleccionada puede haber cambiado su último mensaje
+            try {
+              const selected = selectedConversation ? activeConversations.find(c => c.id === selectedConversation.id) : activeConversations[0];
+              if (selected) {
+                window.dispatchEvent(new CustomEvent('whatsapp:conversationUpdated', { detail: { id: selected.id, lastMessageTime: selected.lastMessageTime } }));
+              }
+            } catch {}
           } else if (lastNonEmptyRef.current && lastNonEmptyRef.current.length > 0) {
             if (DEBUG) console.log('[ConversationList] Empty response ignored to prevent flicker');
             if (mountedRef.current) setConversations(lastNonEmptyRef.current);
