@@ -800,7 +800,7 @@ export default function MessageView({
           } catch (e) {
             alert('Error adjuntando archivo');
           }
-        }} theme={theme} isSending={sendInFlightRef.current} />
+        }} theme={theme} />
       </div>
       {viewer.open && viewer.url && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center" onClick={closeViewer}>
