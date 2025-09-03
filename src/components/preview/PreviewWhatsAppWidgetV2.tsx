@@ -28,6 +28,8 @@ interface Message {
   timestamp: Date;
   status?: string;
   agentName?: string;
+  messageType?: string;
+  mediaUrl?: string;
 }
 
 interface PreviewWhatsAppWidgetProps {
@@ -217,7 +219,9 @@ export default function PreviewWhatsAppWidgetV2({
               isFromMe: !msg.isFromMe,
               timestamp: new Date(msg.timestamp),
               status: msg.status,
-              agentName: msg.agentName
+              agentName: msg.agentName,
+              messageType: msg.messageType || 'text',
+              mediaUrl: msg.mediaUrl || null
             }));
             
             // Debug: Log messages to see what's coming from server
@@ -615,7 +619,16 @@ export default function PreviewWhatsAppWidgetV2({
                       {message.agentName && !message.isFromMe && (
                         <div className="text-xs opacity-70 mb-1">{message.agentName}</div>
                       )}
-                      <div className="text-sm">{message.body}</div>
+                      <div className="text-sm">
+                        {(!message.isFromMe && message.mediaUrl && (message.messageType || '').toLowerCase().includes('image')) ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={message.mediaUrl} alt="imagen" className="max-w-[240px] rounded-md" />
+                        ) : (!message.isFromMe && message.mediaUrl && (message.messageType || '').toLowerCase().includes('video')) ? (
+                          <video src={message.mediaUrl} controls className="max-w-[240px] rounded-md" />
+                        ) : (
+                          message.body
+                        )}
+                      </div>
                       <div className="text-xs opacity-70 mt-1">
                         {new Date(message.timestamp).toLocaleTimeString('es', { 
                           hour: '2-digit', 
