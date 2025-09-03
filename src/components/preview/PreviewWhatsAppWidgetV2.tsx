@@ -215,8 +215,8 @@ export default function PreviewWhatsAppWidgetV2({
             const newMessages = data.data.map((msg: any) => ({
               id: String(msg.id),
               body: msg.body,
-              // In widget UI, "me" is the customer; invert server flag (server true=agent outbound)
-              isFromMe: !msg.isFromMe,
+              // Server returns isFromMe=false for agent outbound; do not invert
+              isFromMe: !!msg.isFromMe,
               timestamp: new Date(msg.timestamp),
               status: msg.status,
               agentName: msg.agentName,
@@ -450,10 +450,10 @@ export default function PreviewWhatsAppWidgetV2({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      // Upload to backend
+      // Upload to backend (public endpoint for widget)
       const form = new FormData();
       form.append('file', file);
-      const res = await fetch(getApiEndpoint('/MediaUpload/media').replace('/api', '/api'), { method: 'POST', body: form });
+      const res = await fetch(getApiEndpoint('/public/media/media'), { method: 'POST', body: form });
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();
       const mediaUrl = data?.url as string;
