@@ -145,12 +145,15 @@ export default function MessageView({
   }, []);
 
   // Load messages from API (mocks only when NEXT_PUBLIC_USE_MOCKS==='true')
-  const loadMessages = async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-    if (abortRef.current) {
-      abortRef.current.abort();
+  const loadMessages = async (force: boolean = false) => {
+    if (inFlightRef.current && !force) {
+      refreshPendingRef.current = true;
+      return;
     }
+    if (force && abortRef.current) {
+      try { abortRef.current.abort(); } catch {}
+    }
+    inFlightRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -309,10 +312,13 @@ export default function MessageView({
       if (error?.name !== 'AbortError') {
         console.error('[MessageView] Error loading messages:', error);
       }
-      // Do not use mocks by default
     } finally {
       setLoading(false);
       inFlightRef.current = false;
+      if (refreshPendingRef.current) {
+        refreshPendingRef.current = false;
+        setTimeout(() => loadMessages(true), 50);
+      }
     }
   };
 
