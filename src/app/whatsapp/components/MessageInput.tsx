@@ -21,7 +21,9 @@ interface MessageInputProps {
 
 export default function MessageInput({ onSendMessage, theme, isSending = false }: MessageInputProps) {
   const [message, setMessage] = useState('');
+  // Attachment menu intentionally hidden per requirements
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,11 +66,7 @@ export default function MessageInput({ onSendMessage, theme, isSending = false }
     alert(`Adjuntar ${type} - Por implementar`);
   };
 
-  const handleEmoji = () => {
-    // TODO: Implement emoji picker
-    // For now, just add a sample emoji
-    setMessage(prev => prev + ' 😊');
-  };
+  const handleEmoji = () => setShowEmojiPicker(prev => !prev);
 
   const handleVoiceRecord = () => {
     setIsRecording(!isRecording);
@@ -86,55 +84,56 @@ export default function MessageInput({ onSendMessage, theme, isSending = false }
     hover: 'hover:bg-gray-100'
   };
 
+  // Simple inlined emoji set (no external deps)
+  const EMOJIS = [
+    '😀','😃','😄','😁','😆','😅','😂','🙂','😉','😊','😍','😘','😋','😎','🤩','🤗',
+    '🤔','😐','😴','😮','😲','😭','😡','👍','👎','🙏','👏','💪','🔥','✨','🎉','✅','❌'
+  ];
+
   return (
     <div className={`p-4 ${themeColors.inputBg}`}>
-      {/* Attachment Menu */}
-      {showAttachMenu && (
-        <div className={`absolute bottom-20 left-4 ${themeColors.inputBg} rounded-lg shadow-lg border ${themeColors.border} p-2 z-10`}>
-          <button
-            onClick={() => handleAttachment('image')}
-            className={`flex items-center w-full px-3 py-2 ${themeColors.hover} rounded-lg`}
-          >
-            <Image className="h-5 w-5 text-blue-500 mr-3" />
-            <span className={`text-sm ${themeColors.inputText}`}>Imagen</span>
-          </button>
-          <button
-            onClick={() => handleAttachment('document')}
-            className={`flex items-center w-full px-3 py-2 ${themeColors.hover} rounded-lg`}
-          >
-            <FileText className="h-5 w-5 text-purple-500 mr-3" />
-            <span className={`text-sm ${themeColors.inputText}`}>Documento</span>
-          </button>
-          <button
-            onClick={() => handleAttachment('location')}
-            className={`flex items-center w-full px-3 py-2 ${themeColors.hover} rounded-lg`}
-          >
-            <MapPin className="h-5 w-5 text-red-500 mr-3" />
-            <span className={`text-sm ${themeColors.inputText}`}>Ubicación</span>
-          </button>
+      {/* Attachment Menu intentionally hidden */}
+      {false && showAttachMenu && (<div />)}
+
+      {/* Emoji Picker */}
+      {showEmojiPicker && (
+        <div className={`absolute bottom-20 left-16 ${themeColors.inputBg} rounded-lg shadow-lg border ${themeColors.border} p-2 z-20 w-64`}>
+          <div className="grid grid-cols-8 gap-1">
+            {EMOJIS.map((e) => (
+              <button
+                key={e}
+                onClick={() => { setMessage(prev => prev + e); setShowEmojiPicker(false); }}
+                className="text-xl leading-none p-1 hover:bg-gray-100 rounded"
+                aria-label={`emoji ${e}`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       <div className="flex items-end space-x-2">
         {/* Attachment Button */}
         <button
-          onClick={() => setShowAttachMenu(!showAttachMenu)}
+          onClick={() => { /* menu hidden intentionally */ }}
           className={`p-2 ${themeColors.hover} rounded-lg transition-colors`}
+          title="Adjuntar (deshabilitado)"
         >
-          {showAttachMenu ? (
-            <X className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
-          ) : (
-            <Paperclip className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
-          )}
+          <Paperclip className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
         </button>
 
         {/* Emoji Button */}
-        <button
-          onClick={handleEmoji}
-          className={`p-2 ${themeColors.hover} rounded-lg transition-colors`}
-        >
-          <Smile className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
-        </button>
+        <div className="relative">
+          <button
+            onClick={handleEmoji}
+            className={`p-2 ${themeColors.hover} rounded-lg transition-colors`}
+            aria-haspopup="true"
+            aria-expanded={showEmojiPicker}
+          >
+            <Smile className={`h-5 w-5 ${themeColors.inputText} opacity-60`} />
+          </button>
+        </div>
 
         {/* Message Input */}
         <div className="flex-1 relative">
