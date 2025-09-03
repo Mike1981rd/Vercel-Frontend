@@ -143,7 +143,7 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:5266/api/orders/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -203,7 +203,7 @@ export default function OrderDetailsPage() {
 
   const handleUpdatePaymentStatus = async () => {
     try {
-      const response = await fetch(`http://localhost:5266/api/orders/${id}/payment-status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${id}/payment-status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ export default function OrderDetailsPage() {
 
   const handleUpdateShippingStatus = async () => {
     try {
-      const response = await fetch(`http://localhost:5266/api/orders/${id}/shipping-status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${id}/shipping-status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ export default function OrderDetailsPage() {
 
   const handleProcessRefund = async () => {
     try {
-      const response = await fetch(`http://localhost:5266/api/orders/${id}/refund`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${id}/refund`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -286,7 +286,7 @@ export default function OrderDetailsPage() {
   const handleExportPDF = async () => {
     try {
       // Create the API endpoint URL for PDF generation
-      const response = await fetch(`http://localhost:5266/api/orders/${id}/export-pdf`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/orders/${id}/export-pdf`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

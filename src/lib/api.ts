@@ -1,8 +1,32 @@
 import axios from 'axios';
 import authService from '@/services/auth.service';
 
-// Base URL de la API - se ajustará en producción
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
+// Función para detectar automáticamente el entorno y configurar la URL
+const getApiUrl = () => {
+  // Si hay variable de entorno configurada, usarla siempre
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // En el servidor (build time) usar localhost
+  if (typeof window === 'undefined') {
+    return 'http://localhost:5266/api';
+  }
+  
+  // En el cliente: detectar si estamos accediendo desde WSL/Ubuntu
+  // Si el hostname contiene una IP (172.x.x.x), estamos en WSL
+  const hostname = window.location.hostname;
+  if (hostname.startsWith('172.') || hostname.startsWith('192.168.')) {
+    // Estamos accediendo desde WSL, usar la misma IP del host
+    return `http://${hostname}:5266/api`;
+  }
+  
+  // Por defecto usar localhost (Windows nativo)
+  return 'http://localhost:5266/api';
+};
+
+// Base URL de la API - se auto-detecta según el entorno
+const API_BASE_URL = getApiUrl();
 
 // Crear instancia de axios con configuración base
 export const api = axios.create({

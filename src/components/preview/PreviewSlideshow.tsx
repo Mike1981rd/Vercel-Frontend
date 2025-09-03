@@ -276,13 +276,13 @@ export default function PreviewSlideshow({
                 muted
                 playsInline
               />
-            ) : (
+            ) : (isMobile ? slide.mobileImage : slide.desktopImage) ? (
               <img 
                 src={isMobile ? slide.mobileImage : slide.desktopImage}
                 alt={settings.slideshowAltText || slide.heading || 'Slideshow image'}
                 className="absolute inset-0 w-full h-full object-cover"
               />
-            )}
+            ) : null}
             
             {/* Overlay with opacity */}
             {((isMobile && slide.mobileOverlayOpacity > 0) || (!isMobile && slide.desktopOverlayOpacity > 0)) && (

@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api-url';
 import { PageType } from '@/types/editor.types';
 import PreviewHeader from './PreviewHeader';
 import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
 import PreviewImageBanner from './PreviewImageBanner';
+import PreviewWhatsAppWidgetV2 from './PreviewWhatsAppWidgetV2';
 
 interface PreviewPageProps {
   pageType: PageType;
@@ -20,6 +22,7 @@ interface StructuralComponents {
   announcementBar?: any;
   imageBanner?: any;
   cartDrawer?: any;
+  whatsAppWidget?: any;
 }
 
 export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageProps) {
@@ -76,15 +79,16 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       }
 
       try {
-        // Load structural components (header, footer, etc.)
-        // Use the published endpoint which allows anonymous access
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
+        const apiUrl = getApiUrl();
         const structuralUrl = `${apiUrl}/structural-components/company/${companyId}/published`;
+        const themeUrl = `${apiUrl}/global-theme-config/company/${companyId}/published`;
         console.log('Fetching structural components from:', structuralUrl);
         
-        const structuralResponse = await fetch(structuralUrl);
-        console.log('Structural response status:', structuralResponse.status);
-        
+        const [structuralResponse, themeResponse] = await Promise.all([
+          fetch(structuralUrl, { cache: 'no-store' }),
+          fetch(themeUrl, { cache: 'no-store' })
+        ]);
+
         if (structuralResponse.ok) {
           const data = await structuralResponse.json();
           console.log('Raw structural data:', data);
@@ -98,6 +102,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
             announcementBar: data.announcementBarConfig ? JSON.parse(data.announcementBarConfig) : null,
             imageBanner: data.imageBannerConfig ? JSON.parse(data.imageBannerConfig) : null,
             cartDrawer: data.cartDrawerConfig ? JSON.parse(data.cartDrawerConfig) : null,
+            whatsAppWidget: data.whatsAppWidgetConfig ? JSON.parse(data.whatsAppWidgetConfig) : null,
           };
 
           // Fallback: try to fetch published ImageBanner config directly if not present in DTO
@@ -126,11 +131,6 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
           console.error('Failed to load structural components:', structuralResponse.statusText);
         }
 
-        // Load global theme configuration (use published endpoint for anonymous access)
-        const themeResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/global-theme-config/company/${companyId}/published`
-        );
-        
         if (themeResponse.ok) {
           const data = await themeResponse.json();
           setGlobalTheme(data);
@@ -220,6 +220,16 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       {structuralComponents.footer && (
         <PreviewFooter 
           config={structuralComponents.footer} 
+          theme={globalTheme}
+          deviceView={editorDeviceView}
+          isEditor={false}
+        />
+      )}
+
+      {/* WhatsApp Widget - if configured */}
+      {structuralComponents.whatsAppWidget && (
+        <PreviewWhatsAppWidgetV2
+          config={structuralComponents.whatsAppWidget}
           theme={globalTheme}
           deviceView={editorDeviceView}
           isEditor={false}

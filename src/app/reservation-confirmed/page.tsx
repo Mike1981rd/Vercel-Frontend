@@ -59,7 +59,7 @@ function ReservationConfirmedContent() {
   const loadCompanyInfo = async () => {
     try {
       const companyId = safeLocalStorage.getItem('companyId') || '1';
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://172.25.64.1:5266/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
       
       // First get the full company data
       const response = await fetch(`${apiUrl}/company/${companyId}/public`);

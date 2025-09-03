@@ -22,9 +22,17 @@ export default function SlideshowEditor({ sectionId }: SlideshowEditorProps) {
   // Find section
   const section = Object.values(sections).flat().find(s => s.id === sectionId);
   
-  // Local state
+  // Local state with defaults
   const [localConfig, setLocalConfig] = useState<SlideshowConfig>(() => {
-    return (section?.settings || getDefaultSlideshowConfig()) as SlideshowConfig;
+    const defaults = getDefaultSlideshowConfig();
+    const sectionSettings = section?.settings || {};
+    return {
+      ...defaults,
+      ...sectionSettings,
+      // Ensure critical fields always have values
+      mobileRatio: (sectionSettings as any).mobileRatio ?? defaults.mobileRatio,
+      desktopRatio: (sectionSettings as any).desktopRatio ?? defaults.desktopRatio,
+    } as SlideshowConfig;
   });
 
   // Expanded sections
@@ -40,7 +48,14 @@ export default function SlideshowEditor({ sectionId }: SlideshowEditorProps) {
   useEffect(() => {
     const currentSection = Object.values(sections).flat().find(s => s.id === sectionId);
     if (currentSection?.settings) {
-      const newSettings = currentSection.settings;
+      const defaults = getDefaultSlideshowConfig();
+      const newSettings = {
+        ...defaults,
+        ...currentSection.settings,
+        // Ensure critical fields always have values
+        mobileRatio: (currentSection.settings as any).mobileRatio ?? defaults.mobileRatio,
+        desktopRatio: (currentSection.settings as any).desktopRatio ?? defaults.desktopRatio,
+      };
       if (JSON.stringify(newSettings) !== JSON.stringify(localConfig)) {
         setLocalConfig(newSettings as SlideshowConfig);
       }

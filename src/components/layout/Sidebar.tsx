@@ -142,7 +142,7 @@ const menuItems: MenuItem[] = [
       {
         id: 'whatsapp',
         nameKey: 'navigation.whatsapp',
-        href: '/whatsapp',
+        href: '/whatsapp/chat',
         icon: WhatsAppIcon,
         permission: 'whatsapp.read'
       },
