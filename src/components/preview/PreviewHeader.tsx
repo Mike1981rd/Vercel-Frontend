@@ -225,6 +225,18 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
     return url.startsWith('/') && !url.startsWith('//');
   };
 
+  // Normalize internal URLs for public site context
+  const normalizeInternalPath = (url: string) => {
+    if (!url) return url;
+    // Map editor-only or admin routes to public-facing slugs
+    const map: Record<string, string> = {
+      '/habitaciones-lista': '/habitaciones', // Public rooms listing slug
+      '/dashboard': '/home',
+      '/editor': '/home'
+    };
+    return map[url] || url;
+  };
+
   // Helper function to handle navigation
   const handleNavigation = (url: string, e?: React.MouseEvent) => {
     if (!url || url === '#') {
@@ -233,12 +245,13 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
     }
 
     if (isInternalUrl(url)) {
+      const normalized = normalizeInternalPath(url);
       if (e) e.preventDefault();
       // Close drawer if open
       setDrawerOpen(false);
       setActiveDrawerSubmenu(null);
       // Navigate using Next.js router
-      router.push(url);
+      router.push(normalized);
     }
     // For external URLs, let the default anchor behavior handle it
   };
@@ -424,7 +437,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
       >
         {isInternal ? (
           <Link
-            href={item.url || '#'}
+            href={normalizeInternalPath(item.url || '#')}
             className="relative flex items-center gap-1 transition-opacity hover:opacity-80 px-4 py-2"
             style={{ 
               color: colorScheme?.text?.default || '#000000',
@@ -514,7 +527,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                 return isChildInternal ? (
                   <Link
                     key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
-                    href={child.url || '#'}
+                    href={normalizeInternalPath(child.url || '#')}
                     className="block px-4 py-2 hover:bg-gray-50 transition-colors"
                     style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
                     onClick={() => setOpenDropdown(null)}
