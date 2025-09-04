@@ -55,6 +55,9 @@ export default function MessageView({
   const currentMessagesRef = useRef<Message[]>([]);
   const suppressFirstScrollRef = useRef<boolean>(false);
   const allowAutoScrollRef = useRef<boolean>(false);
+  const firstLoadRef = useRef<boolean>(true);
+  const autoScrollEnableAtRef = useRef<number>(0);
+  const allowAutoScrollRef = useRef<boolean>(false);
   // Media viewer overlay (image/video)
   const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
   const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
@@ -68,6 +71,9 @@ export default function MessageView({
     allowAutoScrollRef.current = false;
     // Do not auto-scroll on the first render after opening a conversation
     suppressFirstScrollRef.current = true;
+    // Mark first load and block auto-scroll for a short grace period
+    firstLoadRef.current = true;
+    autoScrollEnableAtRef.current = Date.now() + 1200;
     if (messagesCacheRef?.current?.[conversation.id]) {
       setMessages(messagesCacheRef.current[conversation.id]);
       setLoading(false);
@@ -102,8 +108,9 @@ export default function MessageView({
     if (suppressFirstScrollRef.current) {
       suppressFirstScrollRef.current = false;
     } else {
-      // Only auto-scroll if the user already indicated preference (near bottom)
-      if (allowAutoScrollRef.current && stickToBottomRef.current) {
+      // Only auto-scroll if the user already indicated preference (near bottom) and grace period elapsed
+      const canAuto = allowAutoScrollRef.current && stickToBottomRef.current && Date.now() >= autoScrollEnableAtRef.current;
+      if (canAuto) {
         scrollToBottom(false);
         // Also schedule a post-layout scroll to account for images/videos affecting height
         requestAnimationFrame(() => scrollToBottom(false));
@@ -184,8 +191,10 @@ export default function MessageView({
       const el = messagesContainerRef.current;
       const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
-      // Prefer messages endpoint first for fastest history display
-      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
+      // On first load, use conversation detail to fetch a stable batch (avoid flicker)
+      const endpoint = firstLoadRef.current
+        ? getApiEndpoint(`/whatsapp/conversations/${conversation.id}`)
+        : getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
         if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
@@ -195,13 +204,15 @@ export default function MessageView({
 
         if (res.ok) {
           const data = await res.json();
-          const raw = Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.data?.messages)
-              ? data.data.messages
-              : Array.isArray(data?.messages)
-                ? data.messages
-                : [];
+          const raw = firstLoadRef.current
+            ? (Array.isArray(data?.data?.messages) ? data.data.messages : [])
+            : (Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.data?.messages)
+                  ? data.data.messages
+                  : Array.isArray(data?.messages)
+                    ? data.messages
+                    : []);
           if (DEBUG) console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
           if (Array.isArray(raw) && raw.length > 0) {
             // Build previous timestamps map to avoid generating new timestamps on each poll
@@ -284,6 +295,14 @@ export default function MessageView({
             merged = result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             // Safety cap to last 500 messages to avoid unbounded growth
             if (merged.length > 500) merged = merged.slice(merged.length - 500);
+            // Avoid flicker: ignore updates that only contain outbound subset smaller than current
+            const onlyOutbound = formatted.length > 0 && formatted.every(m => m.isFromMe);
+            const prevLen = prevList.length;
+            if (!firstLoadRef.current && prevLen > 0 && (merged.length + 1 < prevLen) && onlyOutbound) {
+              if (DEBUG) console.log('[MessageView] Skipping shrink-only outbound update to avoid flicker');
+              if (messagesCacheRef) messagesCacheRef.current[conversation.id] = prevList;
+              return;
+            }
             // Compute fingerprint to detect real changes
             const fingerprint = merged.map(m => `${String(m.id)}|${m.timestamp.getTime()}|${m.status || ''}`).join(',');
             if (prevFingerprintRef.current === fingerprint) {
@@ -298,6 +317,7 @@ export default function MessageView({
             prevFingerprintRef.current = fingerprint;
             if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
             setMessages(merged);
+            firstLoadRef.current = false;
             // Notify sidebar to reorder based on recent activity
             try {
               const last = merged.length > 0 ? merged[merged.length - 1].timestamp : new Date();
@@ -349,7 +369,7 @@ export default function MessageView({
 
   const scrollToBottom = (force: boolean) => {
     if (!messagesEndRef.current) return;
-    if (force || (allowAutoScrollRef.current && stickToBottomRef.current)) {
+    if (force || (allowAutoScrollRef.current && stickToBottomRef.current && Date.now() >= autoScrollEnableAtRef.current)) {
       try {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
       } catch {
