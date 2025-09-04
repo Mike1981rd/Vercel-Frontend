@@ -59,8 +59,41 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expirado o no válido
       authService.clearAuth();
+
+      // Evitar redirecciones en páginas públicas (sitio público/preview)
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        try {
+          const path = window.location.pathname.toLowerCase();
+
+          // Rutas que SÍ requieren autenticación (solo en panel/admin)
+          const protectedPrefixes = [
+            '/dashboard',
+            '/auth',
+            '/editor',
+            '/backend-test',
+            '/whatsapp',
+            '/website', // rutas internas del panel
+            '/empresa',
+            '/roles-usuarios',
+            '/clientes',
+            '/reservaciones',
+            '/metodos-pago',
+            '/colecciones',
+            '/productos',
+            '/paginas',
+            '/politicas',
+            '/dominios'
+          ];
+
+          const isProtected = protectedPrefixes.some((p) => path.startsWith(p));
+
+          // Solo redirigir a login si estamos en una ruta protegida
+          if (isProtected) {
+            window.location.href = '/login';
+          }
+        } catch {
+          // Como fallback, NO redirigir para no romper páginas públicas
+        }
       }
     }
     return Promise.reject(error);
