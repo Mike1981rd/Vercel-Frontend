@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
+import { getImageUrl, normalizeMediaUrl } from '@/lib/api-url';
 import { getApiEndpoint } from '@/lib/api-url';
 import { 
   ArrowLeft, User, MapPin, CreditCard, Calendar, Clock, 
@@ -288,9 +289,9 @@ export default function ReservationDetailsPage() {
                   {reservation.guestInfo.avatar ? (
                     <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md">
                       <img 
-                        src={reservation.guestInfo.avatar.startsWith('http') 
-                          ? reservation.guestInfo.avatar 
-                          : `http://localhost:5266${reservation.guestInfo.avatar}`}
+                          src={reservation.guestInfo.avatar.startsWith('http')
+                            ? normalizeMediaUrl(reservation.guestInfo.avatar)
+                            : getImageUrl(reservation.guestInfo.avatar)}
                         alt={reservation.guestInfo.fullName}
                         className="w-full h-full object-cover"
                         onError={(e) => {
