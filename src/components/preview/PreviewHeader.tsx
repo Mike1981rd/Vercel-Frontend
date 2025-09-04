@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, ChevronDown, Search, ShoppingCart, ShoppingBag, User, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/api-url';
 import { useRouter } from 'next/navigation';
 
 interface PreviewHeaderProps {
@@ -587,7 +588,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                   <Link href="/home" className="flex items-center justify-center flex-1 cursor-pointer">
                     {headerConfig?.logo?.desktopUrl ? (
                       <img
-                        src={headerConfig.logo.desktopUrl}
+                        src={getImageUrl(headerConfig.logo.desktopUrl)}
                         alt={headerConfig.logo.altText || 'Company Logo'}
                         className="self-center"
                         style={{ 
@@ -607,7 +608,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                 <Link href="/home" className="flex items-center cursor-pointer">
                   {headerConfig?.logo?.desktopUrl ? (
                     <img
-                      src={headerConfig.logo.desktopUrl}
+                      src={getImageUrl(headerConfig.logo.desktopUrl)}
                       alt={headerConfig.logo.altText || 'Company Logo'}
                       className="self-center"
                       style={{ 
@@ -701,7 +702,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                 <Link href="/home" className="justify-self-center flex items-center justify-center cursor-pointer">
                   {headerConfig?.logo?.mobileUrl ? (
                     <img
-                      src={headerConfig.logo.mobileUrl}
+                      src={getImageUrl(headerConfig.logo.mobileUrl)}
                       alt={headerConfig.logo.altText || 'Company Logo'}
                       style={{ 
                         height: headerConfig.logo.mobileHeight || 30,
@@ -710,7 +711,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                     />
                   ) : headerConfig?.logo?.desktopUrl ? (
                     <img
-                      src={headerConfig.logo.desktopUrl}
+                      src={getImageUrl(headerConfig.logo.desktopUrl)}
                       alt={headerConfig.logo.altText || 'Company Logo'}
                       style={{ 
                         height: headerConfig.logo.mobileHeight || 30,
@@ -783,7 +784,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                 <Link href="/home" className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center cursor-pointer">
                   {headerConfig?.logo?.desktopUrl ? (
                     <img
-                      src={headerConfig.logo.desktopUrl}
+                      src={getImageUrl(headerConfig.logo.desktopUrl)}
                       alt={headerConfig.logo.altText || 'Company Logo'}
                       style={{ 
                         height: headerConfig.logo.height || 40,
@@ -1147,7 +1148,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
             <Link href="/home" className="cursor-pointer">
               {headerConfig?.logo?.desktopUrl ? (
                 <img
-                  src={headerConfig.logo.desktopUrl}
+                  src={getImageUrl(headerConfig.logo.desktopUrl)}
                   alt={headerConfig.logo.altText || 'Company Logo'}
                   className="self-center"
                   style={{ 

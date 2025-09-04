@@ -359,7 +359,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                   </div>
                   <div className="relative">
                     <img
-                      src={selectedRoom.host.profilePicture}
+                      src={getImageUrl(selectedRoom.host.profilePicture)}
                       alt={selectedRoom.host.firstName}
                       className="w-14 h-14 rounded-full object-cover border border-gray-200"
                     />
@@ -781,7 +781,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4">
                     <img
-                      src={selectedRoom.host.profilePicture}
+                      src={getImageUrl(selectedRoom.host.profilePicture)}
                       alt={selectedRoom.host.firstName}
                       className="w-[128px] h-[128px] rounded-full object-cover"
                     />
