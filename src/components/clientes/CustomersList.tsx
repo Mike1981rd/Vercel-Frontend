@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Customer, CustomerFilter, customerAPI } from '@/lib/api/customers';
+import { getImageUrl } from '@/lib/api-url';
+import { getInitials } from '@/lib/utils';
 import { useI18n } from '@/contexts/I18nContext';
 import { 
   Search, 
