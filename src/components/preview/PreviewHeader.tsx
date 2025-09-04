@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, ChevronDown, Search, ShoppingCart, ShoppingBag, User, Heart, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface PreviewHeaderProps {
   config: any;
@@ -13,6 +14,7 @@ interface PreviewHeaderProps {
 }
 
 export default function PreviewHeader({ config, theme, deviceView, isEditor = false }: PreviewHeaderProps) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<string[]>([]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -217,6 +219,30 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
   const isStyle1 = iconStyle.startsWith('style1');
   const isSolid = iconStyle.includes('solid');
 
+  // Helper function to determine if URL is internal
+  const isInternalUrl = (url: string) => {
+    if (!url) return false;
+    return url.startsWith('/') && !url.startsWith('//');
+  };
+
+  // Helper function to handle navigation
+  const handleNavigation = (url: string, e?: React.MouseEvent) => {
+    if (!url || url === '#') {
+      if (e) e.preventDefault();
+      return;
+    }
+
+    if (isInternalUrl(url)) {
+      if (e) e.preventDefault();
+      // Close drawer if open
+      setDrawerOpen(false);
+      setActiveDrawerSubmenu(null);
+      // Navigate using Next.js router
+      router.push(url);
+    }
+    // For external URLs, let the default anchor behavior handle it
+  };
+
   // Icon rendering functions (matching EditorPreview.tsx)
   const renderSearchIcon = () => {
     const iconClass = isMobile ? "w-4 h-4" : "w-5 h-5";
@@ -370,6 +396,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
   const renderMenuItem = (item: any) => {
     const hasChildren = item.subItems && item.subItems.length > 0;
     const isOpen = openDropdown === item.label;
+    const isInternal = isInternalUrl(item.url);
 
     return (
       <div
@@ -395,37 +422,71 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
           }
         }}
       >
-        <a
-          href={item.url || '#'}
-          className="relative flex items-center gap-1 transition-opacity hover:opacity-80 px-4 py-2"
-          style={{ 
-            color: colorScheme?.text?.default || '#000000',
-            ...menuTypographyStyles
-          }}
-          onClick={(e) => {
-            if (hasChildren) {
-              e.preventDefault();
-              if (headerConfig.menuOpenOn === 'click') {
+        {isInternal ? (
+          <Link
+            href={item.url || '#'}
+            className="relative flex items-center gap-1 transition-opacity hover:opacity-80 px-4 py-2"
+            style={{ 
+              color: colorScheme?.text?.default || '#000000',
+              ...menuTypographyStyles
+            }}
+            onClick={(e) => {
+              // Only prevent navigation if clicking for dropdown toggle on click mode
+              if (hasChildren && headerConfig.menuOpenOn === 'click') {
+                // Allow navigation but also toggle dropdown
+                setOpenDropdown(isOpen ? null : item.label);
+                // Don't prevent default - allow navigation to happen
+              }
+            }}
+          >
+            {item.label}
+            {headerConfig.menuOpenOn === 'click' && hasChildren && (
+              <ChevronDown className="w-3 h-3" />
+            )}
+            {/* Underline when dropdown is open */}
+            {isOpen && (
+              <span 
+                className="absolute left-0 right-0 h-0.5"
+                style={{ 
+                  backgroundColor: colorScheme?.text?.default || '#000000',
+                  bottom: '-2px'
+                }}
+              />
+            )}
+          </Link>
+        ) : (
+          <a
+            href={item.url || '#'}
+            className="relative flex items-center gap-1 transition-opacity hover:opacity-80 px-4 py-2"
+            style={{ 
+              color: colorScheme?.text?.default || '#000000',
+              ...menuTypographyStyles
+            }}
+            onClick={(e) => {
+              // For external links with children, prevent navigation only on dropdown toggle
+              if (hasChildren && headerConfig.menuOpenOn === 'click') {
                 setOpenDropdown(isOpen ? null : item.label);
               }
-            }
-          }}
-        >
-          {item.label}
-          {headerConfig.menuOpenOn === 'click' && hasChildren && (
-            <ChevronDown className="w-3 h-3" />
-          )}
-          {/* Underline when dropdown is open */}
-          {isOpen && (
-            <span 
-              className="absolute left-0 right-0 h-0.5"
-              style={{ 
-                backgroundColor: colorScheme?.text?.default || '#000000',
-                bottom: '-2px'
-              }}
-            />
-          )}
-        </a>
+            }}
+            target={item.url && !item.url.startsWith('#') ? '_blank' : undefined}
+            rel={item.url && !item.url.startsWith('#') ? 'noopener noreferrer' : undefined}
+          >
+            {item.label}
+            {headerConfig.menuOpenOn === 'click' && hasChildren && (
+              <ChevronDown className="w-3 h-3" />
+            )}
+            {/* Underline when dropdown is open */}
+            {isOpen && (
+              <span 
+                className="absolute left-0 right-0 h-0.5"
+                style={{ 
+                  backgroundColor: colorScheme?.text?.default || '#000000',
+                  bottom: '-2px'
+                }}
+              />
+            )}
+          </a>
+        )}
         
         {hasChildren && isOpen && (
           <div 
@@ -448,16 +509,31 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
             }}
           >
             <div className="py-2">
-              {item.subItems.map((child: any, childIndex: number) => (
-                <a
-                  key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
-                  href={child.url || '#'}
-                  className="block px-4 py-2 hover:bg-gray-50 transition-colors"
-                  style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
-                >
-                  {child.label}
-                </a>
-              ))}
+              {item.subItems.map((child: any, childIndex: number) => {
+                const isChildInternal = isInternalUrl(child.url);
+                return isChildInternal ? (
+                  <Link
+                    key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
+                    href={child.url || '#'}
+                    className="block px-4 py-2 hover:bg-gray-50 transition-colors"
+                    style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
+                    onClick={() => setOpenDropdown(null)}
+                  >
+                    {child.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
+                    href={child.url || '#'}
+                    className="block px-4 py-2 hover:bg-gray-50 transition-colors"
+                    style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
+                    target={child.url && !child.url.startsWith('#') ? '_blank' : undefined}
+                    rel={child.url && !child.url.startsWith('#') ? 'noopener noreferrer' : undefined}
+                  >
+                    {child.label}
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
@@ -815,41 +891,135 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
               
               {/* Menu Items */}
               <nav className="space-y-2">
-                {menuItems.map((item: any) => (
-                  <div key={item.label}>
-                    <button
-                      onClick={() => {
-                        if (item.subItems && item.subItems.length > 0) {
-                          setActiveDrawerSubmenu(item.label);
-                        }
-                      }}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
-                      style={{ 
-                        color: colorScheme?.text?.default || '#000000',
-                        backgroundColor: 'transparent'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
-                          `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <span style={menuTypographyStyles}>{item.label}</span>
-                      {item.subItems && item.subItems.length > 0 && (
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
+                {menuItems.map((item: any) => {
+                  const hasChildren = item.subItems && item.subItems.length > 0;
+                  const isInternal = isInternalUrl(item.url);
+                  
+                  // If has children, show as button that can expand submenu
+                  if (hasChildren) {
+                    return (
+                      <div key={item.label} className="relative">
+                        {/* Main item - clickable link if has URL */}
+                        {item.url && item.url !== '#' ? (
+                          isInternal ? (
+                            <Link
+                              href={item.url}
+                              className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
+                              style={{ 
+                                color: colorScheme?.text?.default || '#000000',
+                                backgroundColor: 'transparent'
+                              }}
+                              onClick={() => {
+                                setDrawerOpen(false);
+                                setActiveDrawerSubmenu(null);
+                              }}
+                            >
+                              <span style={menuTypographyStyles}>{item.label}</span>
+                            </Link>
+                          ) : (
+                            <a
+                              href={item.url}
+                              className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
+                              style={{ 
+                                color: colorScheme?.text?.default || '#000000',
+                                backgroundColor: 'transparent'
+                              }}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => {
+                                setDrawerOpen(false);
+                                setActiveDrawerSubmenu(null);
+                              }}
+                            >
+                              <span style={menuTypographyStyles}>{item.label}</span>
+                            </a>
+                          )
+                        ) : (
+                          <div
+                            className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
+                            style={{ 
+                              color: colorScheme?.text?.default || '#000000',
+                              backgroundColor: 'transparent'
+                            }}
+                          >
+                            <span style={menuTypographyStyles}>{item.label}</span>
+                          </div>
+                        )}
+                        
+                        {/* Expand button for submenu */}
+                        <button
+                          onClick={() => setActiveDrawerSubmenu(item.label)}
+                          className="absolute right-0 top-0 h-full px-4 flex items-center"
+                          style={{ color: colorScheme?.text?.default || '#000000' }}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                          <svg 
+                            className="w-4 h-4" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    );
+                  }
+                  
+                  // No children - simple link
+                  return (
+                    <div key={item.label}>
+                      {isInternal ? (
+                        <Link
+                          href={item.url || '#'}
+                          className="w-full flex items-center px-4 py-3 text-left rounded transition-colors"
+                          style={{ 
+                            color: colorScheme?.text?.default || '#000000',
+                            backgroundColor: 'transparent'
+                          }}
+                          onClick={() => {
+                            setDrawerOpen(false);
+                            setActiveDrawerSubmenu(null);
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
+                              `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <span style={menuTypographyStyles}>{item.label}</span>
+                        </Link>
+                      ) : (
+                        <a
+                          href={item.url || '#'}
+                          className="w-full flex items-center px-4 py-3 text-left rounded transition-colors"
+                          style={{ 
+                            color: colorScheme?.text?.default || '#000000',
+                            backgroundColor: 'transparent'
+                          }}
+                          target={item.url && !item.url.startsWith('#') ? '_blank' : undefined}
+                          rel={item.url && !item.url.startsWith('#') ? 'noopener noreferrer' : undefined}
+                          onClick={() => {
+                            if (item.url !== '#') {
+                              setDrawerOpen(false);
+                              setActiveDrawerSubmenu(null);
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
+                              `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <span style={menuTypographyStyles}>{item.label}</span>
+                        </a>
                       )}
-                    </button>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </nav>
             </div>
             
@@ -878,30 +1048,60 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                   <nav className="space-y-2">
                     {menuItems
                       .find((item: any) => item.label === activeDrawerSubmenu)
-                      ?.subItems?.map((subItem: any, subIndex: number) => (
-                        <a
-                          key={subItem.id || `drawer-submenu-${activeDrawerSubmenu}-${subIndex}`}
-                          href={subItem.url || '#'}
-                          className="block px-4 py-3 rounded transition-colors"
-                          style={{ 
-                            color: colorScheme?.text?.default || '#000000',
-                            ...menuTypographyStyles
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
-                              `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
-                          onClick={() => {
-                            setDrawerOpen(false);
-                            setActiveDrawerSubmenu(null);
-                          }}
-                        >
-                          {subItem.label}
-                        </a>
-                      ))}
+                      ?.subItems?.map((subItem: any, subIndex: number) => {
+                        const isSubInternal = isInternalUrl(subItem.url);
+                        return isSubInternal ? (
+                          <Link
+                            key={subItem.id || `drawer-submenu-${activeDrawerSubmenu}-${subIndex}`}
+                            href={subItem.url || '#'}
+                            className="block px-4 py-3 rounded transition-colors"
+                            style={{ 
+                              color: colorScheme?.text?.default || '#000000',
+                              ...menuTypographyStyles
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
+                                `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                            onClick={() => {
+                              setDrawerOpen(false);
+                              setActiveDrawerSubmenu(null);
+                            }}
+                          >
+                            {subItem.label}
+                          </Link>
+                        ) : (
+                          <a
+                            key={subItem.id || `drawer-submenu-${activeDrawerSubmenu}-${subIndex}`}
+                            href={subItem.url || '#'}
+                            className="block px-4 py-3 rounded transition-colors"
+                            style={{ 
+                              color: colorScheme?.text?.default || '#000000',
+                              ...menuTypographyStyles
+                            }}
+                            target={subItem.url && !subItem.url.startsWith('#') ? '_blank' : undefined}
+                            rel={subItem.url && !subItem.url.startsWith('#') ? 'noopener noreferrer' : undefined}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = colorScheme?.text?.default ? 
+                                `${colorScheme.text.default}10` : 'rgba(0,0,0,0.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                            onClick={() => {
+                              if (subItem.url !== '#') {
+                                setDrawerOpen(false);
+                                setActiveDrawerSubmenu(null);
+                              }
+                            }}
+                          >
+                            {subItem.label}
+                          </a>
+                        );
+                      })}
                   </nav>
                 </>
               )}
