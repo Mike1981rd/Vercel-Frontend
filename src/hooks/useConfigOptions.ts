@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 
 interface ConfigOption {
   id: number;
@@ -150,7 +151,7 @@ export function useConfigOptions(type: string) {
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ConfigOptions/type/${type}`, {
+      const response = await fetch(getApiEndpoint(`/ConfigOptions/type/${type}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -193,7 +194,7 @@ export function useConfigOptions(type: string) {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ConfigOptions/increment-usage`, {
+      await fetch(getApiEndpoint(`/ConfigOptions/increment-usage`), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

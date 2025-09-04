@@ -281,6 +281,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
               {getSectionType(section) === 'image_banner' && (
                 <PreviewImageBanner 
                   config={getSectionConfig(section)} 
+                  theme={theme}
                   isEditor={false}
                   deviceView={deviceView as 'desktop' | 'mobile'}
                 />

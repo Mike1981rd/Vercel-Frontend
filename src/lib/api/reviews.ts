@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { getApiUrl } from '@/lib/api-url';
 
 // Types
 export interface CreateReviewDto {
@@ -105,7 +106,7 @@ export interface ReviewStatisticsDto {
 export async function createReview(data: CreateReviewDto): Promise<ReviewDto> {
   try {
     // For public reviews, we need to send without auth header
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reviews`, {
+    const response = await fetch(`${getApiUrl()}/reviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -141,7 +142,7 @@ export async function uploadReviewMedia(
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/media`,
+      `${getApiUrl()}/reviews/${reviewId}/media`,
       {
         method: 'POST',
         body: formData,
@@ -180,7 +181,7 @@ export async function getReviews(filter: ReviewFilterDto = {}): Promise<{
     });
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/reviews?${params.toString()}`,
+      `${getApiUrl()}/reviews?${params.toString()}`,
       {
         method: 'GET',
         headers: {
@@ -229,7 +230,7 @@ export async function getRoomReviews(
         ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
         : {};
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/reviews/public?${params.toString()}`,
+      `${getApiUrl()}/reviews/public?${params.toString()}`,
       { method: 'GET', headers: { 'Content-Type': 'application/json', ...authHeaders } as any }
     );
     let data: { reviews: ReviewDto[]; statistics?: ReviewStatisticsDto };
@@ -239,8 +240,13 @@ export async function getRoomReviews(
         const fallback = await getReviews({ roomId, sortBy: 'CreatedAt', sortDescending: true, pageSize: 100, status: 'Approved' });
         data = { reviews: fallback.reviews, statistics: fallback.statistics } as any;
       } else {
-        const error = await response.text();
-        throw new Error(error || 'Failed to fetch public room reviews');
+        // Avoid dumping entire HTML in console if server returns an error page
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const errJson = await response.json().catch(() => ({} as any));
+          throw new Error(errJson?.error || `Failed to fetch public room reviews (status ${response.status})`);
+        }
+        throw new Error(`Failed to fetch public room reviews (status ${response.status})`);
       }
     } else {
       data = await response.json();
@@ -335,7 +341,7 @@ export async function interactWithReview(
 ): Promise<void> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/interact`,
+      `${getApiUrl()}/reviews/${reviewId}/interact`,
       {
         method: 'POST',
         headers: {

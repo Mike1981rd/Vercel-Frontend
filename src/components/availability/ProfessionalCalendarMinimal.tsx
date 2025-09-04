@@ -36,6 +36,7 @@ interface ProfessionalCalendarProps {
   onPriceUpdate?: (date: Date, price: number) => void;
   availabilityData: any;
   viewMode?: 'availability' | 'pricing' | 'selection';
+  initialMonth?: Date; // Align calendar with loaded data window
 }
 
 export default function ProfessionalCalendarMinimal({
@@ -45,12 +46,22 @@ export default function ProfessionalCalendarMinimal({
   onDateRangeSelect,
   onPriceUpdate,
   availabilityData,
-  viewMode: initialViewMode = 'availability'
+  viewMode: initialViewMode = 'availability',
+  initialMonth
 }: ProfessionalCalendarProps) {
   const { company } = useCompany();
   const currency = (company as any)?.storeCurrency || company?.currency || '$';
   
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => initialMonth ? new Date(initialMonth) : new Date());
+
+  // Keep calendar month in sync when parent changes the requested month window
+  useEffect(() => {
+    if (initialMonth) {
+      const d = new Date(initialMonth);
+      if (isFinite(d.getTime())) setCurrentMonth(d);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMonth?.getFullYear(), initialMonth?.getMonth()]);
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);

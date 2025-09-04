@@ -22,8 +22,10 @@ interface PreviewImageWithTextProps {
   deviceView?: DeviceView;
 }
 
-export default function PreviewImageWithText({ config, isEditor = false, deviceView }: PreviewImageWithTextProps) {
-  const { config: themeConfig } = useThemeConfigStore();
+export default function PreviewImageWithText({ config, isEditor = false, deviceView, theme }: PreviewImageWithTextProps) {
+  // Prefer theme prop (PreviewPage) in live preview; fallback to store (editor)
+  const storeThemeConfig = useThemeConfigStore(state => state.config);
+  const themeConfig = theme || storeThemeConfig;
 
   // Device detection (only if not explicitly provided)
   const [isMobile, setIsMobile] = React.useState<boolean>(deviceView === 'mobile');

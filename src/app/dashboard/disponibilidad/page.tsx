@@ -483,6 +483,7 @@ export default function AvailabilityDashboard() {
                 onPriceUpdate={handlePriceUpdate}
                 availabilityData={availabilityData}
                 viewMode="availability"
+                initialMonth={currentDate}
               />
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm h-full flex items-center justify-center">

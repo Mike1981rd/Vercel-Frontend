@@ -9,6 +9,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/api-url';
 import { FooterConfig, FooterBlockType } from '@/components/editor/modules/Footer/FooterTypes';
 import { 
   Instagram, Facebook, Twitter, Youtube, 
@@ -343,7 +344,7 @@ export default function PreviewFooter({
             <div className={`flex ${isMobile ? 'justify-center' : ''} items-center`}>
               {block.settings?.logoUrl ? (
                 <img 
-                  src={block.settings.logoUrl} 
+                  src={getImageUrl(block.settings.logoUrl)} 
                   alt="Logo" 
                   className="object-contain"
                   style={{ 
