@@ -479,6 +479,7 @@ export default function PreviewRoomTitleHost({
                             }}
                             loading="eager"
                             decoding="sync"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3'; }}
                           />
                           {config.showHostVerification !== false && displayData.hostVerified && (
                             <div 
@@ -815,6 +816,7 @@ export default function PreviewRoomTitleHost({
                           }}
                           loading="eager"
                           decoding="sync"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3'; }}
                         />
                         {config.showHostVerification !== false && displayData.hostVerified && (
                           <div 
