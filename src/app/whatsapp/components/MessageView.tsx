@@ -90,10 +90,12 @@ export default function MessageView({
       setLoading(true);
     }
     loadMessages();
-    // Quick retries to pick up background provider refresh if any
-    setTimeout(() => loadMessages(true), 900);
-    setTimeout(() => loadMessages(true), 2500);
-    setTimeout(() => loadMessages(true), 5000);
+    // Quick retries only when first-time open (no cache)
+    if (!hasCache) {
+      setTimeout(() => loadMessages(true), 900);
+      setTimeout(() => loadMessages(true), 2500);
+      setTimeout(() => loadMessages(true), 5000);
+    }
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -205,9 +207,9 @@ export default function MessageView({
         if (!detail?.id || detail.id !== conversation.id) return;
         // Quick check: if incoming timestamp is newer than our last, reload
         const lastLocal = currentMessagesRef.current.length > 0 ? currentMessagesRef.current[currentMessagesRef.current.length - 1].timestamp.getTime() : 0;
-        const incomingTs = detail.lastMessageTime ? new Date(detail.lastMessageTime as any).getTime() : Date.now();
-        if (incomingTs > lastLocal) {
-          setTimeout(() => loadMessages(), 150); // small debounce
+        const incomingTs = detail.lastMessageTime ? new Date(detail.lastMessageTime as any).getTime() : 0;
+        if (incomingTs >= lastLocal + 5000) {
+          setTimeout(() => loadMessages(), 200); // mild debounce
         }
       } catch {}
     };
