@@ -417,7 +417,7 @@ export const useEditorStore = create<EditorStore>()(
           console.log('[DEBUG] savePage called:', {
             selectedPageId: state.selectedPageId,
             isDirty: state.isDirty,
-            templateSections: state.sections.template,
+            headerGroupCount: state.sections.headerGroup.length,
             templateCount: state.sections.template.length
           });
           
@@ -433,18 +433,23 @@ export const useEditorStore = create<EditorStore>()(
             // Store by page type to avoid collisions with DB page IDs
             const keyType = (state.selectedPageType ?? PageType.HOME) as unknown as string;
             const pageKey = `page_sections_${keyType.toLowerCase()}`;
-            const sectionsToSave = state.sections.template;
-            localStorage.setItem(pageKey, JSON.stringify(sectionsToSave));
-            console.log('[DEBUG] ✅ Saved sections to localStorage:', {
+            // Include headerGroup ImageBanner sections before template sections for live preview
+            const headerImageBanners = state.sections.headerGroup.filter(s => s.type === SectionType.IMAGE_BANNER && s.visible);
+            const combinedForPreview = [...headerImageBanners, ...state.sections.template]
+              .map((s, idx) => ({ ...s, sortOrder: idx })); // Reindex to preserve intended order
+            localStorage.setItem(pageKey, JSON.stringify(combinedForPreview));
+            console.log('[DEBUG] ✅ Saved sections to localStorage (combined header image banners + template):', {
               pageId: state.selectedPageId,
               key: pageKey,
-              sections: sectionsToSave,
-              savedCount: sectionsToSave.length
+              headerImageBannersCount: headerImageBanners.length,
+              templateCount: state.sections.template.length,
+              totalSaved: combinedForPreview.length
             });
 
             // Also try to save to backend (this might fail with mock page IDs)
-            const templateSections = state.sections.template
-              .sort((a, b) => a.sortOrder - b.sortOrder)
+            // Backend payload: also include header ImageBanner(s) before template sections
+            const sectionsForBackend = [...headerImageBanners, ...state.sections.template]
+              .map((s, idx) => ({ ...s, sortOrder: idx }))
               .map(s => {
                 // Debug FAQ sections
                 if (s.type === SectionType.FAQ) {
@@ -481,8 +486,8 @@ export const useEditorStore = create<EditorStore>()(
 
             console.log('[DEBUG] Attempting to save to backend:', {
               pageId: state.selectedPageId,
-              templateSections,
-              totalSections: templateSections.length
+              sectionsForBackend,
+              totalSections: sectionsForBackend.length
             });
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
@@ -492,7 +497,7 @@ export const useEditorStore = create<EditorStore>()(
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
               },
-              body: JSON.stringify({ sections: templateSections })
+              body: JSON.stringify({ sections: sectionsForBackend })
             });
 
             console.log('[DEBUG] Backend save response:', {

@@ -7,7 +7,6 @@ import PreviewHeader from './PreviewHeader';
 import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
-import PreviewImageBanner from './PreviewImageBanner';
 import PreviewWhatsAppWidgetV2 from './PreviewWhatsAppWidgetV2';
 
 interface PreviewPageProps {
@@ -145,26 +144,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
             return obj;
           };
 
-          // Fallback: try to fetch published ImageBanner config directly if not present in DTO
-          if (!parsedComponents.imageBanner) {
-            try {
-              const imageBannerUrl = `${apiUrl}/structural-components/company/${companyId}/imagebanner/published`;
-              console.log('Fetching image banner (published) from:', imageBannerUrl);
-              const ibRes = await fetch(imageBannerUrl);
-              if (ibRes.ok) {
-                // Controller returns a JSON string, not an object
-                const ibConfigString = await ibRes.text();
-                const ibConfig = ibConfigString ? JSON.parse(ibConfigString) : null;
-                if (ibConfig) {
-                  parsedComponents.imageBanner = ibConfig;
-                }
-              } else {
-                console.log('No published image banner available (status):', ibRes.status);
-              }
-            } catch (e) {
-              console.warn('Failed to fetch published image banner config:', e);
-            }
-          }
+          // Removed structural ImageBanner fallback: ImageBanner should render only as a page section
           const normalized = {
             header: normalizeMediaUrls(parsedComponents.header),
             footer: normalizeMediaUrls(parsedComponents.footer),
@@ -242,18 +222,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
         null
       )}
 
-      {/* Image Banner (structural fallback) */}
-      {structuralComponents.imageBanner &&
-        (structuralComponents.imageBanner.enabled !== false) && // Show if not explicitly disabled
-        (!structuralComponents.imageBanner.showOnlyOnHomePage || pageType === PageType.HOME) && (
-        <PreviewImageBanner 
-          config={structuralComponents.imageBanner}
-          theme={globalTheme}
-          isEditor={false}
-          deviceView={editorDeviceView}
-          pageType={pageType as unknown as string}
-        />
-      )}
+      {/* Structural ImageBanner fallback removed: ImageBanner now renders only when added as a section */}
 
       {/* Page Content */}
       <main className="flex-1">
