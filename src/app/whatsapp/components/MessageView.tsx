@@ -149,6 +149,54 @@ export default function MessageView({
     };
   }, []);
 
+  // Ensure browser doesn't anchor scroll due to images loading above
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    try { (el as HTMLElement).style.setProperty('overflow-anchor', 'none'); } catch {}
+  }, []);
+
+  // When media (images/videos) load and we want to be at bottom, perform a final scroll
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    // Desire bottom when user is near bottom (auto enabled) or when re-opening with cache
+    const wantBottom = (allowAutoScrollRef.current && stickToBottomRef.current) || (!firstLoadRef.current && stickToBottomRef.current);
+    if (!wantBottom) return;
+    const nodes = el.querySelectorAll('img, video');
+    let pending = 0;
+    const cleanups: Array<() => void> = [];
+    const done = () => {
+      requestAnimationFrame(() => scrollToBottom(true));
+      setTimeout(() => scrollToBottom(true), 60);
+      setTimeout(() => scrollToBottom(true), 240);
+    };
+    nodes.forEach((node) => {
+      if (node.tagName.toLowerCase() === 'img') {
+        const img = node as HTMLImageElement;
+        if (!img.complete) {
+          pending++;
+          const handler = () => { pending--; if (pending === 0) done(); };
+          img.addEventListener('load', handler);
+          img.addEventListener('error', handler);
+          cleanups.push(() => { img.removeEventListener('load', handler); img.removeEventListener('error', handler); });
+        }
+      } else if (node.tagName.toLowerCase() === 'video') {
+        const vid = node as HTMLVideoElement;
+        if (vid.readyState < 2) { // HAVE_CURRENT_DATA
+          pending++;
+          const handler = () => { pending--; if (pending === 0) done(); };
+          vid.addEventListener('loadeddata', handler);
+          vid.addEventListener('loadedmetadata', handler);
+          vid.addEventListener('error', handler);
+          cleanups.push(() => { vid.removeEventListener('loadeddata', handler); vid.removeEventListener('loadedmetadata', handler); vid.removeEventListener('error', handler); });
+        }
+      }
+    });
+    if (pending === 0) done();
+    return () => { cleanups.forEach((fn) => fn()); };
+  }, [messages]);
+
   // Reload messages promptly when sidebar reports recent activity on this conversation
   useEffect(() => {
     const onUpdated = (e: Event) => {
