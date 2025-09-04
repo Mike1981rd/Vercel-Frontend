@@ -421,9 +421,17 @@ export function CustomersList() {
                     <div className="flex items-center gap-3">
                       {customer.avatar ? (
                         <img
-                          src={customer.avatar}
+                          src={getImageUrl(customer.avatar)}
                           alt={customer.fullName}
                           className="w-12 h-12 rounded-lg object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = document.createElement('div');
+                            fallback.className = 'w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold';
+                            (fallback as any).style = `background-color: ${primaryColor}`;
+                            fallback.innerText = getInitials(customer.fullName);
+                            e.currentTarget.parentElement?.appendChild(fallback);
+                          }}
                         />
                       ) : (
                         <div 

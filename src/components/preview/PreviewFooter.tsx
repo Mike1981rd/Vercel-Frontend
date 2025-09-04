@@ -353,6 +353,7 @@ export default function PreviewFooter({
                     width: 'auto',
                     margin: isMobile ? '-8px auto 0' : '-8px 0 0 0'
                   }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <div className={`flex items-center gap-2 ${isMobile ? 'justify-center' : ''}`}>
