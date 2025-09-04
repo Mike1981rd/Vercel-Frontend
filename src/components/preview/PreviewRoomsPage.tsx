@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getImageUrl } from '@/lib/api-url';
 import { ChevronLeft, ChevronRight, Star, Wifi, Car, Tv, Home, Shield, Medal, Clock, Check, X, Waves, Sparkles, DoorOpen, Key, Laptop, Award, Dumbbell, Wind, Bed, Grid3x3, MapPin } from 'lucide-react';
 // Import additional icons for amenities
 import { Coffee, Utensils } from 'lucide-react';
