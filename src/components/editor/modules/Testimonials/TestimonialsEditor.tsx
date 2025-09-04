@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '@/lib/constants';
 import { ChevronDown, ChevronUp, Upload, Image, X } from 'lucide-react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
@@ -63,7 +64,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
+        const response = await fetch(`${API_URL}/MediaUpload/image`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

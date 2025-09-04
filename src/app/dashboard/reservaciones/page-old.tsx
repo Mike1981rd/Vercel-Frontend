@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getApiEndpoint } from '@/lib/api-url';
 import { Calendar, Search, Download, ChevronRight, User, Bed, Clock, DollarSign } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -39,7 +40,7 @@ export default function ReservacionesPage() {
   const fetchReservations = async (status?: string, startDate?: string, endDate?: string) => {
     try {
       const token = localStorage.getItem('token');
-      let url = 'http://localhost:5266/api/reservations';
+      let url = getApiEndpoint('/reservations');
       const params = new URLSearchParams();
       
       if (status && status !== 'all') params.append('status', status);

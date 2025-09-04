@@ -6,6 +6,7 @@ import {
   Home, Clock, Download, Check, Search, ChevronDown
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import ProfessionalCalendarMinimal from '@/components/availability/ProfessionalCalendarMinimal';
 import BlockPeriodModal from '@/components/availability/BlockPeriodModal';
 import RulesManager from '@/components/availability/RulesManager';
@@ -72,12 +73,11 @@ export default function AvailabilityDashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = 'http://localhost:5266/api';
       const startDate = getStartOfMonth(currentDate);
       const endDate = getEndOfMonth(currentDate);
 
       // Cargar habitaciones primero
-      const roomsResponse = await fetch(`${apiUrl}/rooms`, {
+      const roomsResponse = await fetch(getApiEndpoint('/rooms'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const roomsData = await roomsResponse.json();
@@ -91,7 +91,7 @@ export default function AvailabilityDashboard() {
       }
 
       // Cargar disponibilidad (con roomId si hay una habitación seleccionada)
-      let availabilityUrl = `${apiUrl}/availability/grid?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`;
+      let availabilityUrl = getApiEndpoint(`/availability/grid?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`);
       if (selectedRoom) {
         availabilityUrl += `&roomId=${selectedRoom.id}`;
       }
@@ -117,7 +117,7 @@ export default function AvailabilityDashboard() {
 
       // Cargar estadísticas
       const statsResponse = await fetch(
-        `${apiUrl}/availability/stats?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`,
+        getApiEndpoint(`/availability/stats?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`),
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       const statsData = await statsResponse.json();
@@ -143,7 +143,7 @@ export default function AvailabilityDashboard() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:5266/api/availability/room/${selectedRoom.id}/date/${formatDate(date)}`,
+        getApiEndpoint(`/availability/room/${selectedRoom.id}/date/${formatDate(date)}`),
         {
           method: 'PUT',
           headers: {
@@ -168,7 +168,7 @@ export default function AvailabilityDashboard() {
   const loadBlockPeriods = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/availability/block-periods', {
+      const response = await fetch(getApiEndpoint('/availability/block-periods'), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

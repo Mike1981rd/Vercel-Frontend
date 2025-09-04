@@ -29,18 +29,14 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
   const [structuralComponents, setStructuralComponents] = useState<StructuralComponents>({});
   const [globalTheme, setGlobalTheme] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [companyId, setCompanyId] = useState<number | null>(null);
+  const [companyId, setCompanyId] = useState<number | null>(1); // Single-company mode
   const [editorDeviceView, setEditorDeviceView] = useState<'desktop' | 'mobile' | undefined>(undefined);
   // Temporary migration: map legacy 'custom' handle to 'habitaciones' slug only for CUSTOM page type
   const effectiveHandle = pageType === PageType.CUSTOM && handle === 'custom' ? 'habitaciones' : handle;
 
   useEffect(() => {
-    // Get company ID from localStorage or use default
-    // In production, this would come from the domain or subdomain
-    const storedCompanyId = localStorage.getItem('companyId');
-    const id = storedCompanyId ? parseInt(storedCompanyId) : 1; // Default to company 1 for now
-    console.log('Setting company ID from localStorage:', storedCompanyId, '-> using:', id);
-    setCompanyId(id);
+    // Single-company deployment: force companyId = 1
+    setCompanyId(1);
     
     // Get editor device view for synchronization
     const storedDeviceView = localStorage.getItem('editorDeviceView');
@@ -80,6 +76,9 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
 
       try {
         const apiUrl = getApiUrl();
+        const apiOrigin = (() => {
+          try { return new URL(apiUrl).origin; } catch { return apiUrl.replace(/\/?api$/, ''); }
+        })();
         const structuralUrl = `${apiUrl}/structural-components/company/${companyId}/published`;
         const themeUrl = `${apiUrl}/global-theme-config/company/${companyId}/published`;
         console.log('Fetching structural components from:', structuralUrl);
@@ -103,6 +102,47 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
             imageBanner: data.imageBannerConfig ? JSON.parse(data.imageBannerConfig) : null,
             cartDrawer: data.cartDrawerConfig ? JSON.parse(data.cartDrawerConfig) : null,
             whatsAppWidget: data.whatsAppWidgetConfig ? JSON.parse(data.whatsAppWidgetConfig) : null,
+          } as StructuralComponents;
+
+          // Normalize dev/local/insecure media URLs to API origin for production
+          const isPrivateIp = (host: string) => {
+            // 10.0.0.0/8
+            if (/^10\./.test(host)) return true;
+            // 172.16.0.0/12
+            if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)) return true;
+            // 192.168.0.0/16
+            if (/^192\.168\./.test(host)) return true;
+            return false;
+          };
+
+          const normalizeMediaUrls = (obj: any): any => {
+            if (!obj) return obj;
+            if (typeof obj === 'string') {
+              try {
+                // If it's a URL, rebase dev/local/insecure hosts to apiOrigin
+                const u = new URL(obj);
+                const host = u.hostname.toLowerCase();
+                const isDevHost = host === 'localhost' || host === '127.0.0.1' || isPrivateIp(host);
+                if (isDevHost || u.protocol === 'http:') {
+                  return `${apiOrigin}${u.pathname}${u.search}${u.hash}`;
+                }
+                return obj;
+              } catch {
+                // Not a URL → leave as-is
+                return obj;
+              }
+            }
+            if (Array.isArray(obj)) {
+              return obj.map(normalizeMediaUrls);
+            }
+            if (typeof obj === 'object') {
+              const out: any = Array.isArray(obj) ? [] : {};
+              for (const k of Object.keys(obj)) {
+                out[k] = normalizeMediaUrls(obj[k]);
+              }
+              return out;
+            }
+            return obj;
           };
 
           // Fallback: try to fetch published ImageBanner config directly if not present in DTO
@@ -125,8 +165,17 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
               console.warn('Failed to fetch published image banner config:', e);
             }
           }
-          console.log('Parsed structural components:', parsedComponents);
-          setStructuralComponents(parsedComponents);
+          const normalized = {
+            header: normalizeMediaUrls(parsedComponents.header),
+            footer: normalizeMediaUrls(parsedComponents.footer),
+            announcementBar: normalizeMediaUrls(parsedComponents.announcementBar),
+            imageBanner: normalizeMediaUrls(parsedComponents.imageBanner),
+            cartDrawer: normalizeMediaUrls(parsedComponents.cartDrawer),
+            whatsAppWidget: normalizeMediaUrls(parsedComponents.whatsAppWidget),
+          } as StructuralComponents;
+
+          console.log('Parsed structural components:', normalized);
+          setStructuralComponents(normalized);
         } else {
           console.error('Failed to load structural components:', structuralResponse.statusText);
         }
@@ -193,8 +242,10 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
         null
       )}
 
-      {/* Image Banner (structural fallback) - if configured via published endpoint */}
-      {structuralComponents.imageBanner && (
+      {/* Image Banner (structural fallback) */}
+      {structuralComponents.imageBanner &&
+        (structuralComponents.imageBanner.enabled !== false) && // Show if not explicitly disabled
+        (!structuralComponents.imageBanner.showOnlyOnHomePage || pageType === PageType.HOME) && (
         <PreviewImageBanner 
           config={structuralComponents.imageBanner}
           theme={globalTheme}

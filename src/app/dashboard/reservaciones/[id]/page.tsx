@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import { 
   ArrowLeft, User, MapPin, CreditCard, Calendar, Clock, 
   DollarSign, MessageSquare, Printer, Check, X, Ban,
@@ -91,7 +92,7 @@ export default function ReservationDetailsPage() {
   const fetchCompanyInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/company/current', {
+      const response = await fetch(getApiEndpoint('/company/current'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -111,7 +112,7 @@ export default function ReservationDetailsPage() {
   const fetchReservation = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5266/api/reservations/${params.id}`, {
+      const response = await fetch(getApiEndpoint(`/reservations/${params.id}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -136,7 +137,7 @@ export default function ReservationDetailsPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5266/api/reservations/${params.id}`, {
+      const response = await fetch(getApiEndpoint(`/reservations/${params.id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

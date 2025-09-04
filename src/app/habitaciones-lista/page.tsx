@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiEndpoint } from '@/lib/api-url';
 import { ChevronDown, Grid, List, Search, SlidersHorizontal, X } from 'lucide-react';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -122,7 +123,7 @@ export default function RoomsListPage() {
   const fetchRooms = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/Rooms', {
+      const response = await fetch(getApiEndpoint('/Rooms'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

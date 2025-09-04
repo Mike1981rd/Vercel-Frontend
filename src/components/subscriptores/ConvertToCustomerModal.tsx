@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
+import { API_URL } from '@/lib/constants';
 
 interface NewsletterSubscriber {
   id: number;
@@ -119,7 +120,7 @@ export default function ConvertToCustomerModal({
         password: formData.password
       };
 
-      const response = await fetch(`http://localhost:5266/api/newslettersubscribers/${subscriber.id}/convert-to-customer`, {
+      const response = await fetch(`${API_URL}/newslettersubscribers/${subscriber.id}/convert-to-customer`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

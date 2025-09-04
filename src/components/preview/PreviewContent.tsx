@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { PageType, Section } from '@/types/editor.types';
+import { PageType, Section, SectionType } from '@/types/editor.types';
+import { getApiUrl } from '@/lib/api-url';
 import PreviewImageBanner from './PreviewImageBanner';
 import PreviewSlideshow from './PreviewSlideshow';
 import PreviewMulticolumns from './PreviewMulticolumns';
@@ -72,42 +73,52 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
       }
 
       try {
-        // Try to load page by slug/handle. Support migration ONLY for CUSTOM pages.
+        // Try to load page by slug/handle.
+        // Migration fallback to 'custom' only when the incoming handle is literally 'custom'.
         const handlesToTry = pageType === PageType.CUSTOM
-          ? ['habitaciones', 'custom']
+          ? (handle === 'custom' ? ['habitaciones', 'custom'] : [handle])
           : [handle];
 
         let loaded = false;
         for (const h of handlesToTry) {
-          console.log('[DEBUG] Loading page with handle:', h, 'for company:', effectiveCompanyId);
-          const pageResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/websitepages/company/${effectiveCompanyId}/slug/${h}`
+          console.log('[DEBUG] Loading snapshot with handle:', h, 'for company:', effectiveCompanyId);
+          const snapshotResponse = await fetch(
+            `${getApiUrl()}/website/${effectiveCompanyId}/snapshot/${h}`,
+            { cache: 'no-store' }
           );
-          console.log('[DEBUG] Page response status:', pageResponse.status);
-          if (!pageResponse.ok) {
-            continue;
-          }
-          const page = await pageResponse.json();
-          setPageData(page);
-          if (page.sections) {
-            const parsedSections = typeof page.sections === 'string'
-              ? JSON.parse(page.sections)
-              : page.sections;
-            const faqSections = parsedSections.filter((s: any) =>
-              s.type === 'faq' || s.type === 'FAQ' || s.sectionType === 'faq' || s.sectionType === 'FAQ'
-            );
-            if (faqSections.length > 0) {
-              console.log('[DEBUG] FAQ sections loaded from API:', faqSections);
-            }
+          console.log('[DEBUG] Snapshot response status:', snapshotResponse.status);
+          if (!snapshotResponse.ok) continue;
+          const snapshot = await snapshotResponse.json();
+          // Expecting shape: { sections: [...] } inside SnapshotData or flattened by API
+          const rawSections = snapshot?.sections || snapshot?.SnapshotData?.sections || snapshot?.snapshotData?.sections;
+          if (rawSections) {
+            const parsedSections = typeof rawSections === 'string' ? JSON.parse(rawSections) : rawSections;
+            setPageData({ handle: h });
             setSections(parsedSections);
+            loaded = true;
+            break;
           }
-          loaded = true;
-          break;
         }
 
         if (!loaded) {
-          // Page doesn't exist yet, show empty state
-          setSections([]);
+          // If we are on a room detail (roomSlug present) and no snapshot sections are available,
+          // render a sensible default room template so the page is not empty in production.
+          if (pageType === PageType.CUSTOM && roomSlug) {
+            const defaults: Section[] = [
+              { id: 'room_gallery_default', type: SectionType.ROOM_GALLERY, name: 'Room Gallery', visible: true, settings: { enabled: true, layoutStyle: 'airbnb' }, sortOrder: 1 },
+              { id: 'room_title_host_default', type: SectionType.ROOM_TITLE_HOST, name: 'Title & Host', visible: true, settings: { enabled: true }, sortOrder: 2 },
+              { id: 'room_highlights_default', type: SectionType.ROOM_HIGHLIGHTS, name: 'Highlights', visible: true, settings: { enabled: true }, sortOrder: 3 },
+              { id: 'room_description_default', type: SectionType.ROOM_DESCRIPTION, name: 'Description', visible: true, settings: { enabled: true }, sortOrder: 4 },
+              { id: 'room_amenities_default', type: SectionType.ROOM_AMENITIES, name: 'Amenities', visible: true, settings: { enabled: true }, sortOrder: 5 },
+              { id: 'room_sleeping_default', type: SectionType.ROOM_SLEEPING, name: 'Sleeping Arrangements', visible: true, settings: { enabled: true }, sortOrder: 6 },
+              { id: 'room_map_default', type: SectionType.ROOM_MAP, name: 'Map', visible: true, settings: { enabled: true }, sortOrder: 7 },
+              { id: 'room_reviews_default', type: SectionType.ROOM_REVIEWS, name: 'Reviews', visible: true, settings: { enabled: true }, sortOrder: 8 },
+            ];
+            setSections(defaults);
+          } else {
+            // Page doesn't exist yet, show empty state
+            setSections([]);
+          }
         }
 
       } catch (error) {

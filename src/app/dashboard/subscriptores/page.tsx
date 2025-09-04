@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import ConvertToCustomerModal from '@/components/subscriptores/ConvertToCustomerModal';
 
 interface NewsletterSubscriber {
@@ -145,7 +146,7 @@ export default function SubscriptoresPage() {
         search: searchTerm
       });
 
-      const response = await fetch(`http://localhost:5266/api/newslettersubscribers?${params}`, {
+      const response = await fetch(getApiEndpoint(`/newslettersubscribers?${params}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -178,7 +179,7 @@ export default function SubscriptoresPage() {
   const fetchStatistics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/newslettersubscribers/statistics', {
+      const response = await fetch(getApiEndpoint('/newslettersubscribers/statistics'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -214,7 +215,7 @@ export default function SubscriptoresPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5266/api/newslettersubscribers/${id}/toggle-status`, {
+      const response = await fetch(getApiEndpoint(`/newslettersubscribers/${id}/toggle-status`), {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -264,7 +265,7 @@ export default function SubscriptoresPage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5266/api/newslettersubscribers/${id}`, {
+      const response = await fetch(getApiEndpoint(`/newslettersubscribers/${id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -1182,7 +1183,7 @@ export default function SubscriptoresPage() {
               const formData = new FormData(e.target as HTMLFormElement);
               try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:5266/api/newslettersubscribers', {
+                const response = await fetch(getApiEndpoint('/newslettersubscribers'), {
                   method: 'POST',
                   headers: {
                     'Authorization': `Bearer ${token}`,

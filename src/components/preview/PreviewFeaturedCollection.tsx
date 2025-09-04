@@ -134,7 +134,7 @@ export default function PreviewFeaturedCollection({
             selectedIds = finalConfig.selectedProducts || [];
             break;
           case 'rooms':
-            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Rooms`;
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/rooms/company/1/public`;
             selectedIds = finalConfig.selectedRooms || [];
             break;
         }
@@ -146,11 +146,7 @@ export default function PreviewFeaturedCollection({
         });
         
         if (endpoint && selectedIds.length > 0) {
-          const response = await fetch(endpoint, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          const response = await fetch(endpoint, { cache: 'no-store' });
           
           console.log('FeaturedCollection - Response status:', response.status);
           
@@ -173,6 +169,7 @@ export default function PreviewFeaturedCollection({
             }
             
             // Helper to ensure absolute image URLs
+            const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api').replace(/\/?api$/, '');
             const getImageUrl = (imageUrl: string | undefined | null): string => {
               if (!imageUrl) {
                 console.log('No image URL provided, using placeholder');
@@ -189,26 +186,26 @@ export default function PreviewFeaturedCollection({
               
               // If it's already an absolute URL, return as is
               if (url.startsWith('http://') || url.startsWith('https://')) {
-                return url;
+                return url.replace(/^https?:\/\/localhost:5266/, apiBase);
               }
               
               // If it starts with /uploads, /wwwroot, or /images prepend the backend URL
               if (url.startsWith('/uploads') || url.startsWith('/wwwroot') || url.startsWith('/images')) {
-                return `http://localhost:5266${url}`;
+                return `${apiBase}${url}`;
               }
               
               // If it starts with uploads/ (without leading slash)
               if (url.startsWith('uploads/') || url.startsWith('wwwroot/') || url.startsWith('images/')) {
-                return `http://localhost:5266/${url}`;
+                return `${apiBase}/${url}`;
               }
               
               // If it starts with /, assume it's relative to backend
               if (url.startsWith('/')) {
-                return `http://localhost:5266${url}`;
+                return `${apiBase}${url}`;
               }
               
               // Otherwise, assume it needs the full path
-              return `http://localhost:5266/${url}`;
+              return `${apiBase}/${url}`;
             };
             
             // Map items to consistent structure

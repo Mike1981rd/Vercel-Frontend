@@ -7,6 +7,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '@/lib/api-url';
 import Link from 'next/link';
 
 interface MenuItem {
@@ -40,18 +41,10 @@ export function FooterMenuBlock({ settings, isEditor, colorScheme, headingTypogr
   const fetchMenuItems = async (menuId: string) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
       console.log('Fetching menu items for menuId:', menuId);
       
-      // Try the correct endpoint structure
-      // First try to get the full menu with its items
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${menuId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Use public endpoint (no auth) for published menu
+      const response = await fetch(`${getApiUrl()}/NavigationMenu/${menuId}/public`, { cache: 'no-store' });
 
       if (response.ok) {
         const menuData = await response.json();
@@ -90,12 +83,7 @@ export function FooterMenuBlock({ settings, isEditor, colorScheme, headingTypogr
         } else {
           console.log('No items found in menu data, trying items endpoint');
           // Try the items endpoint as fallback
-          const itemsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${menuId}/items`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const itemsResponse = await fetch(`${getApiUrl()}/NavigationMenu/${menuId}/items/public`, { cache: 'no-store' });
           
           if (itemsResponse.ok) {
             const items = await itemsResponse.json();

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { XIcon, ShieldIcon } from 'lucide-react';
+import { API_URL } from '@/lib/constants';
 
 interface Role {
   id: number;
@@ -58,7 +59,7 @@ export function RoleModal({ isOpen, onClose, role, primaryColor }: RoleModalProp
   const fetchPermissions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/permissions', {
+      const response = await fetch(`${API_URL}/permissions`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -101,8 +102,8 @@ export function RoleModal({ isOpen, onClose, role, primaryColor }: RoleModalProp
     try {
       const token = localStorage.getItem('token');
       const url = role
-        ? `http://localhost:5266/api/roles/${role.id}`
-        : 'http://localhost:5266/api/roles';
+        ? `${API_URL}/roles/${role.id}`
+        : `${API_URL}/roles`;
       
       const method = role ? 'PUT' : 'POST';
 

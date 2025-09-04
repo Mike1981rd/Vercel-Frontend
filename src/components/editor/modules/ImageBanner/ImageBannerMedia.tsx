@@ -8,6 +8,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { API_URL } from '@/lib/constants';
 import { ChevronDown, ChevronUp, Upload, X, Image, Film, Volume2, VolumeX } from 'lucide-react';
 import { ImageBannerConfig } from './types';
 
@@ -33,7 +34,7 @@ export function ImageBannerMedia({ config, onChange, isExpanded, onToggle }: Ima
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/mediaupload/media', {
+      const response = await fetch(`${API_URL}/mediaupload/media`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -1,4 +1,13 @@
 /** @type {import('next').NextConfig} */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api';
+let API_ORIGIN = 'https://api.test1hotelwebsite.online';
+let API_HOSTNAME = 'api.test1hotelwebsite.online';
+
+try {
+  const u = new URL(API_URL);
+  API_ORIGIN = u.origin;
+  API_HOSTNAME = u.hostname;
+} catch {}
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -25,15 +34,15 @@ const nextConfig = {
         hostname: 'websitebuilder-api-staging.onrender.com',
         pathname: '/**',
       },
-      // Public API domain if serving images through it
+      // API hostname from environment variable
       {
         protocol: 'https',
-        hostname: 'api.test1hotelwebsite.online',
+        hostname: API_HOSTNAME,
         pathname: '/uploads/**',
       },
       {
         protocol: 'https',
-        hostname: 'api.test1hotelwebsite.online',
+        hostname: API_HOSTNAME,
         pathname: '/**',
       },
     ],
@@ -54,7 +63,7 @@ const nextConfig = {
         // This will route custom domains to the snapshot API
         {
           source: '/:path*',
-          destination: 'https://websitebuilder-api-staging.onrender.com/api/website/:companyId/snapshot/:path*',
+          destination: `${API_ORIGIN}/api/website/:companyId/snapshot/:path*`,
           has: [
             {
               type: 'host',

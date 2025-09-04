@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import { 
   UserIcon, 
   ArrowLeftIcon, 
@@ -82,7 +83,7 @@ export default function EditUserPage() {
   const fetchUser = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5266/api/users/${userId}`, {
+      const response = await fetch(getApiEndpoint(`/users/${userId}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -123,7 +124,7 @@ export default function EditUserPage() {
   const fetchRoles = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/roles', {
+      const response = await fetch(getApiEndpoint('/roles'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -196,7 +197,7 @@ export default function EditUserPage() {
         const uploadData = new FormData();
         uploadData.append('file', avatarFile);
         
-        const uploadResponse = await fetch('http://localhost:5266/api/upload/avatar', {
+        const uploadResponse = await fetch(getApiEndpoint('/upload/avatar'), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -227,7 +228,7 @@ export default function EditUserPage() {
         payload.password = formData.password;
       }
 
-      const response = await fetch(`http://localhost:5266/api/users/${userId}`, {
+      const response = await fetch(getApiEndpoint(`/users/${userId}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

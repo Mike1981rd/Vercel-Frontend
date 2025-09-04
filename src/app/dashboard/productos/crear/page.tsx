@@ -17,6 +17,7 @@ import {
 import { useI18n } from '@/contexts/I18nContext';
 import { ProductMessages } from '@/constants/productMessages';
 import { formatCurrencyInput, unformatCurrency } from '@/utils/currency';
+import { getApiEndpoint } from '@/lib/api-url';
 
 interface Collection {
   id: number;
@@ -96,7 +97,7 @@ export default function CreateProductPage() {
   const fetchCollections = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/collections', {
+      const response = await fetch(getApiEndpoint('/collections'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -238,7 +239,7 @@ export default function CreateProductPage() {
         images: uploadedImages
       };
 
-      const response = await fetch('http://localhost:5266/api/products', {
+      const response = await fetch(getApiEndpoint('/products'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -253,7 +254,7 @@ export default function CreateProductPage() {
 
         // Assign to collections if any selected
         if (selectedCollections.length > 0 && productId) {
-          await fetch(`http://localhost:5266/api/products/${productId}/collections`, {
+          await fetch(getApiEndpoint(`/products/${productId}/collections`), {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

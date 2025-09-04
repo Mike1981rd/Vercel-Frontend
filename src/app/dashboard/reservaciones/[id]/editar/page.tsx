@@ -9,6 +9,7 @@ import {
   ChevronRight, Clock, Info, AlertCircle
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
 import { useToast } from '@/contexts/ToastContext';
 
 interface Customer {
@@ -96,7 +97,7 @@ export default function EditReservationPage() {
   const fetchCompanyInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/company/current', {
+      const response = await fetch(getApiEndpoint('/company/current'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -118,7 +119,7 @@ export default function EditReservationPage() {
       const token = localStorage.getItem('token');
       
       // Fetch all reservations to get the basic data including customerId and roomId
-      const listResponse = await fetch(`http://localhost:5266/api/reservations`, {
+      const listResponse = await fetch(getApiEndpoint('/reservations'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -141,7 +142,7 @@ export default function EditReservationPage() {
       console.log('Basic reservation:', basicReservation);
 
       // Now fetch detailed data
-      const detailResponse = await fetch(`http://localhost:5266/api/reservations/${params.id}`, {
+      const detailResponse = await fetch(getApiEndpoint(`/reservations/${params.id}`), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -186,7 +187,7 @@ export default function EditReservationPage() {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/customers?size=100', {
+      const response = await fetch(getApiEndpoint('/customers?size=100'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -212,7 +213,7 @@ export default function EditReservationPage() {
   const fetchRooms = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/rooms', {
+      const response = await fetch(getApiEndpoint('/rooms'), {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -291,7 +292,7 @@ export default function EditReservationPage() {
         status: formData.status
       };
       
-      const response = await fetch(`http://localhost:5266/api/reservations/${params.id}`, {
+      const response = await fetch(getApiEndpoint(`/reservations/${params.id}`), {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
