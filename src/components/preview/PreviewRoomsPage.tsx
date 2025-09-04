@@ -239,6 +239,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                   src={getImageUrl(image)}
                   alt={`Room ${index + 1}`}
                   className="w-full h-auto"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               ))}
             </div>
@@ -255,6 +256,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
               src={getImageUrl(selectedRoom.images[currentImageIndex])}
               alt={selectedRoom.name}
               className="w-full h-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
             />
             <button
               onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedRoom.images.length - 1)}
@@ -288,6 +290,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                 alt={selectedRoom.name}
                 className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                 onClick={() => setShowAllPhotos(true)}
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
               />
             </div>
             {selectedRoom.images.slice(1, 5).map((image, index) => (
@@ -297,6 +300,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                   alt={`Room ${index + 2}`}
                   className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                   onClick={() => setShowAllPhotos(true)}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                 />
               </div>
             ))}
