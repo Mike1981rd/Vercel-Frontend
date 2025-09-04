@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '@/contexts/I18nContext';
+import { getImageUrl } from '@/lib/api-url';
 import { AlertCircle, Phone, Mail, Building2, MapPin, Home, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -458,7 +459,12 @@ export function CheckoutConfiguration() {
                 className="text-sm"
               />
               {checkoutLogoUrl && (
-                <img src={checkoutLogoUrl} alt="logo" className="h-10 object-contain border rounded p-1 bg-white" />
+                <img 
+                  src={getImageUrl(checkoutLogoUrl)} 
+                  alt="logo" 
+                  className="h-10 object-contain border rounded p-1 bg-white"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
               )}
             </div>
 
