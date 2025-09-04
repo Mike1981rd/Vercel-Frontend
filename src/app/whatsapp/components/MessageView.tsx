@@ -53,6 +53,8 @@ export default function MessageView({
   const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
   const prevFingerprintRef = useRef<string | null>(null);
   const currentMessagesRef = useRef<Message[]>([]);
+  const suppressFirstScrollRef = useRef<boolean>(false);
+  const allowAutoScrollRef = useRef<boolean>(false);
   // Media viewer overlay (image/video)
   const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
   const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
@@ -61,7 +63,11 @@ export default function MessageView({
   useEffect(() => {
     // Reset per-conversation state to avoid cross-contamination
     prevFingerprintRef.current = null;
-    stickToBottomRef.current = true;
+    // No auto-stick at first open
+    stickToBottomRef.current = false;
+    allowAutoScrollRef.current = false;
+    // Do not auto-scroll on the first render after opening a conversation
+    suppressFirstScrollRef.current = true;
     if (messagesCacheRef?.current?.[conversation.id]) {
       setMessages(messagesCacheRef.current[conversation.id]);
       setLoading(false);
@@ -70,6 +76,10 @@ export default function MessageView({
       setLoading(true);
     }
     loadMessages();
+    // Quick retries to pick up background provider refresh if any
+    setTimeout(() => loadMessages(true), 900);
+    setTimeout(() => loadMessages(true), 2500);
+    setTimeout(() => loadMessages(true), 5000);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -88,8 +98,18 @@ export default function MessageView({
   }, [conversation.id]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change only if user is near bottom
-    scrollToBottom(false);
+    // On first paint after opening, do not auto-scroll
+    if (suppressFirstScrollRef.current) {
+      suppressFirstScrollRef.current = false;
+    } else {
+      // Only auto-scroll if the user already indicated preference (near bottom)
+      if (allowAutoScrollRef.current && stickToBottomRef.current) {
+        scrollToBottom(false);
+        // Also schedule a post-layout scroll to account for images/videos affecting height
+        requestAnimationFrame(() => scrollToBottom(false));
+        setTimeout(() => scrollToBottom(false), 120);
+      }
+    }
     // Keep a live ref to latest messages to avoid stale closures in polling
     currentMessagesRef.current = messages;
   }, [messages]);
@@ -101,7 +121,9 @@ export default function MessageView({
     const onScroll = () => {
       const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       // Consider near bottom if within 80px
-      stickToBottomRef.current = distanceFromBottom < 80;
+      const nearBottom = distanceFromBottom < 80;
+      stickToBottomRef.current = nearBottom;
+      if (nearBottom) allowAutoScrollRef.current = true;
       userScrollTsRef.current = Date.now();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -326,8 +348,14 @@ export default function MessageView({
   // No mock messages fallback here; center view must show real data only
 
   const scrollToBottom = (force: boolean) => {
-    if (force || stickToBottomRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (!messagesEndRef.current) return;
+    if (force || (allowAutoScrollRef.current && stickToBottomRef.current)) {
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } catch {
+        // Fallback
+        messagesEndRef.current.scrollIntoView();
+      }
     }
   };
 
@@ -689,6 +717,7 @@ export default function MessageView({
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  onLoad={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
                                 <video
@@ -703,6 +732,7 @@ export default function MessageView({
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  onLoadedData={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('audio') ? (
                                 <audio
