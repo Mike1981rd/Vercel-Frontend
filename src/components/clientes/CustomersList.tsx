@@ -330,9 +330,17 @@ export function CustomersList() {
                         <div className="flex-shrink-0">
                           {customer.avatar ? (
                             <img
-                              src={customer.avatar}
+                              src={getImageUrl(customer.avatar)}
                               alt={customer.fullName}
                               className="w-10 h-10 rounded-lg object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = document.createElement('div');
+                                fallback.className = 'w-10 h-10 rounded-lg flex items-center justify-center text-white font-semibold';
+                                (fallback as any).style = `background-color: ${primaryColor}`;
+                                fallback.innerText = getInitials(customer.fullName);
+                                e.currentTarget.parentElement?.appendChild(fallback);
+                              }}
                             />
                           ) : (
                             <div 
