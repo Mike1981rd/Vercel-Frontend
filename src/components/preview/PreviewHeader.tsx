@@ -140,7 +140,13 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
       if (headerConfig.menuId && headerConfig.menuId !== 'none') {
         try {
           // Load real menu from API
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api';
+          // Use local API in development, production API otherwise
+          const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+          const apiUrl = isDevelopment 
+            ? 'http://localhost:5266/api' 
+            : (process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api');
+          
+          console.log('Loading menu from:', apiUrl, 'Menu ID:', headerConfig.menuId);
           const response = await fetch(`${apiUrl}/NavigationMenu/${headerConfig.menuId}/public`);
           
           if (response.ok) {
@@ -149,10 +155,10 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
             
             // Transform menu items to the expected format - using subItems like EditorPreview
             const transformMenuItem = (item: any): any => ({
-              id: item.id?.toString() || item.name,
-              label: item.name || item.label,
-              url: item.url || item.link || '#',
-              subItems: item.children?.map(transformMenuItem) || item.items?.map(transformMenuItem) || item.subItems?.map(transformMenuItem)
+              id: item.id?.toString() || item.label,
+              label: item.label || item.name,
+              url: item.link || item.url || '#',
+              subItems: item.subItems?.map(transformMenuItem) || item.children?.map(transformMenuItem) || item.items?.map(transformMenuItem)
             });
             
             const items = menuData.items?.map(transformMenuItem) || [];
@@ -443,14 +449,14 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
           >
             <div className="py-2">
               {item.subItems.map((child: any, childIndex: number) => (
-                <Link
+                <a
                   key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
                   href={child.url || '#'}
                   className="block px-4 py-2 hover:bg-gray-50 transition-colors"
                   style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
                 >
                   {child.label}
-                </Link>
+                </a>
               ))}
             </div>
           </div>
