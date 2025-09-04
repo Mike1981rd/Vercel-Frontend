@@ -20,16 +20,31 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
+  const lastTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || mapRef.current) return;
+    if (!mapContainer.current) return;
 
     // Resolve token: prefer override, fallback to env; require it to initialize map
     const resolvedToken = (accessTokenOverride && accessTokenOverride.trim()) || (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
     if (!resolvedToken) {
-      console.warn('Mapbox token not available yet. Skipping map init until token is set.');
+      console.warn('Mapbox token not available. Map disabled; form remains usable.');
       return;
     }
+    // Mapbox GL requires a public (pk.*) token in the browser; never use sk.* here
+    if (!resolvedToken.startsWith('pk.')) {
+      console.warn('Mapbox token is not a public token (pk.*). Map disabled; form remains usable.');
+      return;
+    }
+    // Re-init map if token changed
+    const tokenChanged = lastTokenRef.current && lastTokenRef.current !== resolvedToken;
+    if (tokenChanged && mapRef.current) {
+      try { markerRef.current?.remove(); } catch {}
+      try { mapRef.current?.remove(); } catch {}
+      markerRef.current = null;
+      mapRef.current = null;
+    }
+    lastTokenRef.current = resolvedToken;
     (mapboxgl as any).accessToken = resolvedToken;
 
     // If no coords are passed yet, do not initialize to arbitrary fallback center
@@ -39,12 +54,18 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
 
     const center = [longitude, latitude] as [number, number];
 
-    const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center,
-      zoom,
-    });
+    let map: Map | null = null;
+    try {
+      map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center,
+        zoom,
+      });
+    } catch (e) {
+      console.warn('Mapbox GL initialization failed. Map disabled; form remains usable.', e);
+      return;
+    }
     mapRef.current = map;
 
     const marker = new mapboxgl.Marker({ draggable: true })
@@ -58,10 +79,10 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
     });
 
     return () => {
-      marker.remove();
-      map.remove();
-      markerRef.current = null;
-      mapRef.current = null;
+      try { marker.remove(); } catch {}
+      try { map.remove(); } catch {}
+      if (markerRef.current === marker) markerRef.current = null;
+      if (mapRef.current === map) mapRef.current = null;
     };
   }, [accessTokenOverride, latitude, longitude, zoom]);
 
