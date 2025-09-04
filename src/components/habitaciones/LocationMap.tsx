@@ -26,7 +26,10 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
     if (!mapContainer.current) return;
 
     // Resolve token: prefer override, fallback to env; require it to initialize map
-    const resolvedToken = (accessTokenOverride && accessTokenOverride.trim()) || (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
+    // Try override (company), then global window var, then env
+    // @ts-ignore
+    const globalToken = (typeof window !== 'undefined' && window.__MAPBOX_TOKEN) ? String((window as any).__MAPBOX_TOKEN) : '';
+    const resolvedToken = (accessTokenOverride && accessTokenOverride.trim()) || globalToken || (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
     if (!resolvedToken) {
       console.warn('Mapbox token not available. Map disabled; form remains usable.');
       return;
