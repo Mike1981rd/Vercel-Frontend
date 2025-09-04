@@ -65,18 +65,27 @@ export default function MessageView({
   useEffect(() => {
     // Reset per-conversation state to avoid cross-contamination
     prevFingerprintRef.current = null;
-    // No auto-stick at first open
-    stickToBottomRef.current = false;
-    allowAutoScrollRef.current = false;
-    // Do not auto-scroll on the first render after opening a conversation
-    suppressFirstScrollRef.current = true;
-    // Mark first load and block auto-scroll for a short grace period
-    firstLoadRef.current = true;
-    autoScrollEnableAtRef.current = Date.now() + 1200;
-    if (messagesCacheRef?.current?.[conversation.id]) {
-      setMessages(messagesCacheRef.current[conversation.id]);
+    const cached = messagesCacheRef?.current?.[conversation.id];
+    const hasCache = Array.isArray(cached) && cached.length > 0;
+    if (hasCache) {
+      // Re-open: allow stick-to-bottom immediately
+      stickToBottomRef.current = true;
+      allowAutoScrollRef.current = true;
+      suppressFirstScrollRef.current = false;
+      firstLoadRef.current = false; // we already have a stable batch
+      autoScrollEnableAtRef.current = Date.now();
+      setMessages(cached!);
       setLoading(false);
+      // Ensure we land at the bottom after paint
+      requestAnimationFrame(() => scrollToBottom(true));
+      setTimeout(() => scrollToBottom(true), 80);
     } else {
+      // First-time open: no auto-scroll, grace period
+      stickToBottomRef.current = false;
+      allowAutoScrollRef.current = false;
+      suppressFirstScrollRef.current = true;
+      firstLoadRef.current = true;
+      autoScrollEnableAtRef.current = Date.now() + 1200;
       setMessages([]);
       setLoading(true);
     }
