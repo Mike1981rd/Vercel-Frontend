@@ -57,7 +57,6 @@ export default function MessageView({
   const allowAutoScrollRef = useRef<boolean>(false);
   const firstLoadRef = useRef<boolean>(true);
   const autoScrollEnableAtRef = useRef<number>(0);
-  const allowAutoScrollRef = useRef<boolean>(false);
   // Media viewer overlay (image/video)
   const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
   const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
