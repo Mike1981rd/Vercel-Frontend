@@ -277,7 +277,9 @@ export default function MessageView({
             const prevTsMap = new Map<string, number>();
             for (const m of messages) prevTsMap.set(String(m.id), m.timestamp.getTime());
 
-          const formatted: Message[] = raw.map((msg: any) => {
+          // For first paint, reduce payload to last 20 messages for faster render; backend usually returns last 50
+          const trimmed = firstLoadRef.current && Array.isArray(raw) && raw.length > 20 ? raw.slice(raw.length - 20) : raw;
+          const formatted: Message[] = trimmed.map((msg: any) => {
               const dir = (msg.direction || '').toLowerCase();
               const from = msg.from || msg.From;
               // Use server-provided direction when available; only fallback to from/phone heuristic if missing
@@ -426,14 +428,11 @@ export default function MessageView({
   // No mock messages fallback here; center view must show real data only
 
   const scrollToBottom = (force: boolean) => {
-    if (!messagesEndRef.current) return;
+    const el = messagesContainerRef.current;
+    if (!el) return;
     if (force || (allowAutoScrollRef.current && stickToBottomRef.current && Date.now() >= autoScrollEnableAtRef.current)) {
-      try {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      } catch {
-        // Fallback
-        messagesEndRef.current.scrollIntoView();
-      }
+      // Instant scroll, no animation for snappier UX
+      el.scrollTop = el.scrollHeight;
     }
   };
 
@@ -795,6 +794,8 @@ export default function MessageView({
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  loading="lazy"
+                                  decoding="async"
                                   onLoad={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
@@ -810,6 +811,7 @@ export default function MessageView({
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  preload="metadata"
                                   onLoadedData={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('audio') ? (
