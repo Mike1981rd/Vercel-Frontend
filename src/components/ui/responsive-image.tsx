@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getResponsiveImageProps, generateBlurPlaceholder, preloadImage } from '@/lib/image-optimizer';
+import { getImageUrl } from '@/lib/api-url';
 
 interface ResponsiveImageProps {
   src: string;
@@ -32,9 +33,7 @@ export function ResponsiveImage({
     if (!src) return;
 
     // Ensure the URL is complete with backend host if it's a relative path
-    const fullUrl = src.startsWith('http') 
-      ? src 
-      : `http://localhost:5266${src}`;
+    const fullUrl = getImageUrl(src);
 
     // Preload image if priority
     if (priority) {
@@ -66,9 +65,7 @@ export function ResponsiveImage({
   };
 
   // Generate responsive props - use the full URL
-  const fullUrl = src && !src.startsWith('http') 
-    ? `http://localhost:5266${src}`
-    : src;
+  const fullUrl = getImageUrl(src);
     
   const responsiveProps = fullUrl ? getResponsiveImageProps(fullUrl, alt, {
     maxWidth: width,

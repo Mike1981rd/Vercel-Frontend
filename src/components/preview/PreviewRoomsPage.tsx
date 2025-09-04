@@ -235,7 +235,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
               {selectedRoom.images.map((image, index) => (
                 <img
                   key={index}
-                  src={image}
+                  src={getImageUrl(image)}
                   alt={`Room ${index + 1}`}
                   className="w-full h-auto"
                 />
@@ -251,7 +251,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
           // Mobile: Swipeable gallery
           <div className="relative h-[300px] bg-gray-100">
             <img
-              src={selectedRoom.images[currentImageIndex]}
+              src={getImageUrl(selectedRoom.images[currentImageIndex])}
               alt={selectedRoom.name}
               className="w-full h-full object-cover"
             />
@@ -283,7 +283,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
           <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[560px] rounded-xl overflow-hidden relative">
             <div className="col-span-2 row-span-2">
               <img
-                src={selectedRoom.images[0]}
+                src={getImageUrl(selectedRoom.images[0])}
                 alt={selectedRoom.name}
                 className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                 onClick={() => setShowAllPhotos(true)}
@@ -292,7 +292,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
             {selectedRoom.images.slice(1, 5).map((image, index) => (
               <div key={index} className="relative">
                 <img
-                  src={image}
+                  src={getImageUrl(image)}
                   alt={`Room ${index + 2}`}
                   className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                   onClick={() => setShowAllPhotos(true)}

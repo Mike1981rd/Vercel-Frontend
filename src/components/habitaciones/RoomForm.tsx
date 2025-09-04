@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfigOptions } from '@/hooks/useConfigOptions';
+import { apiClient } from '@/lib/api/client';
 import RoomFormExtended from './RoomFormExtended';
 import Toggle from '@/components/ui/Toggle';
 import QuickAddOffcanvas from '@/components/ui/QuickAddOffcanvas';
@@ -261,18 +262,11 @@ export default function RoomForm({
   const loadHosts = async () => {
     try {
       setLoadingHosts(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/hosts`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setHosts(data);
-      }
+      const response = await apiClient.get('/hosts');
+      setHosts(response.data || []);
     } catch (error) {
       console.error('Error loading hosts:', error);
+      setHosts([]);
     } finally {
       setLoadingHosts(false);
     }
