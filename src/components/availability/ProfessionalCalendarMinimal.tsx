@@ -37,6 +37,7 @@ interface ProfessionalCalendarProps {
   availabilityData: any;
   viewMode?: 'availability' | 'pricing' | 'selection';
   initialMonth?: Date; // Align calendar with loaded data window
+  onMonthChange?: (month: Date) => void; // Notify parent when user navigates months
 }
 
 export default function ProfessionalCalendarMinimal({
@@ -47,7 +48,8 @@ export default function ProfessionalCalendarMinimal({
   onPriceUpdate,
   availabilityData,
   viewMode: initialViewMode = 'availability',
-  initialMonth
+  initialMonth,
+  onMonthChange
 }: ProfessionalCalendarProps) {
   const { company } = useCompany();
   const currency = (company as any)?.storeCurrency || company?.currency || '$';
@@ -62,6 +64,15 @@ export default function ProfessionalCalendarMinimal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMonth?.getFullYear(), initialMonth?.getMonth()]);
+
+  // Inform parent when the visible month changes so it can reload data
+  useEffect(() => {
+    if (onMonthChange) {
+      const normalized = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      onMonthChange(normalized);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth.getFullYear(), currentMonth.getMonth()]);
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
@@ -388,7 +399,10 @@ export default function ProfessionalCalendarMinimal({
           {/* Month navigation */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
-              onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))}
+              onClick={() => {
+                const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+                setCurrentMonth(prev);
+              }}
               className="p-0.5 md:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <ChevronLeft className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-600 dark:text-gray-400" />
@@ -399,7 +413,10 @@ export default function ProfessionalCalendarMinimal({
             </span>
             
             <button
-              onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))}
+              onClick={() => {
+                const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+                setCurrentMonth(next);
+              }}
               className="p-0.5 md:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-600 dark:text-gray-400" />
