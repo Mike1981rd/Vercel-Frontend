@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import MessageInput from './MessageInput';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
+import { getApiEndpoint, normalizeMediaUrl } from '@/lib/api-url';
 import type { Conversation, Message } from './ChatRoom';
 import { Avatar } from '@/components/ui/Avatar';
 import type { ChatTheme } from './ThemeSelector';
@@ -679,10 +679,10 @@ export default function MessageView({
                               {message.type?.toLowerCase().includes('image') ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   alt={message.content || 'image'}
                                   className="w-auto h-auto cursor-zoom-in"
-                                  onClick={() => openViewer(message.mediaUrl!, 'image')}
+                                  onClick={() => openViewer(normalizeMediaUrl(message.mediaUrl!)!, 'image')}
                                   style={{
                                     maxWidth: `${mediaSettings.imageMaxWidth}px`,
                                     maxHeight: `${mediaSettings.imageMaxHeight}px`,
@@ -692,11 +692,11 @@ export default function MessageView({
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
                                 <video
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   controls
                                   playsInline
                                   className="h-auto cursor-zoom-in"
-                                  onClick={() => openViewer(message.mediaUrl!, 'video')}
+                                  onClick={() => openViewer(normalizeMediaUrl(message.mediaUrl!)!, 'video')}
                                   style={{
                                     width: `${mediaSettings.videoMaxWidth}px`,
                                     maxHeight: `${mediaSettings.videoMaxHeight}px`,
@@ -706,12 +706,12 @@ export default function MessageView({
                                 />
                               ) : message.type?.toLowerCase().includes('audio') ? (
                                 <audio
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   controls
                                   className="w-64"
                                 />
                               ) : (
-                                <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
+                                <a href={normalizeMediaUrl(message.mediaUrl)} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
                                   Descargar archivo
                                 </a>
                               )}
