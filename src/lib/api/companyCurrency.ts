@@ -1,6 +1,6 @@
 'use client';
 
-import { getApiUrl } from '@/lib/api-url';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
 
 export type CurrencyCode = 'DOP' | 'USD' | 'EUR';
 
@@ -22,7 +22,7 @@ function getAuthHeaders() {
 
 export const companyCurrencyApi = {
   async get(companyId: number): Promise<CompanyCurrencySettings> {
-    const resp = await fetch(`${getApiUrl()}/currency/company/${companyId}/effective-settings`, {
+    const resp = await fetch(`${API_URL}/currency/company/${companyId}/effective-settings`, {
       headers: getAuthHeaders()
     });
     if (!resp.ok) {
@@ -32,7 +32,7 @@ export const companyCurrencyApi = {
   },
 
   async update(companyId: number, settings: CompanyCurrencySettings): Promise<void> {
-    const resp = await fetch(`${getApiUrl()}/company/${companyId}/currency-settings`, {
+    const resp = await fetch(`${API_URL}/company/${companyId}/currency-settings`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(settings)

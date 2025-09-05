@@ -192,7 +192,7 @@ export default function RoomHighlightsTab({ formData, setFormData, primaryColor 
                     <input
                       type="checkbox"
                       checked={highlight.isActive}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHighlightChange(index, 'isActive', e.target.checked)}
+                      onChange={(e) => handleHighlightChange(index, 'isActive', e.target.checked)}
                       className="rounded text-blue-600 focus:ring-blue-500"
                       style={{ accentColor: primaryColor }}
                     />
@@ -247,7 +247,7 @@ export default function RoomHighlightsTab({ formData, setFormData, primaryColor 
                 </label>
                 <select
                   value={highlight.icon}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleHighlightChange(index, 'icon', e.target.value)}
+                  onChange={(e) => handleHighlightChange(index, 'icon', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white"
                   style={{ 
                     '--tw-ring-color': primaryColor,
@@ -270,7 +270,7 @@ export default function RoomHighlightsTab({ formData, setFormData, primaryColor 
                 <input
                   type="text"
                   value={highlight.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleHighlightChange(index, 'title', e.target.value)}
+                  onChange={(e) => handleHighlightChange(index, 'title', e.target.value)}
                   placeholder={t('rooms.highlights.titlePlaceholder', 'e.g. Great location')}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white"
                   style={{ '--tw-ring-color': primaryColor } as any}
@@ -285,7 +285,7 @@ export default function RoomHighlightsTab({ formData, setFormData, primaryColor 
                 </label>
                 <textarea
                   value={highlight.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleHighlightChange(index, 'description', e.target.value)}
+                  onChange={(e) => handleHighlightChange(index, 'description', e.target.value)}
                   placeholder={t('rooms.highlights.descriptionPlaceholder', 'e.g. 90% of recent guests gave the location a 5-star rating')}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 dark:bg-gray-700 dark:text-white resize-none"

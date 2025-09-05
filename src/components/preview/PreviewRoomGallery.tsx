@@ -28,7 +28,7 @@ interface RoomGalleryConfig {
 
 interface PreviewRoomGalleryProps {
   config: RoomGalleryConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }

@@ -74,7 +74,7 @@ function SortableRichTextBlock({
       style={style}
       className={`
         flex items-center gap-2 p-2 bg-white border rounded-lg mb-1
-        ${(block as any).visible === false ? 'opacity-50' : ''}
+        ${block.visible === false ? 'opacity-50' : ''}
         hover:bg-gray-50 transition-colors group
       `}
     >
@@ -100,7 +100,7 @@ function SortableRichTextBlock({
         onClick={onToggleVisibility}
         className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
       >
-        {(block as any).visible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
+        {block.visible !== false ? <Eye size={14} /> : <EyeOff size={14} />}
       </button>
       
       <button

@@ -17,7 +17,7 @@ import { FAQConfig } from '@/components/editor/modules/FAQ/types';
 interface PreviewFAQProps {
   config: FAQConfig;
   theme?: any;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 

@@ -61,7 +61,7 @@ export default function PreviewContactForm({
   };
 
   // Get typography settings
-  const typography: any = themeConfig?.typography || {};
+  const typography = themeConfig?.typography || {};
   
   // Map heading size to typography
   const getHeadingStyles = () => {
@@ -358,7 +358,7 @@ export default function PreviewContactForm({
               className={cn(inputClassName, "resize-none")}
               style={{
                 ...getInputStyles(),
-                '--tw-ring-color': (colorScheme as any)?.accent
+                '--tw-ring-color': colorScheme?.accent
               } as any}
             />
           </div>

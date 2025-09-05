@@ -16,7 +16,7 @@ import { useImageBannerTypography } from '@/components/editor/modules/ImageBanne
 interface PreviewImageBannerProps {
   config: ImageBannerConfig;
   isEditor?: boolean;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   theme?: any; // Theme from PreviewPage for live preview
   pageType?: string; // To check if current page is home
 }

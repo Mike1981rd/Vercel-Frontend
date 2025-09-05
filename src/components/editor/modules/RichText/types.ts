@@ -7,14 +7,12 @@ export interface RichTextIcon {
   icon: string | null; // null = None, string = icon identifier
   customIcon?: string; // URL for custom icon
   size: number; // px
-  visible?: boolean;
 }
 
 export interface RichTextSubheading {
   id: string;
   type: 'subheading';
   text: string;
-  visible?: boolean;
 }
 
 export interface RichTextHeading {
@@ -27,7 +25,6 @@ export interface RichTextHeading {
     italic?: boolean;
     link?: string;
   };
-  visible?: boolean;
 }
 
 export interface RichTextText {
@@ -36,7 +33,6 @@ export interface RichTextText {
   columns: 1 | 2 | 3;
   columnContent: string[]; // Array of HTML content for each column
   bodySize: 'body1' | 'body2' | 'body3' | 'body4';
-  visible?: boolean;
 }
 
 export interface RichTextButton {
@@ -49,7 +45,6 @@ export interface RichTextButtons {
   id: string;
   type: 'buttons';
   buttons: RichTextButton[]; // Max 2 buttons
-  visible?: boolean;
 }
 
 export type RichTextBlock = 

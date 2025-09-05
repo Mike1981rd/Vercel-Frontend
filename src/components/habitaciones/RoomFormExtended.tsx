@@ -158,7 +158,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
       const geo = await geocodeAddress(addressParts, countryCode, provider === 'mapbox' ? token : undefined);
       if (geo) {
         // IMPORTANT: only update coordinates so the display always reflects the user's typed address
-        setFormData((prev: any) => ({ ...prev, latitude: geo.latitude, longitude: geo.longitude }));
+        setFormData(prev => ({ ...prev, latitude: geo.latitude, longitude: geo.longitude }));
       }
       // Update signature after processing
       lastAddressSignatureRef.current = currentSig;
@@ -242,7 +242,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
         <nav className="-mb-px flex space-x-8">
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('location');
             }}
@@ -257,7 +257,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           </button>
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('policies');
             }}
@@ -272,7 +272,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           </button>
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('sleeping');
             }}
@@ -287,7 +287,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           </button>
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('fees');
             }}
@@ -302,7 +302,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           </button>
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('seo');
             }}
@@ -317,7 +317,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           </button>
           <button
             type="button"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.preventDefault();
               setActiveTab('highlights');
             }}
@@ -345,7 +345,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.streetAddress || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, streetAddress: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                 placeholder="Calle Principal 123"
               />
@@ -358,7 +358,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.city || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, city: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -370,7 +370,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.state || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, state: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -382,7 +382,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.country || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, country: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -394,7 +394,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.postalCode || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, postalCode: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -406,7 +406,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
               <input
                 type="text"
                 value={formData.neighborhood || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, neighborhood: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -419,7 +419,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 type="number"
                 step="0.000001"
                 value={formData.latitude || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -432,7 +432,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 type="number"
                 step="0.000001"
                 value={formData.longitude || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
               />
             </div>
@@ -507,8 +507,8 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.houseRulesOrder) ? formData.houseRulesOrder : [];
                         const values = houseRulesOptions.map(o => o.value);
-                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
-                        return ordered.map((valueKey: string) => {
+                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        return ordered.map((valueKey) => {
                           const opt = houseRulesOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
                           return (
@@ -527,7 +527,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                                   });
                                   try { localStorage.setItem('room_houseRulesOrder', JSON.stringify(newOrder)); } catch {}
                                 }}
-                                label={opt.labelEs || opt.value}
+                                label={opt.label || opt.value}
                                 size="medium"
                               />
                             </div>
@@ -572,10 +572,10 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
             <h3 className="font-medium text-lg mb-4">{t('rooms.orderHouseRules', 'Orden de Reglas de la Casa')}</h3>
             {(() => {
-              const enabled = (houseRulesOptions || []).map(o => o.value).filter((v: string) => formData.houseRules?.[v]);
+              const enabled = (houseRulesOptions || []).map(o => o.value).filter(v => formData.houseRules?.[v]);
               const order = Array.isArray(formData.houseRulesOrder) ? formData.houseRulesOrder : [];
-              const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
-              const labelOf = (key: string) => (houseRulesOptions.find(o => o.value === key)?.labelEs || key);
+              const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+              const labelOf = (key: string) => (houseRulesOptions.find(o => o.value === key)?.label || key);
               const onDragEnd = (event: any) => {
                 const { active, over } = event;
                 if (!over || active.id === over.id) return;
@@ -605,7 +605,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 >
                   <SortableContext items={items} strategy={verticalListSortingStrategy}>
                     <ul className="space-y-2">
-                      {items.map((id: string) => (
+                      {items.map((id) => (
                         <SortableItem key={id} id={id} label={labelOf(id)} />
                       ))}
                     </ul>
@@ -626,7 +626,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                     </label>
                     <select
                       value={formData.cancellationPolicy?.type || 'flexible'}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => updateNestedField('cancellationPolicy', 'type', e.target.value)}
+                      onChange={(e) => updateNestedField('cancellationPolicy', 'type', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="flexible">Flexible</option>
@@ -649,8 +649,8 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.cancellationPolicyOrder) ? formData.cancellationPolicyOrder : [];
                         const values = cancellationOptions.map(o => o.value);
-                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
-                        return ordered.map((valueKey: string) => {
+                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        return ordered.map((valueKey) => {
                           const opt = cancellationOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
                           return (
@@ -669,7 +669,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                                   });
                                   try { localStorage.setItem('room_cancellationPolicyOrder', JSON.stringify(newOrder)); } catch {}
                                 }}
-                                label={opt.labelEs || opt.value}
+                                label={opt.label || opt.value}
                                 size="medium"
                               />
                             </div>
@@ -706,10 +706,10 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                   {t('rooms.orderCancellation', 'Orden de Políticas de Cancelación')}
                 </label>
                 {(() => {
-                  const enabled = (cancellationOptions || []).map(o => o.value).filter((v: string) => formData.cancellationPolicy?.[v]);
+                  const enabled = (cancellationOptions || []).map(o => o.value).filter(v => formData.cancellationPolicy?.[v]);
                   const order = Array.isArray(formData.cancellationPolicyOrder) ? formData.cancellationPolicyOrder : [];
-                  const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
-                  const labelOf = (key: string) => (cancellationOptions.find(o => o.value === key)?.labelEs || key);
+                  const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+                  const labelOf = (key: string) => (cancellationOptions.find(o => o.value === key)?.label || key);
                   const onDragEnd = (event: any) => {
                     const { active, over } = event;
                     if (!over || active.id === over.id) return;
@@ -724,7 +724,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                       <SortableContext items={items} strategy={verticalListSortingStrategy}>
                         <ul className="space-y-2">
-                          {items.map((id: string) => (
+                          {items.map((id) => (
                             <SortableItem key={id} id={id} label={labelOf(id)} />
                           ))}
                         </ul>
@@ -751,8 +751,8 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.safetyAndPropertyOrder) ? formData.safetyAndPropertyOrder : [];
                         const values = safetyPropertyOptions.map(o => o.value);
-                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
-                        return ordered.map((valueKey: string) => {
+                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        return ordered.map((valueKey) => {
                           const opt = safetyPropertyOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
                           return (
@@ -771,7 +771,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                                   });
                                   try { localStorage.setItem('room_safetyAndPropertyOrder', JSON.stringify(newOrder)); } catch {}
                                 }}
-                                label={opt.labelEs || opt.value}
+                                label={opt.label || opt.value}
                                 size="medium"
                               />
                             </div>
@@ -857,10 +857,10 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                   {t('rooms.orderSafety', 'Orden de Seguridad y Propiedad')}
                 </label>
                 {(() => {
-                  const enabled = (safetyPropertyOptions || []).map(o => o.value).filter((v: string) => formData.safetyAndProperty?.[v]);
+                  const enabled = (safetyPropertyOptions || []).map(o => o.value).filter(v => formData.safetyAndProperty?.[v]);
                   const order = Array.isArray(formData.safetyAndPropertyOrder) ? formData.safetyAndPropertyOrder : [];
-                  const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
-                  const labelOf = (key: string) => (safetyPropertyOptions.find(o => o.value === key)?.labelEs || key);
+                  const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+                  const labelOf = (key: string) => (safetyPropertyOptions.find(o => o.value === key)?.label || key);
                   const onDragEnd = (event: any) => {
                     const { active, over } = event;
                     if (!over || active.id === over.id) return;
@@ -887,7 +887,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 >
                   <SortableContext items={items} strategy={verticalListSortingStrategy}>
                     <ul className="space-y-2">
-                      {items.map((id: string) => (
+                      {items.map((id) => (
                         <SortableItem key={id} id={id} label={labelOf(id)} />
                       ))}
                     </ul>
@@ -911,7 +911,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                     type="number"
                     min="1"
                     value={formData.guestMaximum?.maxAdults || formData.maxOccupancy || 2}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    onChange={(e) => {
                       setFormData({
                         ...formData,
                         guestMaximum: {

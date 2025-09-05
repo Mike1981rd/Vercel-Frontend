@@ -20,7 +20,7 @@ interface RoomMapConfig {
 
 interface PreviewRoomMapProps {
   config: RoomMapConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }

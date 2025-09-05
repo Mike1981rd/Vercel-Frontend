@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import MessageInput from './MessageInput';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
+import { getApiEndpoint, normalizeMediaUrl } from '@/lib/api-url';
 import type { Conversation, Message } from './ChatRoom';
 import { Avatar } from '@/components/ui/Avatar';
 import type { ChatTheme } from './ThemeSelector';
@@ -53,6 +53,10 @@ export default function MessageView({
   const [mediaSettings, setMediaSettings] = useState<MediaSettings>(defaultMediaSettings);
   const prevFingerprintRef = useRef<string | null>(null);
   const currentMessagesRef = useRef<Message[]>([]);
+  const suppressFirstScrollRef = useRef<boolean>(false);
+  const allowAutoScrollRef = useRef<boolean>(false);
+  const firstLoadRef = useRef<boolean>(true);
+  const autoScrollEnableAtRef = useRef<number>(0);
   // Media viewer overlay (image/video)
   const [viewer, setViewer] = useState<{ open: boolean; url: string | null; type: 'image' | 'video' | null }>({ open: false, url: null, type: null });
   const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
@@ -61,15 +65,37 @@ export default function MessageView({
   useEffect(() => {
     // Reset per-conversation state to avoid cross-contamination
     prevFingerprintRef.current = null;
-    stickToBottomRef.current = true;
-    if (messagesCacheRef?.current?.[conversation.id]) {
-      setMessages(messagesCacheRef.current[conversation.id]);
+    const cached = messagesCacheRef?.current?.[conversation.id];
+    const hasCache = Array.isArray(cached) && cached.length > 0;
+    if (hasCache) {
+      // Re-open: allow stick-to-bottom immediately
+      stickToBottomRef.current = true;
+      allowAutoScrollRef.current = true;
+      suppressFirstScrollRef.current = false;
+      firstLoadRef.current = false; // we already have a stable batch
+      autoScrollEnableAtRef.current = Date.now();
+      setMessages(cached!);
       setLoading(false);
+      // Ensure we land at the bottom after paint
+      requestAnimationFrame(() => scrollToBottom(true));
+      setTimeout(() => scrollToBottom(true), 80);
     } else {
+      // First-time open: no auto-scroll, grace period
+      stickToBottomRef.current = false;
+      allowAutoScrollRef.current = false;
+      suppressFirstScrollRef.current = true;
+      firstLoadRef.current = true;
+      autoScrollEnableAtRef.current = Date.now() + 1200;
       setMessages([]);
       setLoading(true);
     }
     loadMessages();
+    // Quick retries only when first-time open (no cache)
+    if (!hasCache) {
+      setTimeout(() => loadMessages(true), 900);
+      setTimeout(() => loadMessages(true), 2500);
+      setTimeout(() => loadMessages(true), 5000);
+    }
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -88,8 +114,19 @@ export default function MessageView({
   }, [conversation.id]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change only if user is near bottom
-    scrollToBottom(false);
+    // On first paint after opening, do not auto-scroll
+    if (suppressFirstScrollRef.current) {
+      suppressFirstScrollRef.current = false;
+    } else {
+      // Only auto-scroll if the user already indicated preference (near bottom) and grace period elapsed
+      const canAuto = allowAutoScrollRef.current && stickToBottomRef.current && Date.now() >= autoScrollEnableAtRef.current;
+      if (canAuto) {
+        scrollToBottom(false);
+        // Also schedule a post-layout scroll to account for images/videos affecting height
+        requestAnimationFrame(() => scrollToBottom(false));
+        setTimeout(() => scrollToBottom(false), 120);
+      }
+    }
     // Keep a live ref to latest messages to avoid stale closures in polling
     currentMessagesRef.current = messages;
   }, [messages]);
@@ -101,7 +138,9 @@ export default function MessageView({
     const onScroll = () => {
       const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
       // Consider near bottom if within 80px
-      stickToBottomRef.current = distanceFromBottom < 80;
+      const nearBottom = distanceFromBottom < 80;
+      stickToBottomRef.current = nearBottom;
+      if (nearBottom) allowAutoScrollRef.current = true;
       userScrollTsRef.current = Date.now();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -112,6 +151,54 @@ export default function MessageView({
     };
   }, []);
 
+  // Ensure browser doesn't anchor scroll due to images loading above
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    try { (el as HTMLElement).style.setProperty('overflow-anchor', 'none'); } catch {}
+  }, []);
+
+  // When media (images/videos) load and we want to be at bottom, perform a final scroll
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    // Desire bottom when user is near bottom (auto enabled) or when re-opening with cache
+    const wantBottom = (allowAutoScrollRef.current && stickToBottomRef.current) || (!firstLoadRef.current && stickToBottomRef.current);
+    if (!wantBottom) return;
+    const nodes = el.querySelectorAll('img, video');
+    let pending = 0;
+    const cleanups: Array<() => void> = [];
+    const done = () => {
+      requestAnimationFrame(() => scrollToBottom(true));
+      setTimeout(() => scrollToBottom(true), 60);
+      setTimeout(() => scrollToBottom(true), 240);
+    };
+    nodes.forEach((node) => {
+      if (node.tagName.toLowerCase() === 'img') {
+        const img = node as HTMLImageElement;
+        if (!img.complete) {
+          pending++;
+          const handler = () => { pending--; if (pending === 0) done(); };
+          img.addEventListener('load', handler);
+          img.addEventListener('error', handler);
+          cleanups.push(() => { img.removeEventListener('load', handler); img.removeEventListener('error', handler); });
+        }
+      } else if (node.tagName.toLowerCase() === 'video') {
+        const vid = node as HTMLVideoElement;
+        if (vid.readyState < 2) { // HAVE_CURRENT_DATA
+          pending++;
+          const handler = () => { pending--; if (pending === 0) done(); };
+          vid.addEventListener('loadeddata', handler);
+          vid.addEventListener('loadedmetadata', handler);
+          vid.addEventListener('error', handler);
+          cleanups.push(() => { vid.removeEventListener('loadeddata', handler); vid.removeEventListener('loadedmetadata', handler); vid.removeEventListener('error', handler); });
+        }
+      }
+    });
+    if (pending === 0) done();
+    return () => { cleanups.forEach((fn) => fn()); };
+  }, [messages]);
+
   // Reload messages promptly when sidebar reports recent activity on this conversation
   useEffect(() => {
     const onUpdated = (e: Event) => {
@@ -120,9 +207,9 @@ export default function MessageView({
         if (!detail?.id || detail.id !== conversation.id) return;
         // Quick check: if incoming timestamp is newer than our last, reload
         const lastLocal = currentMessagesRef.current.length > 0 ? currentMessagesRef.current[currentMessagesRef.current.length - 1].timestamp.getTime() : 0;
-        const incomingTs = detail.lastMessageTime ? new Date(detail.lastMessageTime as any).getTime() : Date.now();
-        if (incomingTs > lastLocal) {
-          setTimeout(() => loadMessages(), 150); // small debounce
+        const incomingTs = detail.lastMessageTime ? new Date(detail.lastMessageTime as any).getTime() : 0;
+        if (incomingTs >= lastLocal + 5000) {
+          setTimeout(() => loadMessages(), 200); // mild debounce
         }
       } catch {}
     };
@@ -162,8 +249,10 @@ export default function MessageView({
       const el = messagesContainerRef.current;
       const prevBottomDistance = el ? (el.scrollHeight - el.scrollTop) : 0;
       const token = localStorage.getItem('token');
-      // Prefer messages endpoint first for fastest history display
-      const endpoint = getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
+      // On first load, use conversation detail to fetch a stable batch (avoid flicker)
+      const endpoint = firstLoadRef.current
+        ? getApiEndpoint(`/whatsapp/conversations/${conversation.id}`)
+        : getApiEndpoint(`/whatsapp/conversations/${conversation.id}/messages?page=1&pageSize=20`);
         if (DEBUG) console.log('[MessageView] Fetching messages from:', endpoint, 'for conversation', conversation.id);
         const res = await fetch(endpoint, {
           headers: { 'Authorization': `Bearer ${token || ''}` },
@@ -173,20 +262,24 @@ export default function MessageView({
 
         if (res.ok) {
           const data = await res.json();
-          const raw = Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.data?.messages)
-              ? data.data.messages
-              : Array.isArray(data?.messages)
-                ? data.messages
-                : [];
+          const raw = firstLoadRef.current
+            ? (Array.isArray(data?.data?.messages) ? data.data.messages : [])
+            : (Array.isArray(data?.data)
+                ? data.data
+                : Array.isArray(data?.data?.messages)
+                  ? data.data.messages
+                  : Array.isArray(data?.messages)
+                    ? data.messages
+                    : []);
           if (DEBUG) console.log('[MessageView] Messages payload length:', Array.isArray(raw) ? raw.length : 'N/A');
           if (Array.isArray(raw) && raw.length > 0) {
             // Build previous timestamps map to avoid generating new timestamps on each poll
             const prevTsMap = new Map<string, number>();
             for (const m of messages) prevTsMap.set(String(m.id), m.timestamp.getTime());
 
-          const formatted: Message[] = raw.map((msg: any) => {
+          // For first paint, reduce payload to last 20 messages for faster render; backend usually returns last 50
+          const trimmed = firstLoadRef.current && Array.isArray(raw) && raw.length > 20 ? raw.slice(raw.length - 20) : raw;
+          const formatted: Message[] = trimmed.map((msg: any) => {
               const dir = (msg.direction || '').toLowerCase();
               const from = msg.from || msg.From;
               // Use server-provided direction when available; only fallback to from/phone heuristic if missing
@@ -262,6 +355,14 @@ export default function MessageView({
             merged = result.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
             // Safety cap to last 500 messages to avoid unbounded growth
             if (merged.length > 500) merged = merged.slice(merged.length - 500);
+            // Avoid flicker: ignore updates that only contain outbound subset smaller than current
+            const onlyOutbound = formatted.length > 0 && formatted.every(m => m.isFromMe);
+            const prevLen = prevList.length;
+            if (!firstLoadRef.current && prevLen > 0 && (merged.length + 1 < prevLen) && onlyOutbound) {
+              if (DEBUG) console.log('[MessageView] Skipping shrink-only outbound update to avoid flicker');
+              if (messagesCacheRef) messagesCacheRef.current[conversation.id] = prevList;
+              return;
+            }
             // Compute fingerprint to detect real changes
             const fingerprint = merged.map(m => `${String(m.id)}|${m.timestamp.getTime()}|${m.status || ''}`).join(',');
             if (prevFingerprintRef.current === fingerprint) {
@@ -276,6 +377,7 @@ export default function MessageView({
             prevFingerprintRef.current = fingerprint;
             if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
             setMessages(merged);
+            firstLoadRef.current = false;
             // Notify sidebar to reorder based on recent activity
             try {
               const last = merged.length > 0 ? merged[merged.length - 1].timestamp : new Date();
@@ -326,8 +428,11 @@ export default function MessageView({
   // No mock messages fallback here; center view must show real data only
 
   const scrollToBottom = (force: boolean) => {
-    if (force || stickToBottomRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    if (force || (allowAutoScrollRef.current && stickToBottomRef.current && Date.now() >= autoScrollEnableAtRef.current)) {
+      // Instant scroll, no animation for snappier UX
+      el.scrollTop = el.scrollHeight;
     }
   };
 
@@ -679,39 +784,44 @@ export default function MessageView({
                               {message.type?.toLowerCase().includes('image') ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   alt={message.content || 'image'}
                                   className="w-auto h-auto cursor-zoom-in"
-                                  onClick={() => openViewer(message.mediaUrl!, 'image')}
+                                  onClick={() => openViewer(normalizeMediaUrl(message.mediaUrl!)!, 'image')}
                                   style={{
                                     maxWidth: `${mediaSettings.imageMaxWidth}px`,
                                     maxHeight: `${mediaSettings.imageMaxHeight}px`,
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  loading="lazy"
+                                  decoding="async"
+                                  onLoad={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('video') ? (
                                 <video
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   controls
                                   playsInline
                                   className="h-auto cursor-zoom-in"
-                                  onClick={() => openViewer(message.mediaUrl!, 'video')}
+                                  onClick={() => openViewer(normalizeMediaUrl(message.mediaUrl!)!, 'video')}
                                   style={{
                                     width: `${mediaSettings.videoMaxWidth}px`,
                                     maxHeight: `${mediaSettings.videoMaxHeight}px`,
                                     objectFit: mediaSettings.fit,
                                     borderRadius: `${mediaSettings.borderRadius}px`,
                                   }}
+                                  preload="metadata"
+                                  onLoadedData={() => scrollToBottom(false)}
                                 />
                               ) : message.type?.toLowerCase().includes('audio') ? (
                                 <audio
-                                  src={message.mediaUrl}
+                                  src={normalizeMediaUrl(message.mediaUrl)}
                                   controls
                                   className="w-64"
                                 />
                               ) : (
-                                <a href={message.mediaUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
+                                <a href={normalizeMediaUrl(message.mediaUrl)} target="_blank" rel="noreferrer" className="text-blue-600 underline break-all">
                                   Descargar archivo
                                 </a>
                               )}

@@ -230,7 +230,7 @@ export async function getRoomReviews(
         : {};
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/reviews/public?${params.toString()}`,
-      { method: 'GET', headers: { 'Content-Type': 'application/json', ...authHeaders } as any }
+      { method: 'GET', headers: { 'Content-Type': 'application/json', ...authHeaders } }
     );
     let data: { reviews: ReviewDto[]; statistics?: ReviewStatisticsDto };
     if (!response.ok) {

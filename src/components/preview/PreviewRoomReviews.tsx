@@ -28,7 +28,7 @@ interface RoomReviewsConfig {
 
 interface PreviewRoomReviewsProps {
   config: RoomReviewsConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
   roomId?: number;

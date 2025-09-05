@@ -68,14 +68,6 @@ export interface CustomerDetail {
   recentDevices: CustomerDevice[];
   wishlistItems: CustomerWishlistItem[];
   coupons: CustomerCoupon[];
-  
-  // Legacy billing properties for backward compatibility
-  billingAddress?: string;
-  billingCity?: string;
-  billingState?: string;
-  billingCountry?: string;
-  billingPostalCode?: string;
-  billingApartment?: string;
 }
 
 export interface CustomerAddress {
@@ -90,10 +82,6 @@ export interface CustomerAddress {
   postalCode?: string;
   isDefault: boolean;
   createdAt: string;
-  
-  // Alternative property names for compatibility
-  addressLine1?: string;
-  addressLine2?: string;
   fullAddress?: string;
 }
 

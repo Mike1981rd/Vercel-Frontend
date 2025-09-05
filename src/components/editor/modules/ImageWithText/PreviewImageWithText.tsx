@@ -13,7 +13,7 @@ import * as Icons from 'lucide-react';
 import { ImageWithTextConfig, ImageWithTextItem } from './types';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
 
-type DeviceView = 'desktop' | 'mobile' | 'tablet';
+type DeviceView = 'desktop' | 'mobile';
 
 interface PreviewImageWithTextProps {
   config: ImageWithTextConfig;

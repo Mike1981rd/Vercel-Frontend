@@ -34,7 +34,7 @@ interface RoomAmenitiesConfig {
 
 interface PreviewRoomAmenitiesProps {
   config: RoomAmenitiesConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -111,7 +111,7 @@ export default function PreviewRoomAmenities({
 
       // Find the matching amenity option from ConfigOptions to get its icon and iconType
       const matchingOption = amenityOptions?.find(opt => 
-        opt.labelEs?.toLowerCase() === amenityName.toLowerCase()
+        opt.label?.toLowerCase() === amenityName.toLowerCase()
       );
 
       const amenityIcon = matchingOption?.icon;
@@ -284,7 +284,7 @@ export default function PreviewRoomAmenities({
           marginBottom: isMobile ? `${config.mobileTitleSpacing || 16}px` : `${config.titleSpacing || 24}px`,
           fontSize: isMobile ? '18px' : (config.headingSize ? `${config.headingSize}px` : (headingTypographyStyles.fontSize || '20px')),
           fontWeight: config.headingWeight || headingTypographyStyles.fontWeight || '600',
-          fontStyle: config.headingItalic ? 'italic' : ((headingTypographyStyles as any)?.fontStyle || 'normal'),
+          fontStyle: config.headingItalic ? 'italic' : (headingTypographyStyles.fontStyle || 'normal'),
           textDecoration: config.headingUnderline ? 'underline' : 'none',
           textAlign: isMobile ? 'center' : 'left'
         }}
@@ -298,7 +298,7 @@ export default function PreviewRoomAmenities({
           gap: isMobile ? '16px 0' : `${config.verticalSpacing || 16}px ${config.horizontalSpacing || 16}px`
         }}
       >
-        {visibleAmenities.map((amenity: Amenity) => (
+        {visibleAmenities.map((amenity) => (
           <div 
             key={amenity.id} 
             className={`flex items-center ${!amenity.available ? 'opacity-50 line-through' : ''}`}

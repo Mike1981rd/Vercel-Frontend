@@ -509,7 +509,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder={t('collections.titlePlaceholder', 'ej., Colección de verano, Menos de 100 $, Nuestros favoritos')}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-30 dark:bg-gray-700 dark:text-white transition-all"
                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
@@ -591,7 +591,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
               
               <textarea
                 value={formData.description}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder={t('collections.descriptionPlaceholder', 'Escribe aquí la descripción de tu colección...')}
                 className="w-full px-4 py-3 border border-t-0 border-gray-300 dark:border-gray-600 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-opacity-30 dark:bg-gray-700 dark:text-white transition-all"
                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
@@ -611,7 +611,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                 <input
                   type="text"
                   value={formData.handle}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={(e) => {
                     const newHandle = e.target.value.toLowerCase()
                       .replace(/[^a-z0-9-]/g, '-')
                       .replace(/-+/g, '-')
@@ -650,7 +650,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="text"
                     value={formData.seoTitle}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seoTitle: e.target.value }))}
                     placeholder={formData.title || t('collections.seo.pageTitlePlaceholder', 'Título para motores de búsqueda')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-30 dark:bg-gray-700 dark:text-white transition-all"
                     style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
@@ -663,7 +663,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   </label>
                   <textarea
                     value={formData.seoDescription}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seoDescription: e.target.value }))}
                     placeholder={t('collections.seo.metaDescriptionPlaceholder', 'Descripción breve para motores de búsqueda')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-30 dark:bg-gray-700 dark:text-white transition-all"
                     style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
@@ -678,7 +678,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="text"
                     value={formData.seoKeywords}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, seoKeywords: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, seoKeywords: e.target.value }))}
                     placeholder={t('collections.seo.keywordsPlaceholder', 'palabra1, palabra2, palabra3')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-30 dark:bg-gray-700 dark:text-white transition-all"
                     style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
@@ -690,7 +690,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                     type="checkbox"
                     id="publishToSearchEngines"
                     checked={formData.publishToSearchEngines}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, publishToSearchEngines: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, publishToSearchEngines: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -745,7 +745,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.onlineStore}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, onlineStore: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, onlineStore: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -758,7 +758,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.pointOfSale}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, pointOfSale: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pointOfSale: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -771,7 +771,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.facebook}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, facebook: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, facebook: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -784,7 +784,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.instagram}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, instagram: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -797,7 +797,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.tikTok}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, tikTok: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tikTok: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -810,7 +810,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                   <input
                     type="checkbox"
                     checked={formData.whatsAppBusiness}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, whatsAppBusiness: e.target.checked }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, whatsAppBusiness: e.target.checked }))}
                     className="rounded"
                     style={{ accentColor: primaryColor }}
                   />
@@ -891,7 +891,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                 <input
                   type="text"
                   value={productSearch}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onChange={(e) => {
                     setProductSearch(e.target.value);
                     setShowProductsDropdown(true);
                   }}
@@ -951,9 +951,9 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
                       <div
                         key={product.id}
                         draggable
-                        onDragStart={(e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, product.id)}
+                        onDragStart={(e) => handleDragStart(e, product.id)}
                         onDragOver={handleDragOver}
-                        onDrop={(e: React.DragEvent<HTMLDivElement>) => handleDrop(e, index)}
+                        onDrop={(e) => handleDrop(e, index)}
                         className="bg-white dark:bg-gray-800 rounded-lg p-3 flex items-center justify-between cursor-move hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-3">

@@ -1,6 +1,5 @@
 import { api } from '@/lib/api';
 import { API_URL } from '@/lib/constants';
-import { safeLocalStorage } from '@/lib/localStorage';
 
 export interface LoginDto {
   email: string;
@@ -19,7 +18,7 @@ export interface UserDto {
   email: string;
   firstName: string;
   lastName: string;
-  fullName?: string;
+  fullName: string;
   avatarUrl?: string;
   companyId?: number;
   companyName?: string;
@@ -64,17 +63,17 @@ class AuthService {
 
   // Métodos de utilidad para manejar el token
   saveAuth(authResponse: AuthResponse): void {
-    safeLocalStorage.setItem('token', authResponse.token);
-    safeLocalStorage.setItem('user', JSON.stringify(authResponse.user));
-    safeLocalStorage.setItem('expiresAt', authResponse.expiresAt);
+    localStorage.setItem('token', authResponse.token);
+    localStorage.setItem('user', JSON.stringify(authResponse.user));
+    localStorage.setItem('expiresAt', authResponse.expiresAt);
   }
 
   getToken(): string | null {
-    return safeLocalStorage.getItem('token');
+    return localStorage.getItem('token');
   }
 
   getUser(): UserDto | null {
-    const userStr = safeLocalStorage.getItem('user');
+    const userStr = localStorage.getItem('user');
     if (!userStr) return null;
     
     try {
@@ -86,7 +85,7 @@ class AuthService {
 
   isAuthenticated(): boolean {
     const token = this.getToken();
-    const expiresAt = safeLocalStorage.getItem('expiresAt');
+    const expiresAt = localStorage.getItem('expiresAt');
     
     if (!token || !expiresAt) return false;
     
@@ -96,9 +95,9 @@ class AuthService {
   }
 
   clearAuth(): void {
-    safeLocalStorage.removeItem('token');
-    safeLocalStorage.removeItem('user');
-    safeLocalStorage.removeItem('expiresAt');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('expiresAt');
   }
 
   hasPermission(permission: string): boolean {

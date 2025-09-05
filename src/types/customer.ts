@@ -47,13 +47,6 @@ export interface CustomerDetailDto extends CustomerDto {
   billingEmail?: string;
   autoCharge?: boolean;
   paperlessBilling?: boolean;
-  // Billing address properties
-  billingAddress?: string;
-  billingApartment?: string;
-  billingCity?: string;
-  billingState?: string;
-  billingCountry?: string;
-  billingPostalCode?: string;
 }
 
 export interface CustomerAddressDto {
@@ -69,9 +62,6 @@ export interface CustomerAddressDto {
   isDefault: boolean;
   createdAt: string;
   fullAddress?: string;
-  // Alternative property names for compatibility
-  addressLine1?: string;
-  addressLine2?: string;
 }
 
 export interface CustomerPaymentMethodDto {

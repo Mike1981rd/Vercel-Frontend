@@ -20,7 +20,7 @@ interface RoomThingsConfig {
 
 interface PreviewRoomThingsProps {
   config: RoomThingsConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -147,7 +147,7 @@ export default function PreviewRoomThings({
     if (roomData?.houseRules) {
       // If houseRules is a string (text from DB), split it
       if (typeof roomData.houseRules === 'string') {
-        const items = roomData.houseRules.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+        const items = roomData.houseRules.split(',').map((s: string) => s.trim()).filter(s => s);
         rules.push(...items);
       } 
       // If houseRules is an object (JSONB), process it
@@ -173,14 +173,14 @@ export default function PreviewRoomThings({
           const value = roomData.houseRules[option.value];
           if (value !== undefined && value !== null) {
             if (value === true) {
-              rules.push(option.labelEs || option.value);
+              rules.push(option.label || option.value);
             } else if (value === false && option.value.includes('Allowed')) {
               // For "allowed" rules, show "No" version when false
-              const noLabel = option.labelEs?.replace('Se permite', 'No se permite')
+              const noLabel = option.label?.replace('Se permite', 'No se permite')
                 .replace('Se permiten', 'No se permiten')
                 .replace('allowed', 'not allowed')
                 .replace('Allowed', 'not allowed');
-              rules.push(noLabel || `No ${option.labelEs}`);
+              rules.push(noLabel || `No ${option.label}`);
             }
           }
         });
@@ -207,7 +207,7 @@ export default function PreviewRoomThings({
         safetyOptions.forEach(option => {
           const value = roomData.safetyAndProperty[option.value];
           if (value === true) {
-            safety.push(option.labelEs || option.value);
+            safety.push(option.label || option.value);
           }
         });
       }
@@ -250,7 +250,7 @@ export default function PreviewRoomThings({
       cancellationOptions.forEach(option => {
         const value = roomData.cancellationPolicy[option.value];
         if (value === true) {
-          policies.push(option.labelEs || option.value);
+          policies.push(option.label || option.value);
         }
       });
     }

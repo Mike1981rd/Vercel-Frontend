@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient as createSupabaseClient } from '@/lib/supabase-browser';
 import authService, { UserDto, LoginDto, AuthResponse } from '@/services/auth.service';
 import { ROUTES } from '@/lib/constants';
 
@@ -10,7 +9,6 @@ interface AuthContextType {
   user: UserDto | null;
   loading: boolean;
   isAuthenticated: boolean;
-  token: string | null;
   login: (credentials: LoginDto) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -73,11 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await authService.logout();
-      // Also sign out from Supabase session if present
-      try {
-        const supabase = createSupabaseClient();
-        await supabase.auth.signOut();
-      } catch {}
     } catch (error) {
       console.error('Error en logout:', error);
     } finally {
@@ -108,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     isAuthenticated: !!user,
-    token: authService.getToken(),
     login,
     logout,
     refreshUser,

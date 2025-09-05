@@ -1,6 +1,5 @@
 import React, { forwardRef } from 'react';
 import { cn, getInitials, generateAvatarColor } from '@/lib/utils';
-import { getImageUrl } from '@/lib/api-url';
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string;
@@ -52,7 +51,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
       >
         {src ? (
           <img
-            src={getImageUrl(src)}
+            src={src.startsWith('http') ? src : `http://localhost:5266${src}`}
             alt={alt || name}
             className={cn(
               'h-full w-full object-cover',

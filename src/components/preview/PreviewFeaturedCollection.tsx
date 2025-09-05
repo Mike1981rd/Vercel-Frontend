@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface PreviewFeaturedCollectionProps {
   config?: Partial<FeaturedCollectionConfig>;
   theme?: GlobalThemeConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 
@@ -126,15 +126,15 @@ export default function PreviewFeaturedCollection({
         
         switch(finalConfig.activeType) {
           case 'collections':
-            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Collections`;
+            endpoint = 'http://localhost:5266/api/Collections';
             selectedIds = finalConfig.selectedCollections || [];
             break;
           case 'products':
-            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Products`;
+            endpoint = 'http://localhost:5266/api/Products';
             selectedIds = finalConfig.selectedProducts || [];
             break;
           case 'rooms':
-            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Rooms`;
+            endpoint = 'http://localhost:5266/api/Rooms';
             selectedIds = finalConfig.selectedRooms || [];
             break;
         }

@@ -21,7 +21,7 @@ interface RoomSleepingConfig {
 
 interface PreviewRoomSleepingProps {
   config: RoomSleepingConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -83,8 +83,8 @@ export default function PreviewRoomSleeping({
   }
 
   const getIcon = (iconName: string) => {
-    const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType<any>;
-    return IconComponent ? React.createElement(IconComponent, { className: "w-6 h-6" }) : <Bed className="w-6 h-6" />;
+    const IconComponent = Icons[iconName as keyof typeof Icons];
+    return IconComponent ? <IconComponent className="w-6 h-6" /> : <Bed className="w-6 h-6" />;
   };
 
   // Parse SleepingArrangements if available

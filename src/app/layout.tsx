@@ -31,10 +31,6 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" async />
-        <link rel="preconnect" href="https://api.test1hotelwebsite.online" />
-        <link rel="dns-prefetch" href="https://api.test1hotelwebsite.online" />
-        <link rel="preconnect" href="https://websitebuilder-api-staging.onrender.com" />
-        <link rel="dns-prefetch" href="https://websitebuilder-api-staging.onrender.com" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

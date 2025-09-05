@@ -3,7 +3,6 @@
 import React, { Fragment } from 'react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { Section, SectionType, PageType } from '@/types/editor.types';
-import { NewsletterConfig } from '@/components/editor/modules/Newsletter/types';
 import { Monitor, Tablet, Smartphone } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useColorSchemes } from '@/hooks/useColorSchemes';
@@ -37,7 +36,6 @@ import PreviewRoomMap from '@/components/preview/PreviewRoomMap';
 import PreviewRoomCalendar from '@/components/preview/PreviewRoomCalendar';
 import PreviewRoomHostCard from '@/components/preview/PreviewRoomHostCard';
 import PreviewRoomThings from '@/components/preview/modules/RoomThingsPreview';
-import PreviewWhatsAppWidget from '@/components/preview/PreviewWhatsAppWidget';
 
 type DeviceView = 'desktop' | 'tablet' | 'mobile';
 
@@ -129,17 +127,13 @@ const animationStyles = `
   }
 `;
 
-export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: EditorPreviewProps) {
-  // Convert tablet to desktop as per responsive preview specs
-  const deviceView = (originalDeviceView === 'tablet' ? 'desktop' : originalDeviceView) as 'desktop' | 'mobile';
-  
+export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
   const { sections, selectedSectionId, selectSection, hoveredSectionId, setHoveredSection, selectedPageType } = useEditorStore();
   const [openDropdown, setOpenDropdown] = React.useState<string | null>(null);
   const { colorSchemes } = useColorSchemes();
   const { config: structuralComponents } = useStructuralComponents();
   const { menus } = useNavigationMenus();
   const { config: themeConfig } = useThemeConfigStore();
-  const normalizedThemeConfig = themeConfig ?? null;
   
   // Close dropdown when clicking outside (only for click mode)
   React.useEffect(() => {
@@ -427,15 +421,15 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
     let selectedMenuId: number | undefined = undefined;
     
     // Typography styles for menu items
-    const menuTypographyStyles = normalizedThemeConfig?.typography?.menu ? {
-      fontFamily: `'${normalizedThemeConfig.typography.menu.fontFamily}', sans-serif`,
-      fontWeight: normalizedThemeConfig.typography.menu.fontWeight || '400',
-      textTransform: normalizedThemeConfig.typography.menu.useUppercase ? 'uppercase' as const : 'none' as const,
-      fontSize: normalizedThemeConfig.typography.menu.fontSize ? 
-        (normalizedThemeConfig.typography.menu.fontSize <= 100 ? 
-          `${normalizedThemeConfig.typography.menu.fontSize}%` : 
-          `${normalizedThemeConfig.typography.menu.fontSize}px`) : '94%',
-      letterSpacing: `${normalizedThemeConfig.typography.menu.letterSpacing || 0}px`
+    const menuTypographyStyles = themeConfig?.typography?.menu ? {
+      fontFamily: `'${themeConfig.typography.menu.fontFamily}', sans-serif`,
+      fontWeight: themeConfig.typography.menu.fontWeight || '400',
+      textTransform: themeConfig.typography.menu.useUppercase ? 'uppercase' as const : 'none' as const,
+      fontSize: themeConfig.typography.menu.fontSize ? 
+        (themeConfig.typography.menu.fontSize <= 100 ? 
+          `${themeConfig.typography.menu.fontSize}%` : 
+          `${themeConfig.typography.menu.fontSize}px`) : '94%',
+      letterSpacing: `${themeConfig.typography.menu.letterSpacing || 0}px`
     } : {};
     
     // Calculate header-specific values if this is a header section
@@ -454,9 +448,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
       menuItems = selectedMenu?.items || [];
     }
 
-    const sectionType = section.type as string;
-    // @ts-ignore - Allow room_ types
-    switch (sectionType) {
+    switch (section.type) {
       case SectionType.ANNOUNCEMENT_BAR:
         const announcementConfig = structuralComponents?.announcementBar || section.settings;
         
@@ -464,7 +456,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         return (
           <PreviewAnnouncementBar
             config={announcementConfig}
-            theme={normalizedThemeConfig}
+            theme={themeConfig ?? null}
             pageType={selectedPageType as string}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
@@ -476,7 +468,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         return (
           <PreviewHeader
             config={headerConfig || structuralComponents?.header}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
           />
@@ -492,7 +484,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
           <PreviewFooter
             key={`footer-${footerKey}`}
             config={footerConfig}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
           />
@@ -501,7 +493,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         const PreviewImageBanner = require('@/components/preview/PreviewImageBanner').default;
         return (
           <PreviewImageBanner
-            config={section.settings as any}
+            config={section.settings}
             isEditor={true}
             deviceView={deviceView as 'desktop' | 'mobile'}
             pageType={selectedPageType as string}
@@ -558,7 +550,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
           <PreviewSlideshow
             settings={section.settings as any}
             isEditor={true}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
           />
         );
@@ -568,7 +560,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
           <PreviewMulticolumns
             config={section.settings as any}
             isEditor={true}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
           />
         );
@@ -578,7 +570,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
           <PreviewGallery
             config={section.settings as any}
             isEditor={true}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
           />
         );
@@ -594,8 +586,8 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
       case SectionType.FEATURED_COLLECTION:
         return (
           <PreviewFeaturedCollection
-            config={section.settings as any}
-            theme={normalizedThemeConfig ?? undefined}
+            config={section.settings}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
           />
@@ -610,7 +602,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         return (
           <PreviewFAQ
             config={faqConfig as any}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
           />
@@ -624,7 +616,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         return (
           <PreviewTestimonials
             config={testimonialsConfig as any}
-            theme={normalizedThemeConfig}
+            theme={themeConfig || undefined}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
           />
@@ -644,7 +636,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         return (
           <PreviewRichText
             config={richTextConfig as any}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
@@ -652,319 +644,117 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
       case SectionType.CONTACT_FORM:
         return (
           <PreviewContactForm
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorScheme: section.settings?.colorScheme || '3',
-              cardStyle: section.settings?.cardStyle || 'none',
-              cardPadding: section.settings?.cardPadding || 32,
-              width: section.settings?.width || 'extra-small',
-              heading: section.settings?.heading || 'Contact us',
-              body: section.settings?.body || '',
-              headingSize: section.settings?.headingSize || 'h2',
-              bodySize: section.settings?.bodySize || 'body1',
-              contentAlignment: section.settings?.contentAlignment || 'left',
-              inputStyle: section.settings?.inputStyle || 'solid',
-              showPhoneInput: section.settings?.showPhoneInput ?? true,
-              showRecaptcha: section.settings?.showRecaptcha ?? false,
-              addSidePaddings: section.settings?.addSidePaddings ?? true,
-              topPadding: section.settings?.topPadding || 36,
-              bottomPadding: section.settings?.bottomPadding || 36,
-              customCss: section.settings?.customCss || '',
-              nameLabel: section.settings?.nameLabel || 'Name',
-              emailLabel: section.settings?.emailLabel || 'Email',
-              phoneLabel: section.settings?.phoneLabel || 'Phone number',
-              messageLabel: section.settings?.messageLabel || 'Message',
-              buttonText: section.settings?.buttonText || 'Send',
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig ?? undefined}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_GALLERY:
+      case 'room_gallery':
         return (
           <PreviewRoomGallery
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              layoutStyle: section.settings?.layoutStyle || 'airbnb',
-              colorScheme: section.settings?.colorScheme || 1,
-              fontSize: {
-                caption: section.settings?.fontSize?.caption || 100,
-                button: section.settings?.fontSize?.button || 100
-              },
-              cornerRadius: section.settings?.cornerRadius || 'medium',
-              showAllPhotosButton: section.settings?.showAllPhotosButton ?? true,
-              buttonText: section.settings?.buttonText || 'Show all photos',
-              showCaptions: section.settings?.showCaptions ?? false,
-              showShareSave: section.settings?.showShareSave ?? true,
-              cardSize: section.settings?.cardSize || 100,
-              containerWidth: section.settings?.containerWidth || 100,
-              paddingTop: section.settings?.paddingTop || 0,
-              paddingBottom: section.settings?.paddingBottom || 0,
-              containerPaddingTop: section.settings?.containerPaddingTop || 0,
-              containerPaddingBottom: section.settings?.containerPaddingBottom || 24,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_TITLE_HOST:
+      case 'room_title_host':
         return (
           <PreviewRoomTitleHost
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorScheme: section.settings?.colorScheme || 1,
-              fontSize: {
-                title: section.settings?.fontSize?.title || 100,
-                subtitle: section.settings?.fontSize?.subtitle || 100,
-                details: section.settings?.fontSize?.details || 100
-              },
-              alignment: section.settings?.alignment || 'left',
-              showRating: section.settings?.showRating ?? true,
-              showSuperhost: section.settings?.showSuperhost ?? true,
-              showHostImage: section.settings?.showHostImage ?? true,
-              showHostVerification: section.settings?.showHostVerification ?? true,
-              showReservationWidget: section.settings?.showReservationWidget ?? true,
-              reserveButtonText: section.settings?.reserveButtonText || 'Reserve',
-              showHighlights: section.settings?.showHighlights ?? true,
-              highlights: section.settings?.highlights || [],
-              spacing: section.settings?.spacing || 'comfortable',
-              hostImageSize: section.settings?.hostImageSize || 40,
-              paddingTop: section.settings?.paddingTop || 32,
-              paddingBottom: section.settings?.paddingBottom || 32,
-              containerPaddingTop: section.settings?.containerPaddingTop || 0,
-              containerPaddingBottom: section.settings?.containerPaddingBottom || 0,
-              mobileTopSpacing: section.settings?.mobileTopSpacing || 16,
-              mobileCardOffset: section.settings?.mobileCardOffset || -24,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_HIGHLIGHTS:
+      case 'room_highlights':
         return (
           <PreviewRoomHighlights
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorScheme: section.settings?.colorScheme || '1',
-              title: section.settings?.title || 'What makes this place special',
-              highlights: section.settings?.highlights || [],
-              columns: section.settings?.columns || 2,
-              iconSize: section.settings?.iconSize || 24,
-              horizontalSpacing: section.settings?.horizontalSpacing || 16,
-              verticalSpacing: section.settings?.verticalSpacing || 16,
-              titleSpacing: section.settings?.titleSpacing || 24,
-              mobileTitleSpacing: section.settings?.mobileTitleSpacing || 16,
-              headingSize: section.settings?.headingSize || 20,
-              headingWeight: section.settings?.headingWeight || '600',
-              headingItalic: section.settings?.headingItalic ?? false,
-              headingUnderline: section.settings?.headingUnderline ?? false,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_DESCRIPTION:
+      case 'room_description':
         return (
           <PreviewRoomDescription
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorScheme: section.settings?.colorScheme || '1',
-              title: section.settings?.title || 'About this space',
-              description: section.settings?.description || '',
-              showReadMore: section.settings?.showReadMore ?? true,
-              readMoreText: section.settings?.readMoreText || 'Show more',
-              readLessText: section.settings?.readLessText || 'Show less',
-              maxLength: section.settings?.maxLength || 300,
-              headingSize: section.settings?.headingSize || 20,
-              headingWeight: section.settings?.headingWeight || '600',
-              headingItalic: section.settings?.headingItalic ?? false,
-              headingUnderline: section.settings?.headingUnderline ?? false,
-              titleSpacing: section.settings?.titleSpacing || 24,
-              mobileTitleSpacing: section.settings?.mobileTitleSpacing || 16,
-              paddingTop: section.settings?.paddingTop || 40,
-              paddingBottom: section.settings?.paddingBottom || 40,
-              containerPaddingTop: section.settings?.containerPaddingTop || 0,
-              containerPaddingBottom: section.settings?.containerPaddingBottom || 0,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_AMENITIES:
+      case 'room_amenities':
         return (
           <PreviewRoomAmenities
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorScheme: section.settings?.colorScheme || '1',
-              title: section.settings?.title || 'What this place offers',
-              columns: section.settings?.columns || 2,
-              showUnavailable: section.settings?.showUnavailable ?? true,
-              iconSize: section.settings?.iconSize || 24,
-              horizontalSpacing: section.settings?.horizontalSpacing || 16,
-              verticalSpacing: section.settings?.verticalSpacing || 16,
-              titleSpacing: section.settings?.titleSpacing || 24,
-              mobileTitleSpacing: section.settings?.mobileTitleSpacing || 16,
-              headingSize: section.settings?.headingSize || 20,
-              headingWeight: section.settings?.headingWeight || '600',
-              headingItalic: section.settings?.headingItalic ?? false,
-              headingUnderline: section.settings?.headingUnderline ?? false,
-              amenities: section.settings?.amenities || [],
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_SLEEPING:
+      case 'room_sleeping':
         return (
           <PreviewRoomSleeping
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              title: section.settings?.title || 'Where you\'ll sleep',
-              areas: section.settings?.areas || [
-                {
-                  id: '1',
-                  icon: 'Bed',
-                  title: 'Bedroom 1',
-                  description: '1 queen bed'
-                },
-                {
-                  id: '2',
-                  icon: 'Bed',
-                  title: 'Bedroom 2', 
-                  description: '2 single beds'
-                }
-              ],
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_REVIEWS:
+      case 'room_reviews':
         return (
           <PreviewRoomReviews
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              colorSchemeId: section.settings?.colorSchemeId || 'scheme-1',
-              ratingIcon: section.settings?.ratingIcon || 'star',
-              ratingIconColor: section.settings?.ratingIconColor || '#FFB800',
-              bodyType: section.settings?.bodyType || 'standard',
-              cardStyle: section.settings?.cardStyle || 'elegant',
-              cardBackgroundColor: section.settings?.cardBackgroundColor || '#FFFFFF',
-              cardBorderColor: section.settings?.cardBorderColor || '#E5E7EB',
-              headerSize: section.settings?.headerSize || 32,
-              topPadding: section.settings?.topPadding || 40,
-              bottomPadding: section.settings?.bottomPadding || 40,
-              showBusinessReplies: section.settings?.showBusinessReplies ?? true,
-              headerStyle: section.settings?.headerStyle || 'style1',
-              headerBackgroundColor: section.settings?.headerBackgroundColor || '#FACC15',
-              cardBorderRadius: section.settings?.cardBorderRadius || 8,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_MAP:
+      case 'room_map':
         return (
           <PreviewRoomMap
-            config={{
-              enabled: true,
-              title: 'Location',
-              address: '',
-              neighborhood: '',
-              city: '',
-              description: '',
-              mapImage: '',
-              showExactLocation: false,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_CALENDAR:
+      case 'room_calendar':
         return (
           <PreviewRoomCalendar
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              title: section.settings?.title ?? 'Availability',
-              subtitle: section.settings?.subtitle ?? '',
-              minimumNights: section.settings?.minimumNights ?? 1,
-              blockedDates: section.settings?.blockedDates ?? [],
-              pricePerNight: section.settings?.pricePerNight ?? 0,
-              cleaningFee: section.settings?.cleaningFee ?? 0,
-              serviceFee: section.settings?.serviceFee ?? 0,
-              showPricing: section.settings?.showPricing ?? true,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_HOST_CARD:
+      case 'room_host_card':
         return (
           <PreviewRoomHostCard
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              title: section.settings?.title ?? 'Meet your host',
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
-      // @ts-ignore
-      case SectionType.ROOM_THINGS:
+      case 'room_things':
         return (
           <PreviewRoomThings
-            config={{
-              enabled: section.settings?.enabled ?? true,
-              title: section.settings?.title ?? 'Things to know',
-              houseRules: section.settings?.houseRules ?? [],
-              safetyProperty: section.settings?.safetyProperty ?? [],
-              cancellationPolicy: section.settings?.cancellationPolicy ?? [],
-              showMoreButton: section.settings?.showMoreButton ?? true,
-              ...(section.settings as any)
-            } as any}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
       case SectionType.NEWSLETTER:
         return (
           <PreviewNewsletter
-            config={section.settings as NewsletterConfig}
-            theme={normalizedThemeConfig}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            config={section.settings}
+            theme={themeConfig}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
@@ -1016,8 +806,7 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
       <div className="flex-1 bg-white h-full flex flex-col">
       {/* Preview Area */}
       <div className="flex-1 overflow-y-auto flex justify-center bg-gray-100">
-        <div className={`${getPreviewWidth()} min-h-full relative`}>
-          <div className="bg-white shadow-lg flex flex-col min-h-full relative">
+        <div className={`bg-white ${getPreviewWidth()} min-h-full shadow-lg flex flex-col relative`}>
           {!hasContent ? (
             <div className="flex-1 flex items-center justify-center text-gray-400 bg-gray-50">
               <div className="text-center">
@@ -1052,24 +841,13 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
               </div>
             </>
           )}
-          
-          {/* WhatsApp Widget */}
-          {structuralComponents?.whatsAppWidget && (
-            <PreviewWhatsAppWidget
-              config={structuralComponents.whatsAppWidget}
-              theme={normalizedThemeConfig}
-              deviceView={deviceView}
-              isEditor={true}
-            />
-          )}
-          
+
           {/* Aside sections like cart drawer would be rendered as overlays */}
           {asideSections.map(section => (
             <div key={section.id} className="hidden">
               {/* Cart drawer and search drawer are hidden by default, shown on interaction */}
             </div>
           ))}
-          </div>
         </div>
       </div>
     </div>

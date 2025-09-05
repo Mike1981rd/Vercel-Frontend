@@ -23,7 +23,7 @@ import { getCurrencyDisplay } from '@/lib/utils/currency';
 interface PreviewFooterProps {
   config: FooterConfig;
   theme: any;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 

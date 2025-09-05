@@ -8,7 +8,7 @@ import Image from 'next/image';
 interface PreviewHeaderProps {
   config: any;
   theme: any;
-  deviceView?: 'desktop' | 'mobile' | 'tablet'; // Optional prop for editor preview sync
+  deviceView?: 'desktop' | 'mobile'; // Optional prop for editor preview sync
   isEditor?: boolean; // True when used inside EditorPreview
 }
 
@@ -140,7 +140,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
       if (headerConfig.menuId && headerConfig.menuId !== 'none') {
         try {
           // Load real menu from API
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api';
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
           const response = await fetch(`${apiUrl}/NavigationMenu/${headerConfig.menuId}/public`);
           
           if (response.ok) {

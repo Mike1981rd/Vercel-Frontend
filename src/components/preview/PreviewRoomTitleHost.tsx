@@ -46,7 +46,7 @@ interface RoomTitleHostConfig {
 
 interface PreviewRoomTitleHostProps {
   config: RoomTitleHostConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }

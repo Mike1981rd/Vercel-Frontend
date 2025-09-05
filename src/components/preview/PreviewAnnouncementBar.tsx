@@ -11,7 +11,7 @@ interface PreviewAnnouncementBarProps {
   config: AnnouncementBarConfig | null;
   theme: GlobalThemeConfig | null;
   pageType?: PageType | string;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean; // True when used inside EditorPreview
 }
 

@@ -120,7 +120,15 @@ export default function RoomForm({
     floorNumber: undefined,
     viewType: '', // Ensure this is never null
     squareMeters: undefined,
-    // NUEVOS campos se manejan en el spread de initialData
+    // NUEVOS campos inicializados
+    streetAddress: normalizedInitial.streetAddress,
+    city: normalizedInitial.city,
+    state: normalizedInitial.state,
+    country: normalizedInitial.country,
+    postalCode: normalizedInitial.postalCode,
+    latitude: normalizedInitial.latitude,
+    longitude: normalizedInitial.longitude,
+    neighborhood: normalizedInitial.neighborhood,
     hostId: undefined,
     sleepingArrangements: {},
     houseRules: {
@@ -175,15 +183,9 @@ export default function RoomForm({
     images: [],
     isActive: true,
     ...initialData,
-    // Override with normalized address fields to ensure proper casing
-    streetAddress: normalizedInitial.streetAddress,
-    city: normalizedInitial.city,
-    state: normalizedInitial.state,
-    country: normalizedInitial.country,
-    postalCode: normalizedInitial.postalCode,
-    latitude: normalizedInitial.latitude,
-    longitude: normalizedInitial.longitude,
-    neighborhood: normalizedInitial.neighborhood
+    // Ensure select values are never null
+    roomType: initialData?.roomType || '',
+    viewType: initialData?.viewType || ''
   });
 
   // Sync once from initialData when it arrives (respecting normalized casing)
@@ -730,7 +732,7 @@ export default function RoomForm({
                   <option value="">{t('common.select', 'Seleccionar')}</option>
                   {roomTypes.map(type => (
                     <option key={type.value} value={type.value}>
-                      {type.labelEs || type.labelEn}
+                      {type.label}
                     </option>
                   ))}
                 </select>
@@ -761,7 +763,7 @@ export default function RoomForm({
                   <option value="">{t('common.select', 'Seleccionar')}</option>
                   {viewTypes.map(view => (
                     <option key={view.value} value={view.value}>
-                      {view.labelEs || view.labelEn}
+                      {view.label}
                     </option>
                   ))}
                 </select>
@@ -945,32 +947,23 @@ export default function RoomForm({
                   {loadingAmenities ? (
                     <div className="text-xs text-gray-500">Cargando...</div>
                   ) : (
-                    amenityOptions.map((amenity, index) => (
+                    amenityOptions.map(amenity => (
                       <button
-                        key={amenity.value || `amenity-${index}`}
+                        key={amenity.value}
                         type="button"
                         onClick={() => {
-                          const labelToAdd = amenity.labelEs || amenity.label || '';
-                          if (labelToAdd && !formData.amenities?.includes(labelToAdd)) {
+                          if (!formData.amenities?.includes(amenity.label)) {
                             setFormData({
                               ...formData,
-                              amenities: [...(formData.amenities || []), labelToAdd]
+                              amenities: [...(formData.amenities || []), amenity.label]
                             });
                             // Incrementar contador de uso
-                            if (amenity.value && typeof amenity.value === 'string') {
-                              incrementUsage(amenity.value);
-                            }
+                            incrementUsage(amenity.value);
                           }
                         }}
-                        disabled={(() => {
-                          const labelToCheck = amenity.labelEs || amenity.label || '';
-                          return labelToCheck ? formData.amenities?.includes(labelToCheck) || false : false;
-                        })()}
+                        disabled={formData.amenities?.includes(amenity.label)}
                         className={`px-3 py-1 text-xs rounded-full transition-colors flex items-center gap-1 ${
-                          (() => {
-                            const labelToCheck = amenity.labelEs || amenity.label || '';
-                            return labelToCheck ? formData.amenities?.includes(labelToCheck) || false : false;
-                          })()
+                          formData.amenities?.includes(amenity.label)
                             ? 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                         }`}
@@ -982,7 +975,7 @@ export default function RoomForm({
                             className="h-4 w-4"
                           />
                         )}
-                        {amenity.labelEs}
+                        {amenity.label}
                       </button>
                     ))
                   )}
@@ -1253,7 +1246,7 @@ export default function RoomForm({
             
             setFormData(prev => ({
               ...prev,
-              amenities: [...(prev.amenities ?? []), labelToAdd]
+              amenities: [...prev.amenities, labelToAdd]
             }));
             
             console.log('✅ Amenity added to form');

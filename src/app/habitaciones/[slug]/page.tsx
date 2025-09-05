@@ -2,8 +2,14 @@ import { notFound } from 'next/navigation';
 import PreviewPage from '@/components/preview/PreviewPage';
 import { PageType } from '@/types/editor.types';
 
-export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+interface RoomPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export default function RoomPage({ params }: RoomPageProps) {
+  const { slug } = params;
   
   // Pass the room slug to PreviewPage
   // PreviewPage will handle loading the specific room data

@@ -51,7 +51,7 @@ interface Room {
 
 interface PreviewRoomsPageProps {
   companyId?: number;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 
@@ -104,7 +104,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/rooms/company/${companyId}/public`);
+        const response = await fetch(`http://localhost:5266/api/rooms/company/${companyId}/public`);
         if (response.ok) {
           const data = await response.json();
           setRooms(data);

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { StructuralComponentsProvider } from '@/contexts/StructuralComponentsContext';
 import toast from 'react-hot-toast';
 import { 
@@ -20,8 +19,7 @@ import {
   Grid,
   LayoutGrid,
   Box,
-  Bed,
-  MessageCircle
+  Bed
 } from 'lucide-react';
 import { EditorLayout } from '@/components/editor/EditorLayout';
 import { useEditorStore } from '@/stores/useEditorStore';
@@ -30,10 +28,8 @@ import { useEditorTranslations } from '@/hooks/useEditorTranslations';
 import { useStructuralComponents } from '@/hooks/useStructuralComponents';
 import { useCompany } from '@/hooks/useCompany';
 import { StructuralComponentsSync } from '@/components/editor/StructuralComponentsSync';
-import { getApiEndpoint } from '@/lib/api-url';
 
 function EditorPageContent() {
-  const router = useRouter();
   const { 
     selectedPageId: storePageId, 
     selectedPageType,
@@ -391,18 +387,6 @@ function EditorPageContent() {
             >
               <Settings className="w-4 h-4 text-gray-600" />
             </button>
-            
-            {/* WhatsApp Widget */}
-            <button 
-              onClick={() => {
-                const store = useEditorStore.getState();
-                store.toggleWhatsAppWidget();
-              }}
-              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-              title={t('editor.panels.whatsappWidget', 'WhatsApp Widget')}
-            >
-              <MessageCircle className="w-4 h-4 text-gray-600" />
-            </button>
           </div>
 
           {/* Center Section - Page Selector */}
@@ -544,15 +528,7 @@ function EditorPageContent() {
                       handle = 'habitaciones';
                       break;
                   }
-                  try {
-                    // Best-effort prefetch (if supported)
-                    // @ts-ignore
-                    if (router.prefetch) {
-                      // @ts-ignore
-                      router.prefetch(`/${handle}`);
-                    }
-                  } catch {}
-                  setTimeout(() => window.open(`/${handle}`, '_blank'), 50);
+                  window.open(`/${handle}`, '_blank');
                 }}
                 className="p-1.5 hover:bg-gray-100 rounded transition-colors" 
                 title={t('editor.actions.preview', 'Vista Previa')}
@@ -585,8 +561,9 @@ function EditorPageContent() {
                     await handleSave();
                   }
                   // Then publish
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
                   const response = await fetch(
-                    getApiEndpoint(`/structural-components/company/${company?.id || 1}/publish`),
+                    `${apiUrl}/structural-components/company/${company?.id || 1}/publish`,
                     {
                       method: 'POST',
                       headers: {
