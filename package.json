@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel:whoami": "vercel whoami || echo 'No Vercel session (using Git-based deploys)'",
-    "deploy:preview": "vercel --yes --confirm",
-    "deploy:prod": "vercel --prod --yes --confirm"
+    "vercel:whoami": "node -e \"\" && node scripts/dummy.js || true",
+    "deploy:preview": "bash scripts/vercel-cli.sh --yes --confirm",
+    "deploy:prod": "bash scripts/vercel-cli.sh --prod --yes --confirm",
+    "deploy:preview:win": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\vercel-cli.ps1 --yes --confirm",
+    "deploy:prod:win": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\vercel-cli.ps1 --prod --yes --confirm"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
