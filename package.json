@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "vercel:whoami": "vercel whoami || echo 'No Vercel session (using Git-based deploys)'",
+    "deploy:preview": "vercel --yes --confirm",
+    "deploy:prod": "vercel --prod --yes --confirm"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

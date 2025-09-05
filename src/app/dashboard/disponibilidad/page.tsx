@@ -483,6 +483,16 @@ export default function AvailabilityDashboard() {
                 onPriceUpdate={handlePriceUpdate}
                 availabilityData={availabilityData}
                 viewMode="availability"
+                initialMonth={currentDate}
+                onMonthChange={(month) => {
+                  // If parent month differs, update and reload
+                  if (
+                    month.getFullYear() !== currentDate.getFullYear() ||
+                    month.getMonth() !== currentDate.getMonth()
+                  ) {
+                    setCurrentDate(month);
+                  }
+                }}
               />
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm h-full flex items-center justify-center">

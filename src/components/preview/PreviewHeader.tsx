@@ -595,6 +595,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                           height: isMobile ? (headerConfig.logo.mobileHeight || 30) : (headerConfig.logo.height || 40),
                           objectFit: 'contain'
                         }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : (
                       <div className="text-xl font-bold self-center" style={{ color: colorScheme?.text?.default || '#000000' }}>
@@ -615,6 +616,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                         height: isMobile ? (headerConfig.logo.mobileHeight || 30) : (headerConfig.logo.height || 40),
                         objectFit: 'contain'
                       }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
                     <div className="text-xl font-bold self-center" style={{ color: colorScheme?.text?.default || '#000000' }}>
