@@ -21,11 +21,22 @@ const protectedPaths = [
 ];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Por ahora, solo redirigir de / a /login
+  const { pathname, hostname } = request.nextUrl;
+
+  // Redirección inteligente de root según dominio
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const host = (hostname || '').toLowerCase();
+
+    // Considerar dominios de administración (dev y vercel) para enviar a /login
+    const isAdminHost =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === 'websitebuilder-admin.vercel.app' ||
+      (host.startsWith('websitebuilder-admin-') && host.endsWith('.vercel.app'));
+
+    // Si es host de admin → /login; si es dominio público (alias) → /home
+    const target = isAdminHost ? '/login' : '/home';
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
   // Permitir todas las demás rutas sin verificación

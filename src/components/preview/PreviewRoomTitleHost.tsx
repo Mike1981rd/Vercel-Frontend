@@ -9,6 +9,7 @@ import ReservationCalendar from './ReservationCalendar';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { fetchRoomData } from '@/lib/api/rooms';
+import { getApiUrl, getImageUrl, normalizeMediaUrl } from '@/lib/api-url';
 
 interface Highlight {
   id: string;
@@ -46,7 +47,7 @@ interface RoomTitleHostConfig {
 
 interface PreviewRoomTitleHostProps {
   config: RoomTitleHostConfig;
-  deviceView?: 'desktop' | 'mobile';
+  deviceView?: 'desktop' | 'mobile' | 'tablet';
   isEditor?: boolean;
   theme?: any;
 }
@@ -138,9 +139,9 @@ export default function PreviewRoomTitleHost({
       setLoading(true);
       try {
         // First fetch company data to get currency
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
-        const companyId = localStorage.getItem('companyId') || '1';
-        const companyResponse = await fetch(`${apiUrl}/company/${companyId}/public`);
+        const apiUrl = getApiUrl();
+        const companyIdVal = localStorage.getItem('companyId') || '1';
+        const companyResponse = await fetch(`${apiUrl}/company/${companyIdVal}/public`);
         if (companyResponse.ok) {
           const companyData = await companyResponse.json();
           setCompanyCurrency((companyData.currency || 'USD').toUpperCase());
@@ -156,9 +157,7 @@ export default function PreviewRoomTitleHost({
           // If room has hostId, fetch complete host data
           if (data.hostId) {
             try {
-              const hostResponse = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/hosts/by-room/${data.id}`
-              );
+              const hostResponse = await fetch(`${apiUrl}/hosts/by-room/${data.id}`);
               if (hostResponse.ok) {
                 const fullHostData = await hostResponse.json();
                 console.log('Full host data fetched:', fullHostData); // Debug log
@@ -238,7 +237,7 @@ export default function PreviewRoomTitleHost({
     rating: roomData.averageRating || 4.92,
     reviewCount: roomData.totalReviews || 124,
     hostName: currentHost?.fullName || currentHost?.firstName || 'John',
-    hostImage: currentHost?.profilePicture || 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3',
+    hostImage: normalizeMediaUrl(getImageUrl(currentHost?.profilePicture)) || 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3',
     hostVerified: currentHost?.isVerified !== undefined ? currentHost.isVerified : true,
     hostSuperhost: currentHost?.isSuperhost !== undefined ? currentHost.isSuperhost : true,
     hostYears: getHostingYears(),
@@ -480,6 +479,7 @@ export default function PreviewRoomTitleHost({
                             }}
                             loading="eager"
                             decoding="sync"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3'; }}
                           />
                           {config.showHostVerification !== false && displayData.hostVerified && (
                             <div 
@@ -816,6 +816,7 @@ export default function PreviewRoomTitleHost({
                           }}
                           loading="eager"
                           decoding="sync"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://a0.muscache.com/defaults/user_pic-225x225.png?v=3'; }}
                         />
                         {config.showHostVerification !== false && displayData.hostVerified && (
                           <div 

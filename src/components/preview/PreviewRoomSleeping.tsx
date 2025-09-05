@@ -103,9 +103,9 @@ export default function PreviewRoomSleeping({
         `${bed.quantity} ${bed.type}`
       ).join(', ') || 'Double bed',
       image: roomData.images?.[index] // Use room images if available
-    })) : config.areas;
+    })) : (config.areas || []);
 
-  if (displayAreas.length === 0) {
+  if ((displayAreas?.length || 0) === 0) {
     return null;
   }
 

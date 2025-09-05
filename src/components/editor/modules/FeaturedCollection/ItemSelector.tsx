@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '@/lib/constants';
 import { X, Search, ChevronLeft } from 'lucide-react';
 
 interface ItemSelectorProps {
@@ -79,13 +80,13 @@ export default function ItemSelector({
         
         switch(type) {
           case 'collections':
-            endpoint = 'http://localhost:5266/api/Collections';
+            endpoint = `${API_URL}/Collections`;
             break;
           case 'products':
-            endpoint = 'http://localhost:5266/api/Products';
+            endpoint = `${API_URL}/Products`;
             break;
           case 'rooms':
-            endpoint = 'http://localhost:5266/api/Rooms';
+            endpoint = `${API_URL}/Rooms`;
             break;
         }
 

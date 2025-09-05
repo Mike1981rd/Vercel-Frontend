@@ -39,6 +39,7 @@ import {
   GripVertical,
   X
 } from 'lucide-react';
+import { getApiEndpoint } from '@/lib/api-url';
 
 interface CollectionFormProps {
   collectionId?: number;
@@ -302,7 +303,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
         
         // Upload to server
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5266/api/upload/image', {
+        const response = await fetch(getApiEndpoint('/upload/image'), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -352,7 +353,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5266/api/products?pageSize=100', {
+      const response = await fetch(getApiEndpoint('/products?pageSize=100'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -364,7 +365,7 @@ export default function CollectionForm({ collectionId }: CollectionFormProps) {
         
         // If editing, load assigned products
         if (collectionId) {
-          const collectionProductsResponse = await fetch(`http://localhost:5266/api/collections/${collectionId}/products`, {
+          const collectionProductsResponse = await fetch(getApiEndpoint(`/collections/${collectionId}/products`), {
             headers: {
               'Authorization': `Bearer ${token}`
             }

@@ -4,7 +4,7 @@
  * @max-lines 400
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Star, ShoppingCart, CreditCard, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeaturedCollectionConfig, getDefaultFeaturedCollectionConfig } from '@/components/editor/modules/FeaturedCollection/types';
 import { GlobalThemeConfig } from '@/types/theme';
@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface PreviewFeaturedCollectionProps {
   config?: Partial<FeaturedCollectionConfig>;
   theme?: GlobalThemeConfig;
-  deviceView?: 'desktop' | 'mobile';
+  deviceView?: 'desktop' | 'mobile' | 'tablet';
   isEditor?: boolean;
 }
 
@@ -55,7 +55,10 @@ export default function PreviewFeaturedCollection({
     return formatCurrencyPrice(convertedPrice, selectedCurrency);
   };
   
-  const finalConfig: FeaturedCollectionConfig = { ...getDefaultFeaturedCollectionConfig(), ...(config as any) };
+  // Memoize final config to avoid recreating default arrays on every render
+  const finalConfig: FeaturedCollectionConfig = useMemo(() => (
+    { ...getDefaultFeaturedCollectionConfig(), ...(config as any) }
+  ), [config]);
   
   // Debug log
   console.log('PreviewFeaturedCollection rendering:', {
@@ -126,15 +129,15 @@ export default function PreviewFeaturedCollection({
         
         switch(finalConfig.activeType) {
           case 'collections':
-            endpoint = 'http://localhost:5266/api/Collections';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Collections`;
             selectedIds = finalConfig.selectedCollections || [];
             break;
           case 'products':
-            endpoint = 'http://localhost:5266/api/Products';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/Products`;
             selectedIds = finalConfig.selectedProducts || [];
             break;
           case 'rooms':
-            endpoint = 'http://localhost:5266/api/Rooms';
+            endpoint = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/rooms/company/1/public`;
             selectedIds = finalConfig.selectedRooms || [];
             break;
         }
@@ -146,11 +149,7 @@ export default function PreviewFeaturedCollection({
         });
         
         if (endpoint && selectedIds.length > 0) {
-          const response = await fetch(endpoint, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          const response = await fetch(endpoint, { cache: 'no-store' });
           
           console.log('FeaturedCollection - Response status:', response.status);
           
@@ -173,6 +172,7 @@ export default function PreviewFeaturedCollection({
             }
             
             // Helper to ensure absolute image URLs
+            const apiBase = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api').replace(/\/?api$/, '');
             const getImageUrl = (imageUrl: string | undefined | null): string => {
               if (!imageUrl) {
                 console.log('No image URL provided, using placeholder');
@@ -189,26 +189,26 @@ export default function PreviewFeaturedCollection({
               
               // If it's already an absolute URL, return as is
               if (url.startsWith('http://') || url.startsWith('https://')) {
-                return url;
+                return url.replace(/^https?:\/\/localhost:5266/, apiBase);
               }
               
               // If it starts with /uploads, /wwwroot, or /images prepend the backend URL
               if (url.startsWith('/uploads') || url.startsWith('/wwwroot') || url.startsWith('/images')) {
-                return `http://localhost:5266${url}`;
+                return `${apiBase}${url}`;
               }
               
               // If it starts with uploads/ (without leading slash)
               if (url.startsWith('uploads/') || url.startsWith('wwwroot/') || url.startsWith('images/')) {
-                return `http://localhost:5266/${url}`;
+                return `${apiBase}/${url}`;
               }
               
               // If it starts with /, assume it's relative to backend
               if (url.startsWith('/')) {
-                return `http://localhost:5266${url}`;
+                return `${apiBase}${url}`;
               }
               
               // Otherwise, assume it needs the full path
-              return `http://localhost:5266/${url}`;
+              return `${apiBase}/${url}`;
             };
             
             // Map items to consistent structure
@@ -354,7 +354,14 @@ export default function PreviewFeaturedCollection({
     };
     
     fetchItems();
-  }, [finalConfig.activeType, finalConfig.selectedCollections, finalConfig.selectedProducts, finalConfig.selectedRooms, isEditor]);
+    // NOTE: use stable string keys to prevent infinite loops when arrays are recreated
+  }, [
+    finalConfig.activeType,
+    JSON.stringify(finalConfig.selectedCollections || []),
+    JSON.stringify(finalConfig.selectedProducts || []),
+    JSON.stringify(finalConfig.selectedRooms || []),
+    isEditor
+  ]);
   
   // Only hide if explicitly disabled and not in editor
   if (finalConfig.enabled === false && !isEditor) return null;
@@ -802,7 +809,37 @@ export default function PreviewFeaturedCollection({
           )}
           
           {finalConfig.showReserveButton && (
-            finalConfig.activeType === 'rooms' && item.slug && !isEditor ? (
+            // If card is wrapped with an anchor already (isClickable), avoid nested <a> by rendering a button
+            finalConfig.activeType === 'rooms' && item.slug && !isEditor && isClickable ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/habitaciones/${item.slug}`;
+                }}
+                className={cn(
+                  "w-full rounded-md font-medium transition-colors flex items-center justify-center gap-2",
+                  isMobile ? "px-4 py-3 text-base" : "px-4 py-2.5 text-sm",
+                  finalConfig.buttonStyle === 'solid' 
+                    ? "text-white hover:opacity-90"
+                    : "border-2 hover:bg-opacity-10"
+                )}
+                style={{
+                  backgroundColor: finalConfig.buttonStyle === 'solid' ? 
+                    (colorScheme.solidButton || '#000000') : 
+                    'transparent',
+                  borderColor: finalConfig.buttonStyle === 'outline' ? 
+                    (colorScheme.outlineButton || '#000000') : 
+                    'transparent',
+                  color: finalConfig.buttonStyle === 'solid' ? 
+                    (colorScheme.solidButtonText || '#FFFFFF') : 
+                    (colorScheme.outlineButtonText || '#000000')
+                }}
+              >
+                <Calendar className="w-4 h-4" />
+                {finalConfig.reserveButtonText || 'Reservar'}
+              </button>
+            ) : finalConfig.activeType === 'rooms' && item.slug && !isEditor ? (
               <a 
                 href={`/habitaciones/${item.slug}`}
                 className={cn(
