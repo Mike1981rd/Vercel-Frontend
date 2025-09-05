@@ -227,7 +227,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
   // Removed special handling for Custom/Rooms page - now uses regular sections
 
   return (
-    <div className="min-h-[60vh]" style={containerStyle}>
+    <div className="min-h-[60vh] overflow-x-hidden" style={containerStyle}>
       {finalSections.length === 0 ? (
         <div className="text-center py-20">
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">

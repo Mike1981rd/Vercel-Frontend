@@ -257,7 +257,14 @@ export default function PreviewImageBanner({ config, isEditor = false, deviceVie
       {!isMobile && (
         <div 
           className={`relative ${widthClasses[configWithDefaults.width]} ${configWithDefaults.addSidePaddings ? 'px-4 lg:px-8' : ''}`}
-          style={{ aspectRatio: configWithDefaults.desktopRatio }}
+          style={{ 
+            aspectRatio: configWithDefaults.desktopRatio,
+            ...(configWithDefaults.width === 'screen' ? {
+              // Compensate container padding to avoid horizontal scroll
+              marginLeft: 'calc(-50vw + var(--content-padding, 0px))',
+              marginRight: 'calc(-50vw + var(--content-padding, 0px))'
+            } : {})
+          }}
         >
           {/* Background Media */}
           {configWithDefaults.desktopImage && (
@@ -377,7 +384,13 @@ export default function PreviewImageBanner({ config, isEditor = false, deviceVie
       {isMobile && (
         <div 
           className={`relative ${configWithDefaults.addSidePaddings ? 'mx-4' : ''}`}
-          style={{ aspectRatio: configWithDefaults.mobileRatio }}
+          style={{ 
+            aspectRatio: configWithDefaults.mobileRatio,
+            ...(configWithDefaults.width === 'screen' ? {
+              marginLeft: 'calc(-50vw + var(--content-padding, 0px))',
+              marginRight: 'calc(-50vw + var(--content-padding, 0px))'
+            } : {})
+          }}
         >
           {/* Background Media - Use mobile image if available, otherwise desktop */}
           {(configWithDefaults.mobileImage || configWithDefaults.desktopImage) && (

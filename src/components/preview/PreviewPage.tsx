@@ -200,7 +200,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
   // });
 
   return (
-    <div className="min-h-screen" style={{...themeStyles, overflowY: 'auto', height: '100vh'}}>
+    <div className="min-h-screen overflow-x-hidden" style={{...themeStyles, overflowY: 'auto', height: '100vh'}}>
       {/* Announcement Bar - if configured and should show on this page */}
       {structuralComponents.announcementBar && (
         <PreviewAnnouncementBar 
@@ -225,7 +225,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       {/* Structural ImageBanner fallback removed: ImageBanner now renders only when added as a section */}
 
       {/* Page Content */}
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-hidden">
         <PreviewContent 
           pageType={pageType} 
           handle={effectiveHandle}
