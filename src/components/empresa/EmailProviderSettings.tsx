@@ -54,8 +54,9 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
       const token = localStorage.getItem('token');
       const payload: any = {
         Provider: settings.Provider,
-        FromEmail: settings.FromEmail || null,
-        FromName: settings.FromName || null,
+        // Enviar strings trimmeadas; si quedan vacías, el backend las convierte a null
+        FromEmail: (settings.FromEmail ?? '').trim(),
+        FromName: (settings.FromName ?? '').trim(),
       };
       if (apiKeyInput.trim()) payload.ApiKey = apiKeyInput.trim();
       const res = await fetch(API, {
@@ -67,11 +68,22 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to save email settings');
-      // Refresh mask status if a key was provided
-      if (apiKeyInput.trim()) {
-        setSettings((prev) => ({ ...prev, hasApiKey: true, apiKeyMask: mask(apiKeyInput.trim()) }));
-        setApiKeyInput('');
-      }
+      // Refetch settings para reflejar inmediatamente en UI
+      try {
+        const refresh = await fetch(API, { headers: { 'Authorization': token ? `Bearer ${token}` : '' } });
+        if (refresh.ok) {
+          const data = await refresh.json();
+          setSettings({
+            Provider: (data.Provider as Provider) || 'Postmark',
+            FromEmail: data.FromEmail ?? null,
+            FromName: data.FromName ?? null,
+            hasApiKey: !!data.hasApiKey,
+            apiKeyMask: data.apiKeyMask ?? undefined,
+          });
+        }
+      } catch {}
+      // Limpiar input de token si se envió
+      if (apiKeyInput.trim()) setApiKeyInput('');
     } catch (e) {
       console.error(e);
       alert('Error al guardar configuración de correo.');
@@ -176,4 +188,3 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
     </div>
   );
 }
-
