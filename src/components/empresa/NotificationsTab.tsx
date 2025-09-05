@@ -11,6 +11,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { toast } from 'react-hot-toast'
+import ContactNotificationSettings from '@/components/notifications/ContactNotificationSettings'
 import EmailProviderSettings from './EmailProviderSettings'
 import { getApiUrl } from '@/lib/api-url'
 
@@ -189,6 +190,11 @@ export function NotificationsTab() {
       {/* Email Provider (Postmark) */}
       <div className="mb-6">
         <EmailProviderSettings />
+      </div>
+
+      {/* Contact Notifications (email/toast/dashboard) */}
+      <div className="mb-6">
+        <ContactNotificationSettings onSave={() => toast.success(t('notifications.success.save', 'Notification settings saved successfully'))} />
       </div>
 
       {/* Header Section - Mobile Optimized */}
