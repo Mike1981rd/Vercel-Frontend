@@ -29,7 +29,7 @@ export default function RichTextItemEditor({ sectionId, blockId }: RichTextItemE
   const handleUpdate = (updates: Partial<RichTextBlock>) => {
     if (!localBlock) return;
     
-    const updatedBlock = { ...localBlock, ...updates };
+    const updatedBlock = { ...localBlock, ...updates } as RichTextBlock;
     setLocalBlock(updatedBlock);
     
     // Update the blocks array

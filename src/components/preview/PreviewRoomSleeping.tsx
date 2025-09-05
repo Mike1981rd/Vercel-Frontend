@@ -84,7 +84,11 @@ export default function PreviewRoomSleeping({
 
   const getIcon = (iconName: string) => {
     const IconComponent = Icons[iconName as keyof typeof Icons];
-    return IconComponent ? <IconComponent className="w-6 h-6" /> : <Bed className="w-6 h-6" />;
+    if (!IconComponent || typeof IconComponent !== 'function') {
+      return <Bed className="w-6 h-6" />;
+    }
+    const Component = IconComponent as React.FC<{className?: string}>;
+    return <Component className="w-6 h-6" />;
   };
 
   // Parse SleepingArrangements if available

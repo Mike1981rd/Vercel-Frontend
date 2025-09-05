@@ -26,7 +26,8 @@ export default function NewsletterEditor({
     contentPosition: false,
     contentBackground: false,
     paddings: false,
-    css: false
+    css: false,
+    cardSettings: false
   });
 
   // Sync with props when they change

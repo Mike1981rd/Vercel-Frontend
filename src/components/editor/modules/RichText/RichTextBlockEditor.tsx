@@ -13,7 +13,14 @@ import {
   Columns,
   Settings
 } from 'lucide-react';
-import { RichTextBlock } from './types';
+import { 
+  RichTextBlock,
+  RichTextIcon,
+  RichTextSubheading,
+  RichTextHeading,
+  RichTextText,
+  RichTextButtons
+} from './types';
 
 interface RichTextBlockEditorProps {
   block: RichTextBlock;
@@ -36,13 +43,14 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
 
   const renderEditor = () => {
     switch (block.type) {
-      case 'icon':
+      case 'icon': {
+        const iconBlock = localBlock as RichTextIcon;
         return (
           <div className="space-y-4">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Icon</label>
               <select
-                value={localBlock.icon || 'none'}
+                value={iconBlock.icon || 'none'}
                 onChange={(e) => handleChange({ icon: e.target.value === 'none' ? null : e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               >
@@ -58,7 +66,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
               </button>
             </div>
 
-            {localBlock.icon && (
+            {iconBlock.icon && (
               <div className="p-4 border-2 border-dashed rounded-lg text-center">
                 <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">
                   <Settings size={16} className="inline mr-2" />
@@ -73,28 +81,30 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             <div>
               <label className="flex items-center justify-between text-sm mb-2">
                 <span>Icon size</span>
-                <span className="text-gray-500">{localBlock.size} px</span>
+                <span className="text-gray-500">{iconBlock.size} px</span>
               </label>
               <input
                 type="range"
                 min="16"
                 max="120"
-                value={localBlock.size}
+                value={iconBlock.size}
                 onChange={(e) => handleChange({ size: parseInt(e.target.value) })}
                 className="w-full"
               />
             </div>
           </div>
         );
+      }
 
-      case 'subheading':
+      case 'subheading': {
+        const subheadingBlock = localBlock as RichTextSubheading;
         return (
           <div className="space-y-4">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Subheading</label>
               <input
                 type="text"
-                value={localBlock.text}
+                value={subheadingBlock.text}
                 onChange={(e) => handleChange({ text: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm"
                 placeholder="Enter subheading text"
@@ -102,8 +112,10 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             </div>
           </div>
         );
+      }
 
-      case 'heading':
+      case 'heading': {
+        const headingBlock = localBlock as RichTextHeading;
         return (
           <div className="space-y-4">
             <div>
@@ -112,20 +124,20 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                 <div className="flex items-center gap-1 p-2 border-b bg-gray-50">
                   <button
                     onClick={() => handleChange({ 
-                      formatting: { ...localBlock.formatting, bold: !localBlock.formatting?.bold }
+                      formatting: { ...headingBlock.formatting, bold: !headingBlock.formatting?.bold }
                     })}
                     className={`p-1 rounded hover:bg-gray-200 ${
-                      localBlock.formatting?.bold ? 'bg-gray-200' : ''
+                      headingBlock.formatting?.bold ? 'bg-gray-200' : ''
                     }`}
                   >
                     <Bold size={16} />
                   </button>
                   <button
                     onClick={() => handleChange({ 
-                      formatting: { ...localBlock.formatting, italic: !localBlock.formatting?.italic }
+                      formatting: { ...headingBlock.formatting, italic: !headingBlock.formatting?.italic }
                     })}
                     className={`p-1 rounded hover:bg-gray-200 ${
-                      localBlock.formatting?.italic ? 'bg-gray-200' : ''
+                      headingBlock.formatting?.italic ? 'bg-gray-200' : ''
                     }`}
                   >
                     <Italic size={16} />
@@ -136,7 +148,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                 </div>
                 <input
                   type="text"
-                  value={localBlock.text}
+                  value={headingBlock.text}
                   onChange={(e) => handleChange({ text: e.target.value })}
                   className="w-full px-3 py-2 text-sm"
                   placeholder="Enter heading text"
@@ -147,7 +159,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             <div>
               <label className="block text-xs text-gray-600 mb-1">Heading size</label>
               <select
-                value={localBlock.size}
+                value={headingBlock.size}
                 onChange={(e) => handleChange({ size: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               >
@@ -161,8 +173,10 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             </div>
           </div>
         );
+      }
 
-      case 'text':
+      case 'text': {
+        const textBlock = localBlock as RichTextText;
         return (
           <div className="space-y-4">
             <div>
@@ -172,7 +186,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                   <button
                     key={col}
                     onClick={() => {
-                      const newContent = [...localBlock.columnContent];
+                      const newContent = [...textBlock.columnContent];
                       if (col > newContent.length) {
                         for (let i = newContent.length; i < col; i++) {
                           newContent.push('');
@@ -183,7 +197,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                       handleChange({ columns: col as 1 | 2 | 3, columnContent: newContent });
                     }}
                     className={`flex-1 px-3 py-2 border rounded ${
-                      localBlock.columns === col
+                      textBlock.columns === col
                         ? 'bg-blue-50 border-blue-500 text-blue-600'
                         : 'bg-white hover:bg-gray-50'
                     }`}
@@ -194,7 +208,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
               </div>
             </div>
 
-            {Array.from({ length: localBlock.columns }).map((_, index) => (
+            {Array.from({ length: textBlock.columns }).map((_, index) => (
               <div key={index}>
                 <label className="block text-xs text-gray-600 mb-1">
                   Column {index + 1}
@@ -219,9 +233,9 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                     </button>
                   </div>
                   <textarea
-                    value={localBlock.columnContent[index] || ''}
+                    value={textBlock.columnContent[index] || ''}
                     onChange={(e) => {
-                      const newContent = [...localBlock.columnContent];
+                      const newContent = [...textBlock.columnContent];
                       newContent[index] = e.target.value;
                       handleChange({ columnContent: newContent });
                     }}
@@ -236,7 +250,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             <div>
               <label className="block text-xs text-gray-600 mb-1">Body size</label>
               <select
-                value={localBlock.bodySize}
+                value={textBlock.bodySize}
                 onChange={(e) => handleChange({ bodySize: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               >
@@ -251,11 +265,13 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             </div>
           </div>
         );
+      }
 
-      case 'buttons':
+      case 'buttons': {
+        const buttonsBlock = localBlock as RichTextButtons;
         return (
           <div className="space-y-4">
-            {localBlock.buttons.map((button, index) => (
+            {buttonsBlock.buttons.map((button, index) => (
               <div key={index} className="space-y-3 p-4 bg-gray-50 rounded-lg">
                 <h4 className="text-sm font-medium">
                   {index === 0 ? 'First button' : 'Second button'}
@@ -269,7 +285,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                     type="text"
                     value={button.label}
                     onChange={(e) => {
-                      const newButtons = [...localBlock.buttons];
+                      const newButtons = [...buttonsBlock.buttons];
                       newButtons[index] = { ...button, label: e.target.value };
                       handleChange({ buttons: newButtons });
                     }}
@@ -286,7 +302,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                     type="text"
                     value={button.link}
                     onChange={(e) => {
-                      const newButtons = [...localBlock.buttons];
+                      const newButtons = [...buttonsBlock.buttons];
                       newButtons[index] = { ...button, link: e.target.value };
                       handleChange({ buttons: newButtons });
                     }}
@@ -304,7 +320,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                       <button
                         key={style}
                         onClick={() => {
-                          const newButtons = [...localBlock.buttons];
+                          const newButtons = [...buttonsBlock.buttons];
                           newButtons[index] = { ...button, style };
                           handleChange({ buttons: newButtons });
                         }}
@@ -320,11 +336,11 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                   </div>
                 </div>
 
-                {index === 0 && localBlock.buttons.length === 1 && (
+                {index === 0 && buttonsBlock.buttons.length === 1 && (
                   <button
                     onClick={() => {
                       handleChange({ 
-                        buttons: [...localBlock.buttons, {
+                        buttons: [...buttonsBlock.buttons, {
                           label: 'Button',
                           link: '#',
                           style: 'outline'
@@ -337,10 +353,10 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
                   </button>
                 )}
 
-                {localBlock.buttons.length > 1 && (
+                {buttonsBlock.buttons.length > 1 && (
                   <button
                     onClick={() => {
-                      const newButtons = localBlock.buttons.filter((_, i) => i !== index);
+                      const newButtons = buttonsBlock.buttons.filter((_, i) => i !== index);
                       handleChange({ buttons: newButtons });
                     }}
                     className="text-sm text-red-600 hover:underline"
@@ -352,6 +368,7 @@ export default function RichTextBlockEditor({ block, onUpdate, onBack }: RichTex
             ))}
           </div>
         );
+      }
 
       default:
         return null;

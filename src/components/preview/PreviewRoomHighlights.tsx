@@ -347,8 +347,7 @@ export default function PreviewRoomHighlights({
       'award': 'Award',
       'check': 'Check',
       'check-circle': 'CheckCircle',
-      'users': 'Users',
-      'eye': 'Eye',
+      'users': 'Users'
       // Add more mappings as needed
     };
     
@@ -357,7 +356,12 @@ export default function PreviewRoomHighlights({
     const IconComponent = Icons[mappedIconName as keyof typeof Icons];
     
     // Use consistent 24px size for both mobile and desktop
-    return IconComponent ? <IconComponent className="w-full h-full" /> : <Sparkles className="w-full h-full" />;
+    if (!IconComponent || typeof IconComponent !== 'function') {
+      return <Sparkles className="w-full h-full" />;
+    }
+    
+    const Component = IconComponent as React.FC<{className?: string}>;
+    return <Component className="w-full h-full" />;
   };
 
   const handleManualRefresh = async () => {

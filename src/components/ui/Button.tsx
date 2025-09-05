@@ -2,8 +2,8 @@ import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'outline';
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   children: React.ReactNode;
   loading?: boolean;
 }
@@ -29,6 +29,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'px-3 py-1.5 text-sm': size === 'sm',
             'px-4 py-2 text-base': size === 'md',
             'px-6 py-3 text-lg': size === 'lg',
+            'h-8 w-8 p-0': size === 'icon',
           },
           // Variant styles
           {
@@ -37,6 +38,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'bg-transparent text-text-primary hover:bg-gray-100 focus:ring-gray-400': variant === 'ghost',
             'bg-error-500 text-white hover:bg-error-600 focus:ring-error-500': variant === 'danger',
             'bg-success-500 text-white hover:bg-success-600 focus:ring-success-500': variant === 'success',
+            'bg-transparent border border-gray-300 text-text-primary hover:bg-gray-50 focus:ring-gray-400': variant === 'outline',
           },
           className
         )}

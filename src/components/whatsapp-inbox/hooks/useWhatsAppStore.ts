@@ -157,7 +157,7 @@ export const useWhatsAppStore = create<WhatsAppStore>()(
     }),
     {
       name: 'whatsapp-store',
-      partialize: (state) => ({
+      partialize: (state: WhatsAppStore) => ({
         // Only persist certain parts of the state
         conversations: state.conversations,
         selectedConversationId: state.selectedConversationId,

@@ -29,7 +29,7 @@ export default function NewsletterItemEditor({ sectionId, blockId }: NewsletterI
   const handleUpdate = (updates: Partial<NewsletterBlock>) => {
     if (!localBlock) return;
     
-    const updatedBlock = { ...localBlock, ...updates };
+    const updatedBlock = { ...localBlock, ...updates } as NewsletterBlock;
     setLocalBlock(updatedBlock);
     
     // Update the blocks array

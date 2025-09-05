@@ -25,7 +25,9 @@ export default function ContactFormEnhancer({
   autoEnhance = true,
   debug = false
 }: ContactFormEnhancerProps) {
-  const { enhancedFormsCount, isSubmitting } = useEnhancedContactForm();
+  const enhancedForm = useEnhancedContactForm();
+  const enhancedFormsCount = (enhancedForm as any).enhancedFormsCount || 0;
+  const isSubmitting = (enhancedForm as any).isSubmitting || false;
 
   if (debug) {
     console.log(`ContactFormEnhancer: ${enhancedFormsCount} forms enhanced, submitting: ${isSubmitting}`);

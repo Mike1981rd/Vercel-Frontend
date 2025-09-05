@@ -15,7 +15,9 @@ export default function ContactNotificationSettings({
   className = '',
   onSave
 }: ContactNotificationSettingsProps) {
-  const { settings, updateSettings } = useContactNotifications();
+  const contactNotifications = useContactNotifications();
+  const settings = (contactNotifications as any).settings || {};
+  const updateSettings = (contactNotifications as any).updateSettings || (() => {});
   const [currentCompanyId, setCurrentCompanyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);

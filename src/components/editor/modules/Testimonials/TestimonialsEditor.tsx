@@ -21,7 +21,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
   
   const section = Object.values(sections).flat().find(s => s.id === sectionId);
   const [localConfig, setLocalConfig] = useState<TestimonialsConfig>(
-    section?.settings || getDefaultTestimonialsConfig()
+    (section?.settings as TestimonialsConfig) || getDefaultTestimonialsConfig()
   );
   
   const [expandedSections, setExpandedSections] = useState({
@@ -35,7 +35,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
   });
   
   useEffect(() => {
-    setLocalConfig(section?.settings || getDefaultTestimonialsConfig());
+    setLocalConfig((section?.settings as TestimonialsConfig) || getDefaultTestimonialsConfig());
   }, [section?.settings]);
   
   const handleUpdate = (updates: Partial<TestimonialsConfig>) => {

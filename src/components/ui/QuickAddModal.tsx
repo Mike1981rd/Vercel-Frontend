@@ -273,7 +273,7 @@ export default function QuickAddModal({
                 </label>
                 <IconPicker
                   value={formData.icon}
-                  onChange={(icon, type) => setFormData({ ...formData, icon, iconType: type })}
+                  onChange={(icon, type) => setFormData({ ...formData, icon, iconType: type as 'emoji' | 'heroicon' })}
                 />
               </div>
               

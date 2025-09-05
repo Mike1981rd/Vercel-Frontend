@@ -29,8 +29,10 @@ import FAQEditor from './modules/FAQ/FAQEditor';
 import FAQItemEditor from './modules/FAQ/FAQItemEditor';
 import TestimonialsEditor from './modules/Testimonials/TestimonialsEditor';
 import RichTextEditor from './modules/RichText/RichTextEditor';
+import { RichTextConfig, defaultRichTextConfig } from './modules/RichText/types';
 import RichTextItemEditor from './modules/RichText/RichTextItemEditor';
 import NewsletterEditor from './modules/Newsletter/NewsletterEditor';
+import { defaultNewsletterConfig } from './modules/Newsletter/types';
 import ContactFormEditor from './modules/ContactForm/ContactFormEditor';
 import NewsletterItemEditor from './modules/Newsletter/NewsletterItemEditor';
 import TestimonialsItemEditor from './modules/Testimonials/TestimonialsItemEditor';
@@ -473,10 +475,16 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
           sectionsList.some(s => s.id === section.id)
         )?.[0];
         
+        // Normalize settings to ensure it matches RichTextConfig shape
+        const richTextConfig: RichTextConfig = {
+          ...defaultRichTextConfig,
+          ...(section.settings as Record<string, any>),
+        };
+
         return (
           <RichTextEditor
             sectionId={section.id}
-            config={section.settings}
+            config={richTextConfig}
             onUpdate={(config) => {
               if (richTextGroupId) {
                 updateSectionSettings(richTextGroupId, section.id, config);
@@ -487,39 +495,46 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
         );
 
       case SectionType.CONTACT_FORM:
-        return <ContactFormEditor sectionId={selectedSectionId} />;
+        return <ContactFormEditor sectionId={section.id} />;
       case 'room_gallery' as any:
-        return <RoomGalleryEditor sectionId={selectedSectionId} />;
+        return <RoomGalleryEditor sectionId={section.id} />;
       case 'room_title_host' as any:
-        return <RoomTitleHostEditor sectionId={selectedSectionId} />;
+        return <RoomTitleHostEditor sectionId={section.id} />;
       case 'room_highlights' as any:
-        return <RoomHighlightsEditor sectionId={selectedSectionId} />;
+        return <RoomHighlightsEditor sectionId={section.id} />;
       case 'room_description' as any:
-        return <RoomDescriptionEditor sectionId={selectedSectionId} />;
+        return <RoomDescriptionEditor sectionId={section.id} />;
       case 'room_amenities' as any:
-        return <RoomAmenitiesEditor sectionId={selectedSectionId} />;
+        return <RoomAmenitiesEditor sectionId={section.id} />;
       case 'room_sleeping' as any:
-        return <RoomSleepingEditor sectionId={selectedSectionId} />;
+        return <RoomSleepingEditor sectionId={section.id} />;
       case 'room_reviews' as any:
-        return <RoomReviewsEditor sectionId={selectedSectionId} />;
+        return <RoomReviewsEditor sectionId={section.id} />;
       case 'room_map' as any:
-        return <RoomMapEditor sectionId={selectedSectionId} />;
+        return <RoomMapEditor sectionId={section.id} />;
       case 'room_calendar' as any:
-        return <RoomCalendarEditor sectionId={selectedSectionId} />;
+        return <RoomCalendarEditor sectionId={section.id} />;
       case 'room_host_card' as any:
-        return <RoomHostCardEditor sectionId={selectedSectionId} />;
+        return <RoomHostCardEditor sectionId={section.id} />;
       case 'room_things' as any:
-        return <RoomThingsEditor sectionId={selectedSectionId} />;
+        return <RoomThingsEditor sectionId={section.id} />;
       case SectionType.NEWSLETTER:
         // Find the group ID for this section
         const newsletterGroupId = Object.entries(sections).find(([_, sectionsList]) =>
           sectionsList.some(s => s.id === section.id)
         )?.[0];
-        
+
+        // Normalize settings to ensure NewsletterConfig shape
+        const newsletterConfig = {
+          ...defaultNewsletterConfig,
+          ...(section.settings as Record<string, any>),
+        };
+
         return (
           <NewsletterEditor
             sectionId={section.id}
-            config={section.settings}
+            // Casting to satisfy TS with normalized shape
+            config={newsletterConfig as any}
             onUpdate={(config) => {
               if (newsletterGroupId) {
                 updateSectionSettings(newsletterGroupId, section.id, config);

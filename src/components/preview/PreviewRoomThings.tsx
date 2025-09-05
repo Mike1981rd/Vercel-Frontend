@@ -147,7 +147,7 @@ export default function PreviewRoomThings({
     if (roomData?.houseRules) {
       // If houseRules is a string (text from DB), split it
       if (typeof roomData.houseRules === 'string') {
-        const items = roomData.houseRules.split(',').map((s: string) => s.trim()).filter(s => s);
+        const items = roomData.houseRules.split(',').map((s: string) => s.trim()).filter((s: string) => s);
         rules.push(...items);
       } 
       // If houseRules is an object (JSONB), process it

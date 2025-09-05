@@ -158,7 +158,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
       const geo = await geocodeAddress(addressParts, countryCode, provider === 'mapbox' ? token : undefined);
       if (geo) {
         // IMPORTANT: only update coordinates so the display always reflects the user's typed address
-        setFormData(prev => ({ ...prev, latitude: geo.latitude, longitude: geo.longitude }));
+        setFormData((prev: any) => ({ ...prev, latitude: geo.latitude, longitude: geo.longitude }));
       }
       // Update signature after processing
       lastAddressSignatureRef.current = currentSig;
@@ -507,7 +507,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.houseRulesOrder) ? formData.houseRulesOrder : [];
                         const values = houseRulesOptions.map(o => o.value);
-                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
                         return ordered.map((valueKey) => {
                           const opt = houseRulesOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
@@ -574,7 +574,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
             {(() => {
               const enabled = (houseRulesOptions || []).map(o => o.value).filter(v => formData.houseRules?.[v]);
               const order = Array.isArray(formData.houseRulesOrder) ? formData.houseRulesOrder : [];
-              const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+              const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
               const labelOf = (key: string) => (houseRulesOptions.find(o => o.value === key)?.label || key);
               const onDragEnd = (event: any) => {
                 const { active, over } = event;
@@ -649,7 +649,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.cancellationPolicyOrder) ? formData.cancellationPolicyOrder : [];
                         const values = cancellationOptions.map(o => o.value);
-                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
                         return ordered.map((valueKey) => {
                           const opt = cancellationOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
@@ -708,7 +708,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 {(() => {
                   const enabled = (cancellationOptions || []).map(o => o.value).filter(v => formData.cancellationPolicy?.[v]);
                   const order = Array.isArray(formData.cancellationPolicyOrder) ? formData.cancellationPolicyOrder : [];
-                  const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+                  const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
                   const labelOf = (key: string) => (cancellationOptions.find(o => o.value === key)?.label || key);
                   const onDragEnd = (event: any) => {
                     const { active, over } = event;
@@ -751,7 +751,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                       (() => {
                         const order = Array.isArray(formData.safetyAndPropertyOrder) ? formData.safetyAndPropertyOrder : [];
                         const values = safetyPropertyOptions.map(o => o.value);
-                        const ordered = [...order.filter(v => values.includes(v)), ...values.filter(v => !order.includes(v))];
+                        const ordered = [...order.filter((v: string) => values.includes(v)), ...values.filter((v: string) => !order.includes(v))];
                         return ordered.map((valueKey) => {
                           const opt = safetyPropertyOptions.find(o => o.value === valueKey);
                           if (!opt) return null;
@@ -859,7 +859,7 @@ export default function RoomFormExtended({ formData, setFormData, primaryColor }
                 {(() => {
                   const enabled = (safetyPropertyOptions || []).map(o => o.value).filter(v => formData.safetyAndProperty?.[v]);
                   const order = Array.isArray(formData.safetyAndPropertyOrder) ? formData.safetyAndPropertyOrder : [];
-                  const items = [...order.filter(v => enabled.includes(v)), ...enabled.filter(v => !order.includes(v))];
+                  const items = [...order.filter((v: string) => enabled.includes(v)), ...enabled.filter((v: string) => !order.includes(v))];
                   const labelOf = (key: string) => (safetyPropertyOptions.find(o => o.value === key)?.label || key);
                   const onDragEnd = (event: any) => {
                     const { active, over } = event;

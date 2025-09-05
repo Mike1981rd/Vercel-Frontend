@@ -37,10 +37,10 @@ import PreviewRoomCalendar from '@/components/preview/PreviewRoomCalendar';
 import PreviewRoomHostCard from '@/components/preview/PreviewRoomHostCard';
 import PreviewRoomThings from '@/components/preview/modules/RoomThingsPreview';
 
-type DeviceView = 'desktop' | 'tablet' | 'mobile';
+type DeviceView = 'desktop' | 'mobile';
 
 interface EditorPreviewProps {
-  deviceView?: 'desktop' | 'tablet' | 'mobile';
+  deviceView?: 'desktop' | 'mobile';
 }
 
 // CSS for animations
@@ -160,8 +160,6 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
     switch (deviceView) {
       case 'mobile':
         return 'w-[375px]';
-      case 'tablet' as any:
-        return 'w-[768px]';
       default:
         return 'w-full';
     }
@@ -448,7 +446,7 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       menuItems = selectedMenu?.items || [];
     }
 
-    switch (section.type) {
+    switch (section.type as any) {
       case SectionType.ANNOUNCEMENT_BAR:
         const announcementConfig = structuralComponents?.announcementBar || section.settings;
         
@@ -458,7 +456,7 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
             config={announcementConfig}
             theme={themeConfig ?? null}
             pageType={selectedPageType as string}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
@@ -469,7 +467,7 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
           <PreviewHeader
             config={headerConfig || structuralComponents?.header}
             theme={themeConfig || undefined}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            deviceView={deviceView}
             isEditor={true}
           />
         );
@@ -495,7 +493,7 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
           <PreviewImageBanner
             config={section.settings}
             isEditor={true}
-            deviceView={deviceView as 'desktop' | 'mobile'}
+            deviceView={deviceView}
             pageType={selectedPageType as string}
           />
         );
@@ -644,8 +642,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case SectionType.CONTACT_FORM:
         return (
           <PreviewContactForm
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -653,8 +651,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_gallery':
         return (
           <PreviewRoomGallery
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -662,8 +660,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_title_host':
         return (
           <PreviewRoomTitleHost
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -671,8 +669,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_highlights':
         return (
           <PreviewRoomHighlights
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -680,8 +678,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_description':
         return (
           <PreviewRoomDescription
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -689,8 +687,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_amenities':
         return (
           <PreviewRoomAmenities
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -698,8 +696,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_sleeping':
         return (
           <PreviewRoomSleeping
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -707,8 +705,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_reviews':
         return (
           <PreviewRoomReviews
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -716,8 +714,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_map':
         return (
           <PreviewRoomMap
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -725,8 +723,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_calendar':
         return (
           <PreviewRoomCalendar
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -734,8 +732,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_host_card':
         return (
           <PreviewRoomHostCard
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -743,8 +741,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case 'room_things':
         return (
           <PreviewRoomThings
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />
@@ -752,8 +750,8 @@ export function EditorPreview({ deviceView = 'desktop' }: EditorPreviewProps) {
       case SectionType.NEWSLETTER:
         return (
           <PreviewNewsletter
-            config={section.settings}
-            theme={themeConfig}
+            config={section.settings as any}
+            theme={themeConfig || undefined}
             deviceView={deviceView}
             isEditor={true}
           />

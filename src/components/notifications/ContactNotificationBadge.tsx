@@ -18,7 +18,10 @@ export default function ContactNotificationBadge({
   autoRefresh = true,
   refreshInterval = 30000 // 30 seconds
 }: ContactNotificationBadgeProps) {
-  const { unreadCount, fetchUnreadCount, settings } = useContactNotifications();
+  const contactNotifications = useContactNotifications();
+  const { unreadCount } = contactNotifications;
+  const fetchUnreadCount = (contactNotifications as any).fetchUnreadCount || (() => {});
+  const settings = (contactNotifications as any).settings || { soundEnabled: false };
   const [currentCompanyId, setCurrentCompanyId] = useState<number | null>(null);
 
   // Función para obtener companyId desde localStorage si no se proporciona

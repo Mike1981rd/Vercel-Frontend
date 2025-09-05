@@ -431,7 +431,7 @@ export default function PreviewRoomHostCard({
         </div>
 
         {/* Message Host Button - Centered at bottom */}
-        {config.showMessageButton !== false && (
+        {(config as any).showMessageButton !== false && (
           <div className={`flex justify-center ${isMobile ? 'mt-6' : 'mt-8'}`}>
             <div className={`w-full ${isMobile ? 'max-w-full' : 'max-w-md'}`}>
               <button 

@@ -67,7 +67,7 @@ export default function PreviewNewsletter({
   };
   
   // Obtener typography
-  const typography = themeConfig?.typography || {};
+  const typography: any = themeConfig?.typography || {};
   
   // Configuraciones responsive
   const containerClass = cn(
@@ -152,7 +152,7 @@ export default function PreviewNewsletter({
     
     switch (contentBackground) {
       case 'solid':
-        styles.backgroundColor = colorScheme.foreground || colorScheme.secondaryBackground || '#f5f5f5';
+        styles.backgroundColor = colorScheme.foreground || (colorScheme as any).secondaryBackground || '#f5f5f5';
         styles.padding = '2rem';
         break;
       case 'outline':

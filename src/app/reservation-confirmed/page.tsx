@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Calendar, Users, MapPin, Mail, Phone, Home, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
@@ -269,6 +269,7 @@ export default function ReservationConfirmedPage() {
   }
 
   return (
+    <Suspense fallback={<div />}> 
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success Message */}
@@ -454,5 +455,6 @@ export default function ReservationConfirmedPage() {
         </div>
       </div>
     </div>
+    </Suspense>
   );
 }

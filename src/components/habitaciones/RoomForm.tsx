@@ -118,7 +118,7 @@ export default function RoomForm({
     roomCode: '',
     roomType: '', // Ensure this is never null
     floorNumber: undefined,
-    viewType: '', // Ensure this is never null
+    // viewType will be set from initialData fallback below
     squareMeters: undefined,
     // NUEVOS campos inicializados
     streetAddress: normalizedInitial.streetAddress,
@@ -183,9 +183,7 @@ export default function RoomForm({
     images: [],
     isActive: true,
     ...initialData,
-    // Ensure select values are never null
-    roomType: initialData?.roomType || '',
-    viewType: initialData?.viewType || ''
+    // Ensure select values are never null (handled in useEffect from initialData)
   });
 
   // Sync once from initialData when it arrives (respecting normalized casing)
@@ -1246,7 +1244,7 @@ export default function RoomForm({
             
             setFormData(prev => ({
               ...prev,
-              amenities: [...prev.amenities, labelToAdd]
+              amenities: [...(prev.amenities || []), labelToAdd]
             }));
             
             console.log('✅ Amenity added to form');

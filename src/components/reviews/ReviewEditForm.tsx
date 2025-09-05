@@ -106,7 +106,7 @@ export function ReviewEditForm({
   };
 
   const getStatusLabel = (status: string) => {
-    const labels = {
+    const labels: Record<string, string> = {
       Pending: '⏳ Pendiente',
       Approved: '✅ Aprobado',
       Rejected: '❌ Rechazado',
@@ -345,7 +345,7 @@ export function ReviewEditForm({
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2"
-            style={{ focusRingColor: primaryColor }}
+            style={{ '--focus-ring-color': primaryColor } as React.CSSProperties}
           />
         </div>
 
@@ -358,7 +358,7 @@ export function ReviewEditForm({
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             rows={5}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 resize-none"
-            style={{ focusRingColor: primaryColor }}
+            style={{ '--focus-ring-color': primaryColor } as React.CSSProperties}
           />
         </div>
 
@@ -459,7 +459,7 @@ export function ReviewEditForm({
               placeholder={t('reviews.replyPlaceholder', 'Write your reply to this review...')}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 resize-none mb-4"
-              style={{ focusRingColor: primaryColor }}
+              style={{ '--focus-ring-color': primaryColor } as React.CSSProperties}
             />
             <div className="flex gap-3">
               <button

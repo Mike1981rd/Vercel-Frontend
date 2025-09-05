@@ -66,7 +66,7 @@ export async function generateReservationPDF(data: ReservationPDFData): Promise<
           console.error('Could not load logo for PDF');
           resolve(null);
         };
-        logoImage.src = data.companyLogo;
+        logoImage.src = data.companyLogo || '';
       });
       
       if (logoImage.complete && logoImage.naturalHeight !== 0) {

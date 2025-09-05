@@ -192,12 +192,12 @@ Whether you're here for business or pleasure, this apartment provides the perfec
               <h2 
                 className={`text-2xl md:text-3xl mb-4 ${getHeaderAlignment()}`}
                 style={{
-                  ...headingTypography,
+                  ...(headingTypography as any),
                   color: colorScheme?.text || '#000000',
                   fontWeight: config.headingBold !== false ? 'bold' : 'normal',
                   fontStyle: config.headingItalic ? 'italic' : 'normal',
                   textDecoration: config.headingUnderline ? 'underline' : 'none'
-                }}
+                } as React.CSSProperties}
               >
                 {config.headingText}
               </h2>
@@ -207,9 +207,9 @@ Whether you're here for business or pleasure, this apartment provides the perfec
             <p 
               className={`text-base whitespace-pre-wrap ${getBodyAlignment()}`}
               style={{
-                ...bodyTypography,
+                ...(bodyTypography as any),
                 color: colorScheme?.text || '#000000'
-              }}
+              } as React.CSSProperties}
             >
               {displayText}
             </p>

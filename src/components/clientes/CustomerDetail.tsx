@@ -298,18 +298,18 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
                 const lbl = (a.label || '').toString().toLowerCase();
                 return t === 'billing' || t === 'office' || lbl.includes('billing');
               });
-              const fallbackStreet = data.billingAddress || b?.street || b?.addressLine1 || '';
-              const fallbackCity = data.billingCity || b?.city || '';
-              const fallbackCountry = mapCountryNameToIso(data.billingCountry || b?.country || '');
+              const fallbackStreet = (data as any).billingAddress || b?.street || (b as any)?.addressLine1 || '';
+              const fallbackCity = (data as any).billingCity || b?.city || '';
+              const fallbackCountry = mapCountryNameToIso((data as any).billingCountry || b?.country || '');
               if (fallbackStreet && fallbackCity && fallbackCountry) {
                 mapped = [{
                   id: undefined,
                   type: 'shipping',
                   addressLine1: fallbackStreet,
-                  addressLine2: data.billingApartment || b?.apartment || b?.addressLine2 || '',
+                  addressLine2: (data as any).billingApartment || b?.apartment || (b as any)?.addressLine2 || '',
                   city: fallbackCity,
-                  state: data.billingState || b?.state || '',
-                  postalCode: data.billingPostalCode || b?.postalCode || '',
+                  state: (data as any).billingState || b?.state || '',
+                  postalCode: (data as any).billingPostalCode || b?.postalCode || '',
                   country: fallbackCountry,
                   isDefault: true
                 }];
@@ -331,25 +331,25 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             paperlessBilling: data.paperlessBilling !== false
           },
           billingAddress: (() => {
-            if (data.billingAddress) return data.billingAddress;
+            if ((data as any).billingAddress) return (data as any).billingAddress;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
               return t === 'billing' || t === 'office' || lbl.includes('billing');
             });
-            return b?.street || b?.addressLine1 || '';
+            return b?.street || (b as any)?.addressLine1 || '';
           })(),
           billingApartment: (() => {
-            if (data.billingApartment) return data.billingApartment;
+            if ((data as any).billingApartment) return (data as any).billingApartment;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
               return t === 'billing' || t === 'office' || lbl.includes('billing');
             });
-            return b?.apartment || b?.addressLine2 || '';
+            return b?.apartment || (b as any)?.addressLine2 || '';
           })(),
           billingCity: (() => {
-            if (data.billingCity) return data.billingCity;
+            if ((data as any).billingCity) return (data as any).billingCity;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -358,7 +358,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.city || '';
           })(),
           billingState: (() => {
-            if (data.billingState) return data.billingState;
+            if ((data as any).billingState) return (data as any).billingState;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -367,7 +367,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.state || '';
           })(),
           billingPostalCode: (() => {
-            if (data.billingPostalCode) return data.billingPostalCode;
+            if ((data as any).billingPostalCode) return (data as any).billingPostalCode;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -376,7 +376,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.postalCode || '';
           })(),
           billingCountry: (() => {
-            const name = data.billingCountry || (() => {
+            const name = (data as any).billingCountry || (() => {
               const b = (data.addresses || []).find((a: any) => {
                 const t = (a.type || '').toString().toLowerCase();
                 const lbl = (a.label || '').toString().toLowerCase();

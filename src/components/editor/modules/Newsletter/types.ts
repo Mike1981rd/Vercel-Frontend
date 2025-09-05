@@ -57,6 +57,8 @@ export type MobilePositionType = 'top' | 'center' | 'bottom';
 export type CardStyleType = 'minimal' | 'flat' | 'raised' | 'bordered' | 'rounded' | 'modern';
 
 export interface NewsletterConfig {
+  // Enabled flag (optional, used by preview)
+  enabled?: boolean;
   // Color scheme and background
   colorScheme: string;
   colorBackground: boolean;

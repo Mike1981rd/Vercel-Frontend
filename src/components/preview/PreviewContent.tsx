@@ -36,6 +36,7 @@ interface PreviewContentProps {
 
 export default function PreviewContent({ pageType, handle, theme, companyId, deviceView, roomSlug }: PreviewContentProps) {
   // DO NOT normalize or coalesce deviceView - pass it through as-is per documentation
+  const coercedDeviceView: 'desktop' | 'mobile' = deviceView === 'mobile' ? 'mobile' : 'desktop';
   const [sections, setSections] = useState<Section[]>([]);
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -337,7 +338,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                     <PreviewFAQ 
                       config={faqConfig} 
                       theme={theme}
-                      deviceView={deviceView as 'desktop' | 'mobile'}
+                      deviceView={coercedDeviceView}
                       isEditor={false}
                     />
 
@@ -350,7 +351,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewTestimonials 
                   config={getSectionConfig(section)} 
                   theme={theme}
-                  deviceView={deviceView as 'desktop' | 'mobile'}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -359,7 +360,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
               {getSectionType(section) === 'rich_text' && (
                 <PreviewRichText 
                   config={getSectionConfig(section)}
-                  deviceView={deviceView as 'desktop' | 'mobile' | 'tablet'}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -369,7 +370,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewNewsletter 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -378,7 +379,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewContactForm 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -387,7 +388,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomGallery 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -396,7 +397,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomTitleHost 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -405,7 +406,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomHighlights 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -414,7 +415,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomDescription 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -423,7 +424,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomAmenities 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -432,7 +433,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomSleeping 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -441,7 +442,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomReviews 
                   config={getSectionConfig(section) || { enabled: true }}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -450,7 +451,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomMap 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -459,7 +460,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomCalendar 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -468,7 +469,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomHostCard 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}
@@ -477,7 +478,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomThings 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={deviceView}
+                  deviceView={coercedDeviceView}
                   isEditor={false}
                 />
               )}

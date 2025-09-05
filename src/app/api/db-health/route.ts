@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 
+// Mark this route as dynamic to avoid static optimization errors during build
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // Health check that proxies the backend API health endpoint instead of Supabase
 export async function GET() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'

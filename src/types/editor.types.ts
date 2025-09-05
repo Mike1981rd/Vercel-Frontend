@@ -419,16 +419,6 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       videoUrl: ''
     }
   },
-  [SectionType.RICH_TEXT]: {
-    type: SectionType.RICH_TEXT,
-    name: 'Rich text',
-    description: 'Formatted text content',
-    icon: 'text',
-    category: 'template',
-    defaultSettings: {
-      content: ''
-    }
-  },
   [SectionType.FOOTER]: {
     type: SectionType.FOOTER,
     name: 'Footer',

@@ -21,6 +21,8 @@ interface CalendarDay {
     id: number;
     guestName: string;
     status: string;
+    isCheckIn?: boolean;
+    isCheckOut?: boolean;
   };
 }
 

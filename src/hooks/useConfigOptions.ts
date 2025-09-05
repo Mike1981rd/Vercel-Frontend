@@ -7,6 +7,8 @@ interface ConfigOption {
   value: string;
   labelEs: string;
   labelEn: string;
+  // Optional display label derived from current language
+  label?: string;
   icon?: string;
   iconType?: string;
   category?: string;
@@ -19,7 +21,7 @@ interface ConfigOption {
 
 export function useConfigOptions(type: string) {
   const { language } = useI18n();
-  const [options, setOptions] = useState<ConfigOption[]>([]);
+  const [options, setOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

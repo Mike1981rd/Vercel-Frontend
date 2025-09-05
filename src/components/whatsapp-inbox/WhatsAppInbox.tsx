@@ -263,7 +263,7 @@ const WhatsAppInbox: React.FC<WhatsAppInboxProps> = ({
         <div className="w-80 flex-shrink-0">
           <ConversationList
             conversations={conversations}
-            selectedConversationId={selectedConversationId}
+            selectedConversationId={selectedConversationId || undefined}
             onSelectConversation={handleSelectConversation}
             onSearchConversations={handleSearchConversations}
             loading={loading}

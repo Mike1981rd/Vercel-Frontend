@@ -14,10 +14,4 @@ export { useContactNotifications } from '@/hooks/useContactNotifications';
 export { useEnhancedContactForm } from '@/hooks/useEnhancedContactForm';
 export { useContactFormEnhancer } from '@/hooks/useContactFormEnhancer';
 
-// Tipos (si necesitas importarlos)
-export type {
-  ContactMessage,
-  ContactNotificationSettings,
-  ContactFormData,
-  UseContactNotificationsReturn
-} from '@/hooks/useContactNotifications';
+// Tipos: re-export omitted to avoid duplicate identifiers with component names
