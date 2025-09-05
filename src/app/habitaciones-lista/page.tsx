@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getApiEndpoint } from '@/lib/api-url';
 import { ChevronDown, Grid, List, Search, SlidersHorizontal, X } from 'lucide-react';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -123,24 +122,11 @@ export default function RoomsListPage() {
   const fetchRooms = async () => {
     try {
       const token = localStorage.getItem('token');
-      const companyId = localStorage.getItem('companyId') || '1';
-      
-      let response;
-      
-      // Check if we're in public context (no token) or authenticated context
-      if (!token) {
-        // Public context - use public endpoint that doesn't require authentication
-        console.log('Fetching rooms in public mode');
-        response = await fetch(getApiEndpoint(`/Rooms/company/${companyId}/public`));
-      } else {
-        // Authenticated context - use protected endpoint with token
-        console.log('Fetching rooms in authenticated mode');
-        response = await fetch(getApiEndpoint('/Rooms'), {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
+      const response = await fetch('http://localhost:5266/api/Rooms', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -148,13 +134,6 @@ export default function RoomsListPage() {
         const activeRooms = data.filter((room: Room) => room.isActive);
         setRooms(activeRooms);
         setFilteredRooms(activeRooms);
-      } else {
-        console.error('Failed to fetch rooms:', response.status, response.statusText);
-        // Don't redirect to login if in public mode
-        if (token && response.status === 401) {
-          // Only redirect if we had a token but it's invalid
-          console.log('Token invalid, user might need to re-login');
-        }
       }
     } catch (error) {
       console.error('Error fetching rooms:', error);

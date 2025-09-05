@@ -12,7 +12,7 @@ import { Plus, Trash2, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { useStructuralComponents } from '@/hooks/useStructuralComponents';
 import { FooterBlock, FooterBlockType } from './FooterTypes';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/Button';
 
 interface FooterChildrenProps {

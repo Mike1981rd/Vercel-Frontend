@@ -12,7 +12,6 @@ export interface StructuralComponentsDto {
   announcementBarConfig: string; // JSON string
   footerConfig: string; // JSON string
   cartDrawerConfig: string; // JSON string
-  whatsAppWidgetConfig?: string; // JSON string
   isActive?: boolean;
   isPublished?: boolean;
   publishedAt?: string;
@@ -23,7 +22,7 @@ export interface StructuralComponentsDto {
 }
 
 export interface UpdateComponentDto {
-  componentType: 'header' | 'announcementbar' | 'footer' | 'cartdrawer' | 'whatsappwidget';
+  componentType: 'header' | 'announcementbar' | 'footer' | 'cartdrawer';
   config: string;
   notes?: string;
 }
@@ -114,22 +113,6 @@ export async function updateImageBannerConfig(companyId: number, config: any): P
 export async function updateCartDrawerConfig(companyId: number, config: any): Promise<StructuralComponentsDto> {
   const updateDto: UpdateComponentDto = {
     componentType: 'cartdrawer',
-    config: JSON.stringify(config)
-  };
-  
-  const response = await apiClient.put(
-    `/structural-components/company/${companyId}/component`,
-    updateDto
-  );
-  return response.data;
-}
-
-/**
- * Update WhatsApp widget configuration
- */
-export async function updateWhatsAppWidgetConfig(companyId: number, config: any): Promise<StructuralComponentsDto> {
-  const updateDto: UpdateComponentDto = {
-    componentType: 'whatsappwidget',
     config: JSON.stringify(config)
   };
   

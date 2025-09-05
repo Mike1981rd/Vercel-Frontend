@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 import { 
   ShieldIcon, 
   ArrowLeftIcon, 
@@ -50,7 +49,7 @@ export default function NewRolePage() {
   const fetchPermissions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/permissions'), {
+      const response = await fetch('http://localhost:5266/api/permissions', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -94,7 +93,7 @@ export default function NewRolePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/roles'), {
+      const response = await fetch('http://localhost:5266/api/roles', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

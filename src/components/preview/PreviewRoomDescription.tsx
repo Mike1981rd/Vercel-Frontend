@@ -28,7 +28,7 @@ interface RoomDescriptionConfig {
 
 interface PreviewRoomDescriptionProps {
   config: RoomDescriptionConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -155,18 +155,18 @@ Whether you're here for business or pleasure, this apartment provides the perfec
   };
 
   // Get typography from theme config
-  const headingTypography: React.CSSProperties = themeConfig?.typography?.headings ? {
+  const headingTypography = themeConfig?.typography?.headings ? {
     fontFamily: `'${themeConfig.typography.headings.fontFamily}', sans-serif`,
     fontWeight: themeConfig.typography.headings.fontWeight || '400',
-    textTransform: themeConfig.typography.headings.useUppercase ? 'uppercase' as const : 'none' as const,
+    textTransform: themeConfig.typography.headings.useUppercase ? 'uppercase' : 'none',
     fontSize: `${config.fontSize?.heading || 100}%`,
     letterSpacing: `${themeConfig.typography.headings.letterSpacing || 0}px`
   } : { fontSize: `${config.fontSize?.heading || 100}%` };
 
-  const bodyTypography: React.CSSProperties = themeConfig?.typography?.body ? {
+  const bodyTypography = themeConfig?.typography?.body ? {
     fontFamily: `'${themeConfig.typography.body.fontFamily}', sans-serif`,
     fontWeight: themeConfig.typography.body.fontWeight || '400',
-    textTransform: themeConfig.typography.body.useUppercase ? 'uppercase' as const : 'none' as const,
+    textTransform: themeConfig.typography.body.useUppercase ? 'uppercase' : 'none',
     fontSize: `${config.fontSize?.body || 100}%`,
     letterSpacing: `${themeConfig.typography.body.letterSpacing || 0}px`
   } : { fontSize: `${config.fontSize?.body || 100}%` };

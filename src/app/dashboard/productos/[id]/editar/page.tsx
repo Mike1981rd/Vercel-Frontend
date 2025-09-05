@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { ProductMessages } from '@/constants/productMessages';
-import { getApiEndpoint } from '@/lib/api-url';
 import { formatCurrencyInput, unformatCurrency } from '@/utils/currency';
 
 interface Collection {
@@ -136,7 +135,7 @@ export default function EditProductPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/products/${productId}`), {
+      const response = await fetch(`http://localhost:5266/api/products/${productId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -179,7 +178,7 @@ export default function EditProductPage() {
   const fetchCollections = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/collections'), {
+      const response = await fetch('http://localhost:5266/api/collections', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -319,7 +318,7 @@ export default function EditProductPage() {
         isActive: formData.isActive
       };
 
-      const response = await fetch(getApiEndpoint(`/products/${productId}`), {
+      const response = await fetch(`http://localhost:5266/api/products/${productId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -330,7 +329,7 @@ export default function EditProductPage() {
 
       if (response.ok) {
         // Update collections
-        await fetch(getApiEndpoint(`/products/${productId}/collections`), {
+        await fetch(`http://localhost:5266/api/products/${productId}/collections`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -362,7 +361,7 @@ export default function EditProductPage() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/products/${productId}`), {
+      const response = await fetch(`http://localhost:5266/api/products/${productId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

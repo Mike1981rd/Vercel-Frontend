@@ -5,13 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/lib/api';
-import authService from '@/services/auth.service';
-import { localAuthService } from '@/services/local-auth.service';
 import { useI18n } from '@/contexts/I18nContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Eye, EyeOff, Languages } from 'lucide-react';
 import { FaFacebookF, FaTwitter, FaGithub, FaGoogle } from 'react-icons/fa';
+import { api } from '@/lib/api';
 import { buildAssetUrl } from '@/lib/utils';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
@@ -69,25 +67,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Normalizar entradas
-      const emailNorm = (email || '').trim().toLowerCase();
-      const passwordNorm = (password || '').trim();
-
-      if (!emailNorm || !passwordNorm) {
-        throw new Error(t('auth.missingCredentials', 'Please enter email and password'));
-      }
-
-      // Login directo con el backend (sin Supabase)
-      const authResponse = await localAuthService.login({
-        email: emailNorm,
-        password: passwordNorm
-      });
-      
-      // Guardar la autenticación
-      authService.saveAuth(authResponse);
-      
-      // Redirigir al dashboard
-      router.push('/dashboard');
+      await login({ email: email.trim(), password: password.trim() });
     } catch (err: any) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);

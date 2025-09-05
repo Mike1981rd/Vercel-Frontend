@@ -19,8 +19,14 @@ const validHandles: Record<string, PageType> = {
   'habitaciones': PageType.CUSTOM
 };
 
-export default async function Page({ params }: { params: Promise<{ handle: string }> }) {
-  const { handle } = await params;
+interface PageProps {
+  params: {
+    handle: string;
+  };
+}
+
+export default function Page({ params }: PageProps) {
+  const { handle } = params;
   
   // Check if handle is valid for Website Builder pages
   const pageType = validHandles[handle];
@@ -38,5 +44,3 @@ export async function generateStaticParams() {
     handle,
   }));
 }
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;

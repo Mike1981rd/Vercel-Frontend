@@ -17,7 +17,7 @@ interface RoomCalendarConfig {
 
 interface PreviewRoomCalendarProps {
   config: RoomCalendarConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }

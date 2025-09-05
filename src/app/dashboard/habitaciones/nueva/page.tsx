@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
 import RoomForm from '@/components/habitaciones/RoomForm';
-import { getApiEndpoint } from '@/lib/api-url';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function NuevaHabitacionPage() {
@@ -24,7 +23,7 @@ export default function NuevaHabitacionPage() {
   const handleSave = async (data: any) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/rooms'), {
+      const response = await fetch('http://localhost:5266/api/rooms', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

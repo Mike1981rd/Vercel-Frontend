@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getImageUrl } from '@/lib/api-url';
 import { ChevronLeft, ChevronRight, Star, Wifi, Car, Tv, Home, Shield, Medal, Clock, Check, X, Waves, Sparkles, DoorOpen, Key, Laptop, Award, Dumbbell, Wind, Bed, Grid3x3, MapPin } from 'lucide-react';
 // Import additional icons for amenities
 import { Coffee, Utensils } from 'lucide-react';
@@ -52,7 +51,7 @@ interface Room {
 
 interface PreviewRoomsPageProps {
   companyId?: number;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 
@@ -105,7 +104,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/rooms/company/${companyId}/public`);
+        const response = await fetch(`http://localhost:5266/api/rooms/company/${companyId}/public`);
         if (response.ok) {
           const data = await response.json();
           setRooms(data);
@@ -236,10 +235,9 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
               {selectedRoom.images.map((image, index) => (
                 <img
                   key={index}
-                  src={getImageUrl(image)}
+                  src={image}
                   alt={`Room ${index + 1}`}
                   className="w-full h-auto"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               ))}
             </div>
@@ -253,10 +251,9 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
           // Mobile: Swipeable gallery
           <div className="relative h-[300px] bg-gray-100">
             <img
-              src={getImageUrl(selectedRoom.images[currentImageIndex])}
+              src={selectedRoom.images[currentImageIndex]}
               alt={selectedRoom.name}
               className="w-full h-full object-cover"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
             />
             <button
               onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedRoom.images.length - 1)}
@@ -286,21 +283,19 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
           <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[560px] rounded-xl overflow-hidden relative">
             <div className="col-span-2 row-span-2">
               <img
-                src={getImageUrl(selectedRoom.images[0])}
+                src={selectedRoom.images[0]}
                 alt={selectedRoom.name}
                 className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                 onClick={() => setShowAllPhotos(true)}
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
               />
             </div>
             {selectedRoom.images.slice(1, 5).map((image, index) => (
               <div key={index} className="relative">
                 <img
-                  src={getImageUrl(image)}
+                  src={image}
                   alt={`Room ${index + 2}`}
                   className="w-full h-full object-cover hover:brightness-95 transition cursor-pointer"
                   onClick={() => setShowAllPhotos(true)}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden'; }}
                 />
               </div>
             ))}
@@ -359,7 +354,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                   </div>
                   <div className="relative">
                     <img
-                      src={getImageUrl(selectedRoom.host.profilePicture)}
+                      src={selectedRoom.host.profilePicture}
                       alt={selectedRoom.host.firstName}
                       className="w-14 h-14 rounded-full object-cover border border-gray-200"
                     />
@@ -781,7 +776,7 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4">
                     <img
-                      src={getImageUrl(selectedRoom.host.profilePicture)}
+                      src={selectedRoom.host.profilePicture}
                       alt={selectedRoom.host.firstName}
                       className="w-[128px] h-[128px] rounded-full object-cover"
                     />

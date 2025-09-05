@@ -21,8 +21,6 @@ import {
   X,
   Bed
 } from 'lucide-react';
-import { API_URL } from '@/lib/constants';
-import { getApiEndpoint } from '@/lib/api-url';
 
 interface MenuItem {
   id?: string;
@@ -232,7 +230,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/NavigationMenu/${menuId}`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -435,8 +433,8 @@ export default function NavigationMenuForm({ menuId }: Props) {
       setSaving(true);
       const token = localStorage.getItem('token');
       const url = menuId 
-        ? `${API_URL}/NavigationMenu/${menuId}`
-        : `${API_URL}/NavigationMenu`;
+        ? `http://localhost:5266/api/NavigationMenu/${menuId}`
+        : 'http://localhost:5266/api/NavigationMenu';
       
       const method = menuId ? 'PUT' : 'POST';
 
@@ -507,7 +505,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/NavigationMenu/${menuId}/duplicate`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}/duplicate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -536,7 +534,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/NavigationMenu/${menuId}`), {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

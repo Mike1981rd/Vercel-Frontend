@@ -9,7 +9,6 @@ import { useI18n } from '@/contexts/I18nContext';
 import DomainStatusBadge from '@/components/domains/DomainStatusBadge';
 import DnsRecordsList from '@/components/domains/DnsRecordsList';
 import DnsRecordModal, { DnsRecord } from '@/components/domains/DnsRecordModal';
-import { API_URL } from '@/lib/constants';
 
 interface DomainFormData {
   id?: number;
@@ -71,7 +70,7 @@ export default function DomainsPage() {
   const fetchDomain = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/domains`, {
+      const response = await fetch('http://localhost:5266/api/domains', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -204,8 +203,8 @@ export default function DomainsPage() {
     try {
       const token = localStorage.getItem('token');
       const url = isEditMode 
-        ? `${API_URL}/domains/${formData.id}`
-        : `${API_URL}/domains`;
+        ? `http://localhost:5266/api/domains/${formData.id}`
+        : 'http://localhost:5266/api/domains';
       
       const method = isEditMode ? 'PUT' : 'POST';
       

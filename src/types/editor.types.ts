@@ -38,20 +38,7 @@ export enum SectionType {
   FOOTER = 'footer',
   
   // Product Page Specific
-  PRODUCT_INFORMATION = 'product_information',
-  
-  // Room/Habitaciones Specific
-  ROOM_GALLERY = 'room_gallery',
-  ROOM_TITLE_HOST = 'room_title_host',
-  ROOM_HIGHLIGHTS = 'room_highlights',
-  ROOM_DESCRIPTION = 'room_description',
-  ROOM_AMENITIES = 'room_amenities',
-  ROOM_SLEEPING = 'room_sleeping',
-  ROOM_REVIEWS = 'room_reviews',
-  ROOM_MAP = 'room_map',
-  ROOM_CALENDAR = 'room_calendar',
-  ROOM_HOST_CARD = 'room_host_card',
-  ROOM_THINGS = 'room_things'
+  PRODUCT_INFORMATION = 'product_information'
 }
 
 export interface SectionGroup {
@@ -109,7 +96,6 @@ export interface SectionConfig {
   defaultSettings: Record<string, any>;
 }
 
-// Section configurations mapping
 export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
   [SectionType.ANNOUNCEMENT_BAR]: {
     type: SectionType.ANNOUNCEMENT_BAR,
@@ -433,6 +419,16 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       videoUrl: ''
     }
   },
+  [SectionType.RICH_TEXT]: {
+    type: SectionType.RICH_TEXT,
+    name: 'Rich text',
+    description: 'Formatted text content',
+    icon: 'text',
+    category: 'template',
+    defaultSettings: {
+      content: ''
+    }
+  },
   [SectionType.FOOTER]: {
     type: SectionType.FOOTER,
     name: 'Footer',
@@ -456,8 +452,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showVariants: true
     }
   },
-  [SectionType.ROOM_GALLERY]: {
-    type: SectionType.ROOM_GALLERY,
+  ['room_gallery' as any]: {
+    type: 'room_gallery' as any,
     name: 'Room Gallery',
     description: 'Airbnb-style photo gallery',
     icon: 'images',
@@ -478,8 +474,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       autoFetch: true
     }
   },
-  [SectionType.ROOM_TITLE_HOST]: {
-    type: SectionType.ROOM_TITLE_HOST,
+  ['room_title_host' as any]: {
+    type: 'room_title_host' as any,
     name: 'Room Title & Host',
     description: 'Room title, location and host info',
     icon: 'home',
@@ -502,8 +498,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showShareSave: true
     }
   },
-  [SectionType.ROOM_HIGHLIGHTS]: {
-    type: SectionType.ROOM_HIGHLIGHTS,
+  ['room_highlights' as any]: {
+    type: 'room_highlights' as any,
     name: 'Room Highlights',
     description: 'Key features and highlights',
     icon: 'sparkles',
@@ -532,8 +528,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       ]
     }
   },
-  [SectionType.ROOM_DESCRIPTION]: {
-    type: SectionType.ROOM_DESCRIPTION,
+  ['room_description' as any]: {
+    type: 'room_description' as any,
     name: 'Room Description',
     description: 'Detailed room description',
     icon: 'file-text',
@@ -545,8 +541,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       maxLines: 3
     }
   },
-  [SectionType.ROOM_AMENITIES]: {
-    type: SectionType.ROOM_AMENITIES,
+  ['room_amenities' as any]: {
+    type: 'room_amenities' as any,
     name: 'Room Amenities',
     description: 'What this place offers',
     icon: 'list-checks',
@@ -565,8 +561,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showUnavailable: true
     }
   },
-  [SectionType.ROOM_SLEEPING]: {
-    type: SectionType.ROOM_SLEEPING,
+  ['room_sleeping' as any]: {
+    type: 'room_sleeping' as any,
     name: 'Room Sleeping',
     description: 'Where you\'ll sleep',
     icon: 'bed',
@@ -590,8 +586,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       ]
     }
   },
-  [SectionType.ROOM_REVIEWS]: {
-    type: SectionType.ROOM_REVIEWS,
+  ['room_reviews' as any]: {
+    type: 'room_reviews' as any,
     name: 'Room Reviews',
     description: 'Guest reviews and ratings',
     icon: 'star',
@@ -638,8 +634,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showAllButton: true
     }
   },
-  [SectionType.ROOM_MAP]: {
-    type: SectionType.ROOM_MAP,
+  ['room_map' as any]: {
+    type: 'room_map' as any,
     name: 'Room Map',
     description: 'Location and map',
     icon: 'map-pin',
@@ -655,8 +651,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showExactLocation: false
     }
   },
-  [SectionType.ROOM_CALENDAR]: {
-    type: SectionType.ROOM_CALENDAR,
+  ['room_calendar' as any]: {
+    type: 'room_calendar' as any,
     name: 'Room Calendar',
     description: 'Availability calendar and pricing',
     icon: 'calendar',
@@ -673,8 +669,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       showPricing: true
     }
   },
-  [SectionType.ROOM_HOST_CARD]: {
-    type: SectionType.ROOM_HOST_CARD,
+  ['room_host_card' as any]: {
+    type: 'room_host_card' as any,
     name: 'Room Host Card',
     description: 'Detailed host information',
     icon: 'user-circle',
@@ -697,8 +693,8 @@ export const SECTION_CONFIGS: Record<SectionType, SectionConfig> = {
       location: 'San Francisco, California'
     }
   },
-  [SectionType.ROOM_THINGS]: {
-    type: SectionType.ROOM_THINGS,
+  ['room_things' as any]: {
+    type: 'room_things' as any,
     name: 'Room Things to Know',
     description: 'House rules and policies',
     icon: 'info',

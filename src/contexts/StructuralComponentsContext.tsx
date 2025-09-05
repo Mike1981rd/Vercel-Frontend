@@ -9,7 +9,6 @@ import {
   updateAnnouncementBarConfig,
   updateFooterConfig,
   updateCartDrawerConfig,
-  updateWhatsAppWidgetConfig,
   publishStructuralComponents
 } from '@/lib/api/structural-components';
 import toast from 'react-hot-toast';
@@ -19,7 +18,6 @@ export interface StructuralComponentsConfig {
   announcementBar?: any;
   footer?: any;
   cartDrawer?: any;
-  whatsAppWidget?: any;
 }
 
 interface StructuralComponentsContextType {
@@ -32,7 +30,6 @@ interface StructuralComponentsContextType {
   updateAnnouncementBarConfigLocal: (config: any) => void;
   updateFooterConfigLocal: (config: any) => void;
   updateCartDrawerConfigLocal: (config: any) => void;
-  updateWhatsAppWidgetConfigLocal: (config: any) => void;
   publish: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -62,7 +59,6 @@ export function StructuralComponentsProvider({ children }: { children: React.Rea
         announcementBar: data.announcementBarConfig ? JSON.parse(data.announcementBarConfig) : undefined,
         footer: data.footerConfig ? JSON.parse(data.footerConfig) : undefined,
         cartDrawer: data.cartDrawerConfig ? JSON.parse(data.cartDrawerConfig) : undefined,
-        whatsAppWidget: data.whatsAppWidgetConfig ? JSON.parse(data.whatsAppWidgetConfig) : undefined,
       };
       
       setConfig(parsedConfig);
@@ -116,16 +112,6 @@ export function StructuralComponentsProvider({ children }: { children: React.Rea
     }));
   }, []);
 
-  // Update WhatsApp widget configuration locally (without saving to backend)
-  const updateWhatsAppWidgetConfigLocal = useCallback((whatsAppWidgetConfig: any) => {
-    console.log('[CRITICAL] updateWhatsAppWidgetConfigLocal - Setting hasChanges to TRUE', whatsAppWidgetConfig);
-    setHasChanges(true);
-    setConfig(prev => ({
-      ...prev,
-      whatsAppWidget: whatsAppWidgetConfig
-    }));
-  }, []);
-
   // Publish all structural components
   const publish = useCallback(async (): Promise<void> => {
     if (!company?.id) {
@@ -147,9 +133,6 @@ export function StructuralComponentsProvider({ children }: { children: React.Rea
       }
       if (config.cartDrawer) {
         await updateCartDrawerConfig(company.id, config.cartDrawer);
-      }
-      if (config.whatsAppWidget) {
-        await updateWhatsAppWidgetConfig(company.id, config.whatsAppWidget);
       }
       
       // Then publish
@@ -194,7 +177,6 @@ export function StructuralComponentsProvider({ children }: { children: React.Rea
     updateAnnouncementBarConfigLocal,
     updateFooterConfigLocal,
     updateCartDrawerConfigLocal,
-    updateWhatsAppWidgetConfigLocal,
     publish,
     refresh: fetchConfig,
   };

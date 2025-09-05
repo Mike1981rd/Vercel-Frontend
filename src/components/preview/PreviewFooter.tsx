@@ -9,7 +9,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getImageUrl } from '@/lib/api-url';
 import { FooterConfig, FooterBlockType } from '@/components/editor/modules/Footer/FooterTypes';
 import { 
   Instagram, Facebook, Twitter, Youtube, 
@@ -24,7 +23,7 @@ import { getCurrencyDisplay } from '@/lib/utils/currency';
 interface PreviewFooterProps {
   config: FooterConfig;
   theme: any;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 
@@ -344,7 +343,7 @@ export default function PreviewFooter({
             <div className={`flex ${isMobile ? 'justify-center' : ''} items-center`}>
               {block.settings?.logoUrl ? (
                 <img 
-                  src={getImageUrl(block.settings.logoUrl)} 
+                  src={block.settings.logoUrl} 
                   alt="Logo" 
                   className="object-contain"
                   style={{ 
@@ -353,7 +352,6 @@ export default function PreviewFooter({
                     width: 'auto',
                     margin: isMobile ? '-8px auto 0' : '-8px 0 0 0'
                   }}
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <div className={`flex items-center gap-2 ${isMobile ? 'justify-center' : ''}`}>

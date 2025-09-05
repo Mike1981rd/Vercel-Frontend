@@ -9,7 +9,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '@/lib/constants';
 import { ArrowLeft, Upload, Image, Video, X, Eye, EyeOff } from 'lucide-react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { ImageWithTextItem } from './types';
@@ -85,7 +84,7 @@ export default function ImageWithTextItemEditor({ sectionId, itemId }: ImageWith
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -129,7 +128,7 @@ export default function ImageWithTextItemEditor({ sectionId, itemId }: ImageWith
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/MediaUpload/video`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/video', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

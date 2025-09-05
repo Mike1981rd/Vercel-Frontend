@@ -8,7 +8,6 @@
 'use client';
 
 import React from 'react';
-import { API_URL } from '@/lib/constants';
 import { ChevronDown, ChevronUp, Upload } from 'lucide-react';
 import { SlideConfig } from './types';
 
@@ -45,7 +44,7 @@ export function SlideImageVideoEditor({
         const token = localStorage.getItem('token');
         
         // Usar la API real del backend
-        const response = await fetch(`${API_URL}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -90,7 +89,7 @@ export function SlideImageVideoEditor({
         const token = localStorage.getItem('token');
         
         // Usar la API real del backend
-        const response = await fetch(`${API_URL}/MediaUpload/video`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/video', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

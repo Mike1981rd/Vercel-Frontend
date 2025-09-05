@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -284,8 +283,8 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             let mapped = contact.map((addr: any) => ({
               id: addr.id,
               type: (addr.type?.toLowerCase() || 'shipping'),
-              addressLine1: addr.street || (addr as any).addressLine1 as any || '',
-              addressLine2: addr.apartment || (addr as any).addressLine2 as any || '',
+              addressLine1: addr.street || addr.addressLine1 || '',
+              addressLine2: addr.apartment || addr.addressLine2 || '',
               city: addr.city || '',
               state: addr.state || '',
               postalCode: addr.postalCode || '',
@@ -299,18 +298,18 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
                 const lbl = (a.label || '').toString().toLowerCase();
                 return t === 'billing' || t === 'office' || lbl.includes('billing');
               });
-              const fallbackStreet = (data as any).billingAddress || b?.street || (b as any)?.addressLine1 || '';
-              const fallbackCity = (data as any).billingCity || b?.city || '';
-              const fallbackCountry = mapCountryNameToIso((data as any).billingCountry || b?.country || '');
+              const fallbackStreet = data.billingAddress || b?.street || b?.addressLine1 || '';
+              const fallbackCity = data.billingCity || b?.city || '';
+              const fallbackCountry = mapCountryNameToIso(data.billingCountry || b?.country || '');
               if (fallbackStreet && fallbackCity && fallbackCountry) {
                 mapped = [{
                   id: undefined,
                   type: 'shipping',
                   addressLine1: fallbackStreet,
-                  addressLine2: (data as any).billingApartment || b?.apartment || (b as any)?.addressLine2 || '',
+                  addressLine2: data.billingApartment || b?.apartment || b?.addressLine2 || '',
                   city: fallbackCity,
-                  state: (data as any).billingState || b?.state || '',
-                  postalCode: (data as any).billingPostalCode || b?.postalCode || '',
+                  state: data.billingState || b?.state || '',
+                  postalCode: data.billingPostalCode || b?.postalCode || '',
                   country: fallbackCountry,
                   isDefault: true
                 }];
@@ -332,28 +331,25 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             paperlessBilling: data.paperlessBilling !== false
           },
           billingAddress: (() => {
-            // Legacy field no longer in data type
-            // if (data.billingAddress as any) return data.billingAddress as any;
+            if (data.billingAddress) return data.billingAddress;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
               return t === 'billing' || t === 'office' || lbl.includes('billing');
             });
-            return b?.street || (b as any)?.addressLine1 as any || '';
+            return b?.street || b?.addressLine1 || '';
           })(),
           billingApartment: (() => {
-            // Legacy field no longer in data type
-            // if (data.billingApartment as any) return data.billingApartment as any;
+            if (data.billingApartment) return data.billingApartment;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
               return t === 'billing' || t === 'office' || lbl.includes('billing');
             });
-            return b?.apartment || (b as any)?.addressLine2 as any || '';
+            return b?.apartment || b?.addressLine2 || '';
           })(),
           billingCity: (() => {
-            // Legacy field no longer in data type
-            // if (data.billingCity as any) return data.billingCity as any;
+            if (data.billingCity) return data.billingCity;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -362,8 +358,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.city || '';
           })(),
           billingState: (() => {
-            // Legacy field no longer in data type
-            // if (data.billingState as any) return data.billingState as any;
+            if (data.billingState) return data.billingState;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -372,8 +367,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.state || '';
           })(),
           billingPostalCode: (() => {
-            // Legacy field no longer in data type
-            // if (data.billingPostalCode as any) return data.billingPostalCode as any;
+            if (data.billingPostalCode) return data.billingPostalCode;
             const b = (data.addresses || []).find((a: any) => {
               const t = (a.type || '').toString().toLowerCase();
               const lbl = (a.label || '').toString().toLowerCase();
@@ -382,7 +376,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             return b?.postalCode || '';
           })(),
           billingCountry: (() => {
-            const name = (() => {
+            const name = data.billingCountry || (() => {
               const b = (data.addresses || []).find((a: any) => {
                 const t = (a.type || '').toString().toLowerCase();
                 const lbl = (a.label || '').toString().toLowerCase();
@@ -557,8 +551,8 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
         
         // Check if we have valid address data (at least street, city and country)
         if (firstAddress && 
-            (firstAddress as any).addressLine1 && 
-            (firstAddress as any).addressLine1.trim() !== '' &&
+            firstAddress.addressLine1 && 
+            firstAddress.addressLine1.trim() !== '' &&
             firstAddress.city && 
             firstAddress.city.trim() !== '' &&
             firstAddress.country && 
@@ -581,8 +575,8 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             label: firstAddress.type === 'billing' ? 'Billing Address' : 
                    firstAddress.type === 'shipping' ? 'Shipping Address' : 
                    'Main Address',
-            street: (firstAddress.addressLine1 as any).trim(),
-            apartment: (firstAddress.addressLine2 as any)?.trim() || null,
+            street: firstAddress.addressLine1.trim(),
+            apartment: firstAddress.addressLine2?.trim() || null,
             city: firstAddress.city.trim(),
             state: firstAddress.state?.trim() || null,
             postalCode: firstAddress.postalCode?.trim() || null,
@@ -603,7 +597,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
         } else {
           console.log('No valid address to save. Missing required fields:', {
             hasAddress: !!firstAddress,
-            addressLine1: firstAddress?.addressLine1 as any || 'MISSING',
+            addressLine1: firstAddress?.addressLine1 || 'MISSING',
             city: firstAddress?.city || 'MISSING',
             country: firstAddress?.country || 'MISSING',
             fullAddress: firstAddress
@@ -665,12 +659,12 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
           taxId: formData.overview.taxId || undefined,
           loyaltyTier: formData.overview.loyaltyTier || undefined,
           // Billing Address fields
-          billingAddress: formData.addressBilling.billingAddress as any || undefined,
-          billingApartment: formData.addressBilling.billingApartment as any || undefined,
-          billingCity: formData.addressBilling.billingCity as any || undefined,
-          billingState: formData.addressBilling.billingState as any || undefined,
-          billingPostalCode: formData.addressBilling.billingPostalCode as any || undefined,
-          billingCountry: formData.addressBilling.billingCountry as any ? mapIsoToCountryName(formData.addressBilling.billingCountry as any) : undefined
+          billingAddress: formData.addressBilling.billingAddress || undefined,
+          billingApartment: formData.addressBilling.billingApartment || undefined,
+          billingCity: formData.addressBilling.billingCity || undefined,
+          billingState: formData.addressBilling.billingState || undefined,
+          billingPostalCode: formData.addressBilling.billingPostalCode || undefined,
+          billingCountry: formData.addressBilling.billingCountry ? mapIsoToCountryName(formData.addressBilling.billingCountry) : undefined
         };
         
         // Remove undefined values
@@ -682,7 +676,7 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
         await customerAPI.updateCustomer(customer!.id, updateData);
         
         // Handle address updates
-        if (formData.addressBilling.addresses.length > 0 && formData.addressBilling.addresses[0].addressLine1 as any) {
+        if (formData.addressBilling.addresses.length > 0 && formData.addressBilling.addresses[0].addressLine1) {
           // Map frontend address type to backend expected values
           const getAddressType = (type: string) => {
             switch(type) {
@@ -698,8 +692,8 @@ export default function CustomerDetail({ customerId }: CustomerDetailProps) {
             label: formData.addressBilling.addresses[0].type === 'billing' ? 'Billing Address' : 
                    formData.addressBilling.addresses[0].type === 'shipping' ? 'Shipping Address' : 
                    'Main Address',
-            street: formData.addressBilling.addresses[0].addressLine1 as any,
-            apartment: formData.addressBilling.addresses[0].addressLine2 as any || null,
+            street: formData.addressBilling.addresses[0].addressLine1,
+            apartment: formData.addressBilling.addresses[0].addressLine2 || null,
             city: formData.addressBilling.addresses[0].city || '',
             state: formData.addressBilling.addresses[0].state || null,
             postalCode: formData.addressBilling.addresses[0].postalCode || null,

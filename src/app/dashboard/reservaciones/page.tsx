@@ -9,7 +9,6 @@ import {
   Mail, Phone, MapPin, Building, User
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint, getBaseUrl } from '@/lib/api-url';
 import { ExportModal } from '@/components/ExportModal';
 
 // Types
@@ -40,8 +39,7 @@ const Avatar = ({ name, email, image }: { name?: string | null; email?: string |
   const getImageUrl = (imagePath?: string | null) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http')) return imagePath;
-    const base = getBaseUrl();
-    return `${base}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+    return `http://localhost:5266${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
   };
   
   const imageUrl = getImageUrl(image);
@@ -111,7 +109,7 @@ export default function ReservacionesPage() {
 
   // Fetch company data
   useEffect(() => {
-    fetch(getApiEndpoint('/company/current'), {
+    fetch('http://localhost:5266/api/company/current', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
@@ -158,7 +156,7 @@ export default function ReservacionesPage() {
       }
       // Si no hay filtro de fecha, no enviar parámetros de fecha
 
-      const response = await fetch(getApiEndpoint(`/reservations?${params}`), {
+      const response = await fetch(`http://localhost:5266/api/reservations?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

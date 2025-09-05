@@ -189,7 +189,7 @@ export default function RichTextChildren({ blocks, onBlocksChange }: RichTextChi
 
   const handleUpdateBlock = (blockId: string, updates: Partial<RichTextBlock>) => {
     onBlocksChange(blocks.map(b => 
-      b.id === blockId ? { ...b, ...updates } as RichTextBlock : b
+      b.id === blockId ? { ...b, ...updates } : b
     ));
   };
 

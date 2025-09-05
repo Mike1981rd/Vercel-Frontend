@@ -4,15 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Info, User, Calendar, DollarSign } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 
-interface ReservationInfo {
-  id: number;
-  guestName: string;
-  status: string;
-  isCheckIn: boolean;
-  isCheckOut: boolean;
-}
-
-interface CalendarDayMinimal {
+interface CalendarDay {
   date: Date;
   dayOfMonth: number;
   isCurrentMonth: boolean;
@@ -25,7 +17,11 @@ interface CalendarDayMinimal {
   isBlocked: boolean;
   hasReservation: boolean;
   price: number;
-  reservationInfo?: ReservationInfo;
+  reservationInfo?: {
+    id: number;
+    guestName: string;
+    status: string;
+  };
 }
 
 interface ProfessionalCalendarProps {
@@ -36,8 +32,6 @@ interface ProfessionalCalendarProps {
   onPriceUpdate?: (date: Date, price: number) => void;
   availabilityData: any;
   viewMode?: 'availability' | 'pricing' | 'selection';
-  initialMonth?: Date; // Align calendar with loaded data window
-  onMonthChange?: (month: Date) => void; // Notify parent when user navigates months
 }
 
 export default function ProfessionalCalendarMinimal({
@@ -47,36 +41,16 @@ export default function ProfessionalCalendarMinimal({
   onDateRangeSelect,
   onPriceUpdate,
   availabilityData,
-  viewMode: initialViewMode = 'availability',
-  initialMonth,
-  onMonthChange
+  viewMode: initialViewMode = 'availability'
 }: ProfessionalCalendarProps) {
   const { company } = useCompany();
   const currency = (company as any)?.storeCurrency || company?.currency || '$';
   
-  const [currentMonth, setCurrentMonth] = useState(() => initialMonth ? new Date(initialMonth) : new Date());
-
-  // Keep calendar month in sync when parent changes the requested month window
-  useEffect(() => {
-    if (initialMonth) {
-      const d = new Date(initialMonth);
-      if (isFinite(d.getTime())) setCurrentMonth(d);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMonth?.getFullYear(), initialMonth?.getMonth()]);
-
-  // Inform parent when the visible month changes so it can reload data
-  useEffect(() => {
-    if (onMonthChange) {
-      const normalized = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-      onMonthChange(normalized);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentMonth.getFullYear(), currentMonth.getMonth()]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
   const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState<CalendarDayMinimal | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<CalendarDay | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -123,7 +97,7 @@ export default function ProfessionalCalendarMinimal({
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
-    const days: CalendarDayMinimal[] = [];
+    const days: CalendarDay[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -152,19 +126,19 @@ export default function ProfessionalCalendarMinimal({
         hasReservation: dayData?.hasReservation ?? false,
         price: dayData?.customPrice ?? basePrice,
         reservationInfo: dayData?.hasReservation ? {
-          id: Number(dayData.reservationId) || 0,
-          guestName: String(dayData.guestName || ''),
-          status: String(dayData.status || 'confirmed'),
-          isCheckIn: Boolean(dayData.isCheckIn || false),
-          isCheckOut: Boolean(dayData.isCheckOut || false)
-        } as ReservationInfo : undefined
+          id: dayData.reservationId,
+          guestName: dayData.guestName,
+          status: dayData.status || 'confirmed',
+          isCheckIn: dayData.isCheckIn,
+          isCheckOut: dayData.isCheckOut
+        } : undefined
       });
     }
     
     return days;
   }, [currentMonth, selectedStartDate, selectedEndDate, availabilityData, roomId, basePrice]);
 
-  const handleDateClick = (day: CalendarDayMinimal) => {
+  const handleDateClick = (day: CalendarDay) => {
     if (!day.isCurrentMonth || day.isBlocked) return;
     
     // Show modal for reserved dates
@@ -189,7 +163,7 @@ export default function ProfessionalCalendarMinimal({
     }
   };
 
-  const getDayClasses = (day: CalendarDayMinimal) => {
+  const getDayClasses = (day: CalendarDay) => {
     const base = 'h-8 flex items-center justify-center text-xs rounded-md transition-all cursor-pointer relative';
     
     if (!day.isCurrentMonth) {
@@ -302,8 +276,8 @@ export default function ProfessionalCalendarMinimal({
                     </div>
                     <div className="flex-1">
                       <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
-                        {(selectedReservation.reservationInfo as ReservationInfo)?.isCheckIn ? 'Fecha de Entrada' : 
-                         (selectedReservation.reservationInfo as ReservationInfo)?.isCheckOut ? 'Fecha de Salida' : 'Fecha de Reservación'}
+                        {selectedReservation.reservationInfo?.isCheckIn ? 'Fecha de Entrada' : 
+                         selectedReservation.reservationInfo?.isCheckOut ? 'Fecha de Salida' : 'Fecha de Reservación'}
                       </p>
                       <p className="text-base font-semibold text-gray-900 dark:text-white">
                         {selectedReservation.date.toLocaleDateString('es-ES', { 
@@ -315,12 +289,12 @@ export default function ProfessionalCalendarMinimal({
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedReservation.date.getFullYear()}
                       </p>
-                      {(selectedReservation.reservationInfo as ReservationInfo)?.isCheckIn && (
+                      {selectedReservation.reservationInfo?.isCheckIn && (
                         <span className="inline-block mt-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full">
                           ✓ DÍA DE ENTRADA
                         </span>
                       )}
-                      {(selectedReservation.reservationInfo as ReservationInfo)?.isCheckOut && (
+                      {selectedReservation.reservationInfo?.isCheckOut && (
                         <span className="inline-block mt-2 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold rounded-full">
                           ✓ DÍA DE SALIDA
                         </span>
@@ -364,18 +338,17 @@ export default function ProfessionalCalendarMinimal({
                     </div>
                     <span className={`
                       inline-block px-4 py-2 text-sm font-bold rounded-xl
-                      ${selectedReservation.reservationInfo?.status === 'confirmed' 
+                      ${selectedReservation.reservationInfo.status === 'confirmed' 
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 ring-1 ring-green-500' 
-                        : selectedReservation.reservationInfo?.status === 'pending'
+                        : selectedReservation.reservationInfo.status === 'pending'
                         ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 ring-1 ring-yellow-500'
                         : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-1 ring-blue-500'}
                     `}>
-                      {selectedReservation.reservationInfo?.status === 'confirmed' ? 'Confirmada' :
-                       selectedReservation.reservationInfo?.status === 'pending' ? 'Pendiente' :
-                       selectedReservation.reservationInfo?.status === 'cancelled' ? 'Cancelada' :
-                       selectedReservation.reservationInfo?.status ? 
-                         selectedReservation.reservationInfo.status.charAt(0).toUpperCase() + 
-                         selectedReservation.reservationInfo.status.slice(1) : 'Desconocido'}
+                      {selectedReservation.reservationInfo.status === 'confirmed' ? 'Confirmada' :
+                       selectedReservation.reservationInfo.status === 'pending' ? 'Pendiente' :
+                       selectedReservation.reservationInfo.status === 'cancelled' ? 'Cancelada' :
+                       selectedReservation.reservationInfo.status.charAt(0).toUpperCase() + 
+                       selectedReservation.reservationInfo.status.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -399,10 +372,7 @@ export default function ProfessionalCalendarMinimal({
           {/* Month navigation */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
-              onClick={() => {
-                const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
-                setCurrentMonth(prev);
-              }}
+              onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))}
               className="p-0.5 md:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <ChevronLeft className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-600 dark:text-gray-400" />
@@ -413,10 +383,7 @@ export default function ProfessionalCalendarMinimal({
             </span>
             
             <button
-              onClick={() => {
-                const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
-                setCurrentMonth(next);
-              }}
+              onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))}
               className="p-0.5 md:p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
             >
               <ChevronRight className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-600 dark:text-gray-400" />

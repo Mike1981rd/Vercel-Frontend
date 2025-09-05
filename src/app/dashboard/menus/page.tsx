@@ -59,7 +59,7 @@ export default function MenusPage() {
         ...(searchTerm && { search: searchTerm })
       });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu?${params}`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ export default function MenusPage() {
       const menu = menus.find(m => m.id === id);
       const newStatus = !menu?.isActive;
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${id}/toggle-active`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${id}/toggle-active`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -134,7 +134,7 @@ export default function MenusPage() {
       const token = localStorage.getItem('token');
       const menu = menus.find(m => m.id === id);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${id}/duplicate`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${id}/duplicate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -174,7 +174,7 @@ export default function MenusPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NavigationMenu/${id}`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 import { useToast } from '@/contexts/ToastContext';
 import { Search } from 'lucide-react';
 
@@ -60,7 +59,7 @@ export default function NavigationMenusPage() {
         ...(searchTerm && { search: searchTerm })
       });
 
-      const response = await fetch(getApiEndpoint(`/NavigationMenu?${params}`), {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { PageType, Section, SectionType } from '@/types/editor.types';
-import { getApiUrl } from '@/lib/api-url';
+import { PageType, Section } from '@/types/editor.types';
 import PreviewImageBanner from './PreviewImageBanner';
 import PreviewSlideshow from './PreviewSlideshow';
 import PreviewMulticolumns from './PreviewMulticolumns';
@@ -37,8 +36,6 @@ interface PreviewContentProps {
 
 export default function PreviewContent({ pageType, handle, theme, companyId, deviceView, roomSlug }: PreviewContentProps) {
   // DO NOT normalize or coalesce deviceView - pass it through as-is per documentation
-  // However, transform tablet to desktop for components that don't support tablet
-  const normalizedDeviceView: 'desktop' | 'mobile' | undefined = deviceView === 'tablet' ? 'desktop' : deviceView as 'desktop' | 'mobile' | undefined;
   const [sections, setSections] = useState<Section[]>([]);
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -73,52 +70,42 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
       }
 
       try {
-        // Try to load page by slug/handle.
-        // Migration fallback to 'custom' only when the incoming handle is literally 'custom'.
+        // Try to load page by slug/handle. Support migration ONLY for CUSTOM pages.
         const handlesToTry = pageType === PageType.CUSTOM
-          ? (handle === 'custom' ? ['habitaciones', 'custom'] : [handle])
+          ? ['habitaciones', 'custom']
           : [handle];
 
         let loaded = false;
         for (const h of handlesToTry) {
-          console.log('[DEBUG] Loading snapshot with handle:', h, 'for company:', effectiveCompanyId);
-          const snapshotResponse = await fetch(
-            `${getApiUrl()}/website/${effectiveCompanyId}/snapshot/${h}`,
-            { cache: 'no-store' }
+          console.log('[DEBUG] Loading page with handle:', h, 'for company:', effectiveCompanyId);
+          const pageResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/websitepages/company/${effectiveCompanyId}/slug/${h}`
           );
-          console.log('[DEBUG] Snapshot response status:', snapshotResponse.status);
-          if (!snapshotResponse.ok) continue;
-          const snapshot = await snapshotResponse.json();
-          // Expecting shape: { sections: [...] } inside SnapshotData or flattened by API
-          const rawSections = snapshot?.sections || snapshot?.SnapshotData?.sections || snapshot?.snapshotData?.sections;
-          if (rawSections) {
-            const parsedSections = typeof rawSections === 'string' ? JSON.parse(rawSections) : rawSections;
-            setPageData({ handle: h });
-            setSections(parsedSections);
-            loaded = true;
-            break;
+          console.log('[DEBUG] Page response status:', pageResponse.status);
+          if (!pageResponse.ok) {
+            continue;
           }
+          const page = await pageResponse.json();
+          setPageData(page);
+          if (page.sections) {
+            const parsedSections = typeof page.sections === 'string'
+              ? JSON.parse(page.sections)
+              : page.sections;
+            const faqSections = parsedSections.filter((s: any) =>
+              s.type === 'faq' || s.type === 'FAQ' || s.sectionType === 'faq' || s.sectionType === 'FAQ'
+            );
+            if (faqSections.length > 0) {
+              console.log('[DEBUG] FAQ sections loaded from API:', faqSections);
+            }
+            setSections(parsedSections);
+          }
+          loaded = true;
+          break;
         }
 
         if (!loaded) {
-          // If we are on a room detail (roomSlug present) and no snapshot sections are available,
-          // render a sensible default room template so the page is not empty in production.
-          if (pageType === PageType.CUSTOM && roomSlug) {
-            const defaults: Section[] = [
-              { id: 'room_gallery_default', type: SectionType.ROOM_GALLERY, name: 'Room Gallery', visible: true, settings: { enabled: true, layoutStyle: 'airbnb' }, sortOrder: 1 },
-              { id: 'room_title_host_default', type: SectionType.ROOM_TITLE_HOST, name: 'Title & Host', visible: true, settings: { enabled: true }, sortOrder: 2 },
-              { id: 'room_highlights_default', type: SectionType.ROOM_HIGHLIGHTS, name: 'Highlights', visible: true, settings: { enabled: true }, sortOrder: 3 },
-              { id: 'room_description_default', type: SectionType.ROOM_DESCRIPTION, name: 'Description', visible: true, settings: { enabled: true }, sortOrder: 4 },
-              { id: 'room_amenities_default', type: SectionType.ROOM_AMENITIES, name: 'Amenities', visible: true, settings: { enabled: true }, sortOrder: 5 },
-              { id: 'room_sleeping_default', type: SectionType.ROOM_SLEEPING, name: 'Sleeping Arrangements', visible: true, settings: { enabled: true }, sortOrder: 6 },
-              { id: 'room_map_default', type: SectionType.ROOM_MAP, name: 'Map', visible: true, settings: { enabled: true }, sortOrder: 7 },
-              { id: 'room_reviews_default', type: SectionType.ROOM_REVIEWS, name: 'Reviews', visible: true, settings: { enabled: true }, sortOrder: 8 },
-            ];
-            setSections(defaults);
-          } else {
-            // Page doesn't exist yet, show empty state
-            setSections([]);
-          }
+          // Page doesn't exist yet, show empty state
+          setSections([]);
         }
 
       } catch (error) {
@@ -227,7 +214,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
   // Removed special handling for Custom/Rooms page - now uses regular sections
 
   return (
-    <div className="min-h-[60vh] overflow-x-hidden" style={containerStyle}>
+    <div className="min-h-[60vh]" style={containerStyle}>
       {finalSections.length === 0 ? (
         <div className="text-center py-20">
           <h2 className="text-2xl font-semibold text-gray-700 mb-2">
@@ -281,7 +268,6 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
               {getSectionType(section) === 'image_banner' && (
                 <PreviewImageBanner 
                   config={getSectionConfig(section)} 
-                  theme={theme}
                   isEditor={false}
                   deviceView={deviceView as 'desktop' | 'mobile'}
                 />
@@ -383,7 +369,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewNewsletter 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -392,7 +378,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewContactForm 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -401,7 +387,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomGallery 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -410,7 +396,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomTitleHost 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -419,7 +405,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomHighlights 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -428,7 +414,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomDescription 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -437,7 +423,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomAmenities 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -446,7 +432,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomSleeping 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -455,7 +441,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomReviews 
                   config={getSectionConfig(section) || { enabled: true }}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -464,7 +450,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomMap 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -473,7 +459,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomCalendar 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -482,7 +468,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomHostCard 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}
@@ -491,7 +477,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                 <PreviewRoomThings 
                   config={getSectionConfig(section)}
                   theme={theme}
-                  deviceView={normalizedDeviceView}
+                  deviceView={deviceView}
                   isEditor={false}
                 />
               )}

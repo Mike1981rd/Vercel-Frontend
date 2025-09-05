@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { validateImageFile, fileToBase64, getResponsiveImageProps } from '@/lib/image-optimizer';
-import { getApiEndpoint, getImageUrl } from '@/lib/api-url';
 
 interface ImageUploadProps {
   value?: string;
@@ -31,7 +30,9 @@ export function ImageUpload({
   useEffect(() => {
     if (value) {
       // Ensure the URL is complete with backend host if it's a relative path
-      const imageUrl = getImageUrl(value);
+      const imageUrl = value.startsWith('http') 
+        ? value 
+        : `http://localhost:5266${value}`;
       setPreview(imageUrl);
     } else {
       setPreview(null);
@@ -61,7 +62,7 @@ export function ImageUpload({
       formData.append('type', 'logo');
 
       // Upload to backend
-      const response = await fetch(getApiEndpoint('upload/image'), {
+      const response = await fetch('http://localhost:5266/api/upload/image', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -75,7 +76,9 @@ export function ImageUpload({
 
       const data = await response.json();
       // Ensure the URL is complete with backend host
-      const imageUrl = getImageUrl(data.url);
+      const imageUrl = data.url.startsWith('http') 
+        ? data.url 
+        : `http://localhost:5266${data.url}`;
       onChange(imageUrl);
       setPreview(imageUrl);
     } catch (err) {

@@ -20,7 +20,6 @@ interface RoomHostCardConfig {
   languages?: string[];
   work?: string;
   location?: string;
-  showMessageButton?: boolean;
   // Style settings
   buttonColor?: string;
   buttonTextColor?: string;
@@ -37,7 +36,7 @@ interface RoomHostCardConfig {
 
 interface PreviewRoomHostCardProps {
   config: RoomHostCardConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }

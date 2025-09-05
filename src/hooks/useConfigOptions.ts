@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 
 interface ConfigOption {
   id: number;
   type: string;
   value: string;
-  label?: string;  // Add label for display
-  labelEs?: string;
-  labelEn?: string;
+  labelEs: string;
+  labelEn: string;
   icon?: string;
   iconType?: string;
   category?: string;
@@ -18,26 +16,6 @@ interface ConfigOption {
   isCustom: boolean;
   isDefault: boolean;
 }
-
-// Transform fallback options to match ConfigOption interface
-const transformFallbackOptions = (fallbackOptions: { value: string; label: string; icon?: string }[]): ConfigOption[] => {
-  return fallbackOptions.map((option, index) => ({
-    id: index + 1,
-    type: 'fallback',
-    value: option.value,
-    label: option.label,  // Add label property
-    labelEs: option.label,
-    labelEn: option.label,
-    icon: option.icon,
-    iconType: option.icon ? 'emoji' : undefined,
-    category: undefined,
-    sortOrder: index + 1,
-    usageCount: 0,
-    isActive: true,
-    isCustom: false,
-    isDefault: false
-  }));
-};
 
 export function useConfigOptions(type: string) {
   const { language } = useI18n();
@@ -146,12 +124,11 @@ export function useConfigOptions(type: string) {
       const token = localStorage.getItem('token');
       if (!token) {
         // Si no hay token, usar opciones hardcodeadas
-        const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-        setOptions(fallbackOptions);
+        setOptions(getFallbackOptions());
         return;
       }
 
-      const response = await fetch(getApiEndpoint(`/ConfigOptions/type/${type}`), {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ConfigOptions/type/${type}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -160,8 +137,7 @@ export function useConfigOptions(type: string) {
       if (!response.ok) {
         // Si hay cualquier error (404, 401, 500, etc), usar opciones hardcodeadas
         console.log(`Using fallback options for ${type} (API returned ${response.status})`);
-        const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-        setOptions(fallbackOptions);
+        setOptions(getFallbackOptions());
         return;
       }
 
@@ -170,9 +146,18 @@ export function useConfigOptions(type: string) {
       console.log(`📊 ConfigOptions received from API for type "${type}":`, data);
       
       // Mapear las opciones con el idioma correcto y todos los campos necesarios
-      const mappedOptions: ConfigOption[] = data.map((opt: ConfigOption) => ({
+      const mappedOptions = data.map((opt: ConfigOption) => ({
         ...opt, // Include all original fields
-        label: language === 'es' ? opt.labelEs : opt.labelEn
+        value: opt.value,
+        label: language === 'es' ? opt.labelEs : opt.labelEn,
+        labelEs: opt.labelEs,
+        labelEn: opt.labelEn,
+        icon: opt.icon,
+        iconType: opt.iconType,
+        category: opt.category,
+        isCustom: opt.isCustom,
+        isActive: opt.isActive,
+        sortOrder: opt.sortOrder
       }));
       
       console.log(`🔄 Mapped options for display:`, mappedOptions);
@@ -181,8 +166,7 @@ export function useConfigOptions(type: string) {
     } catch (err) {
       // En caso de error, usar opciones hardcodeadas silenciosamente
       console.log(`Using fallback options for ${type} (network error)`);
-      const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-      setOptions(fallbackOptions);
+      setOptions(getFallbackOptions());
     } finally {
       setLoading(false);
     }
@@ -194,7 +178,7 @@ export function useConfigOptions(type: string) {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      await fetch(getApiEndpoint(`/ConfigOptions/increment-usage`), {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ConfigOptions/increment-usage`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

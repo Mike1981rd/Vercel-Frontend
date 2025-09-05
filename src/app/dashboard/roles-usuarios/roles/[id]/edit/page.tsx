@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 import { 
   ShieldIcon, 
   ArrowLeftIcon, 
@@ -84,7 +83,7 @@ export default function EditRolePage() {
   const fetchRole = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/roles/${roleId}`), {
+      const response = await fetch(`http://localhost:5266/api/roles/${roleId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -116,7 +115,7 @@ export default function EditRolePage() {
   const fetchPermissions = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/permissions'), {
+      const response = await fetch('http://localhost:5266/api/permissions', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -160,7 +159,7 @@ export default function EditRolePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/roles/${roleId}`), {
+      const response = await fetch(`http://localhost:5266/api/roles/${roleId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

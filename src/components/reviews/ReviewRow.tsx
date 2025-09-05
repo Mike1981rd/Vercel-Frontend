@@ -48,7 +48,7 @@ interface ReviewRowProps {
 export function ReviewRow({ review, isSelected, onSelect, onRefresh }: ReviewRowProps) {
   const router = useRouter();
   const { t } = useI18n();
-  const { token } = useAuth() as any;
+  const { token } = useAuth();
   const { primaryColor } = usePrimaryColor();
   const [isUpdating, setIsUpdating] = useState(false);
 

@@ -17,7 +17,6 @@ import {
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from '@heroicons/react/24/solid';
-import { API_URL } from '@/lib/constants';
 
 interface Location {
   id: number;
@@ -132,7 +131,7 @@ export function LocationsConfiguration({ primaryColor }: LocationsConfigurationP
         }
       }
       
-      const response = await fetch(`${API_URL}/locations`, {
+      const response = await fetch('http://localhost:5266/api/locations', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -188,8 +187,8 @@ export function LocationsConfiguration({ primaryColor }: LocationsConfigurationP
     try {
       const token = localStorage.getItem('token');
       const url = editingLocation 
-        ? `${API_URL}/locations/${editingLocation.id}`
-        : `${API_URL}/locations`;
+        ? `http://localhost:5266/api/locations/${editingLocation.id}`
+        : 'http://localhost:5266/api/locations';
       
       const method = editingLocation ? 'PUT' : 'POST';
 
@@ -234,7 +233,7 @@ export function LocationsConfiguration({ primaryColor }: LocationsConfigurationP
     setDeleting(id);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/locations/${id}`, {
+      const response = await fetch(`http://localhost:5266/api/locations/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -255,7 +254,7 @@ export function LocationsConfiguration({ primaryColor }: LocationsConfigurationP
   const handleSetDefault = async (id: number) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/locations/${id}/set-default`, {
+      const response = await fetch(`http://localhost:5266/api/locations/${id}/set-default`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`

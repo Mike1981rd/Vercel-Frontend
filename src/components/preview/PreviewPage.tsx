@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getApiUrl } from '@/lib/api-url';
 import { PageType } from '@/types/editor.types';
 import PreviewHeader from './PreviewHeader';
 import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
-import PreviewWhatsAppWidgetV2 from './PreviewWhatsAppWidgetV2';
+import PreviewImageBanner from './PreviewImageBanner';
 
 interface PreviewPageProps {
   pageType: PageType;
@@ -21,21 +20,24 @@ interface StructuralComponents {
   announcementBar?: any;
   imageBanner?: any;
   cartDrawer?: any;
-  whatsAppWidget?: any;
 }
 
 export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageProps) {
   const [structuralComponents, setStructuralComponents] = useState<StructuralComponents>({});
   const [globalTheme, setGlobalTheme] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [companyId, setCompanyId] = useState<number | null>(1); // Single-company mode
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const [editorDeviceView, setEditorDeviceView] = useState<'desktop' | 'mobile' | undefined>(undefined);
   // Temporary migration: map legacy 'custom' handle to 'habitaciones' slug only for CUSTOM page type
   const effectiveHandle = pageType === PageType.CUSTOM && handle === 'custom' ? 'habitaciones' : handle;
 
   useEffect(() => {
-    // Single-company deployment: force companyId = 1
-    setCompanyId(1);
+    // Get company ID from localStorage or use default
+    // In production, this would come from the domain or subdomain
+    const storedCompanyId = localStorage.getItem('companyId');
+    const id = storedCompanyId ? parseInt(storedCompanyId) : 1; // Default to company 1 for now
+    console.log('Setting company ID from localStorage:', storedCompanyId, '-> using:', id);
+    setCompanyId(id);
     
     // Get editor device view for synchronization
     const storedDeviceView = localStorage.getItem('editorDeviceView');
@@ -74,19 +76,15 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       }
 
       try {
-        const apiUrl = getApiUrl();
-        const apiOrigin = (() => {
-          try { return new URL(apiUrl).origin; } catch { return apiUrl.replace(/\/?api$/, ''); }
-        })();
+        // Load structural components (header, footer, etc.)
+        // Use the published endpoint which allows anonymous access
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
         const structuralUrl = `${apiUrl}/structural-components/company/${companyId}/published`;
-        const themeUrl = `${apiUrl}/global-theme-config/company/${companyId}/published`;
         console.log('Fetching structural components from:', structuralUrl);
         
-        const [structuralResponse, themeResponse] = await Promise.all([
-          fetch(structuralUrl, { cache: 'no-store' }),
-          fetch(themeUrl, { cache: 'no-store' })
-        ]);
-
+        const structuralResponse = await fetch(structuralUrl);
+        console.log('Structural response status:', structuralResponse.status);
+        
         if (structuralResponse.ok) {
           const data = await structuralResponse.json();
           console.log('Raw structural data:', data);
@@ -100,66 +98,39 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
             announcementBar: data.announcementBarConfig ? JSON.parse(data.announcementBarConfig) : null,
             imageBanner: data.imageBannerConfig ? JSON.parse(data.imageBannerConfig) : null,
             cartDrawer: data.cartDrawerConfig ? JSON.parse(data.cartDrawerConfig) : null,
-            whatsAppWidget: data.whatsAppWidgetConfig ? JSON.parse(data.whatsAppWidgetConfig) : null,
-          } as StructuralComponents;
-
-          // Normalize dev/local/insecure media URLs to API origin for production
-          const isPrivateIp = (host: string) => {
-            // 10.0.0.0/8
-            if (/^10\./.test(host)) return true;
-            // 172.16.0.0/12
-            if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host)) return true;
-            // 192.168.0.0/16
-            if (/^192\.168\./.test(host)) return true;
-            return false;
           };
 
-          const normalizeMediaUrls = (obj: any): any => {
-            if (!obj) return obj;
-            if (typeof obj === 'string') {
-              try {
-                // If it's a URL, rebase dev/local/insecure hosts to apiOrigin
-                const u = new URL(obj);
-                const host = u.hostname.toLowerCase();
-                const isDevHost = host === 'localhost' || host === '127.0.0.1' || isPrivateIp(host);
-                if (isDevHost || u.protocol === 'http:') {
-                  return `${apiOrigin}${u.pathname}${u.search}${u.hash}`;
+          // Fallback: try to fetch published ImageBanner config directly if not present in DTO
+          if (!parsedComponents.imageBanner) {
+            try {
+              const imageBannerUrl = `${apiUrl}/structural-components/company/${companyId}/imagebanner/published`;
+              console.log('Fetching image banner (published) from:', imageBannerUrl);
+              const ibRes = await fetch(imageBannerUrl);
+              if (ibRes.ok) {
+                // Controller returns a JSON string, not an object
+                const ibConfigString = await ibRes.text();
+                const ibConfig = ibConfigString ? JSON.parse(ibConfigString) : null;
+                if (ibConfig) {
+                  parsedComponents.imageBanner = ibConfig;
                 }
-                return obj;
-              } catch {
-                // Not a URL → leave as-is
-                return obj;
+              } else {
+                console.log('No published image banner available (status):', ibRes.status);
               }
+            } catch (e) {
+              console.warn('Failed to fetch published image banner config:', e);
             }
-            if (Array.isArray(obj)) {
-              return obj.map(normalizeMediaUrls);
-            }
-            if (typeof obj === 'object') {
-              const out: any = Array.isArray(obj) ? [] : {};
-              for (const k of Object.keys(obj)) {
-                out[k] = normalizeMediaUrls(obj[k]);
-              }
-              return out;
-            }
-            return obj;
-          };
-
-          // Removed structural ImageBanner fallback: ImageBanner should render only as a page section
-          const normalized = {
-            header: normalizeMediaUrls(parsedComponents.header),
-            footer: normalizeMediaUrls(parsedComponents.footer),
-            announcementBar: normalizeMediaUrls(parsedComponents.announcementBar),
-            imageBanner: normalizeMediaUrls(parsedComponents.imageBanner),
-            cartDrawer: normalizeMediaUrls(parsedComponents.cartDrawer),
-            whatsAppWidget: normalizeMediaUrls(parsedComponents.whatsAppWidget),
-          } as StructuralComponents;
-
-          console.log('Parsed structural components:', normalized);
-          setStructuralComponents(normalized);
+          }
+          console.log('Parsed structural components:', parsedComponents);
+          setStructuralComponents(parsedComponents);
         } else {
           console.error('Failed to load structural components:', structuralResponse.statusText);
         }
 
+        // Load global theme configuration (use published endpoint for anonymous access)
+        const themeResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/global-theme-config/company/${companyId}/published`
+        );
+        
         if (themeResponse.ok) {
           const data = await themeResponse.json();
           setGlobalTheme(data);
@@ -200,7 +171,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
   // });
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{...themeStyles, overflowY: 'auto', height: '100vh'}}>
+    <div className="min-h-screen" style={{...themeStyles, overflowY: 'auto', height: '100vh'}}>
       {/* Announcement Bar - if configured and should show on this page */}
       {structuralComponents.announcementBar && (
         <PreviewAnnouncementBar 
@@ -222,10 +193,19 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
         null
       )}
 
-      {/* Structural ImageBanner fallback removed: ImageBanner now renders only when added as a section */}
+      {/* Image Banner (structural fallback) - if configured via published endpoint */}
+      {structuralComponents.imageBanner && (
+        <PreviewImageBanner 
+          config={structuralComponents.imageBanner}
+          theme={globalTheme}
+          isEditor={false}
+          deviceView={editorDeviceView}
+          pageType={pageType as unknown as string}
+        />
+      )}
 
       {/* Page Content */}
-      <main className="flex-1 overflow-x-hidden">
+      <main className="flex-1">
         <PreviewContent 
           pageType={pageType} 
           handle={effectiveHandle}
@@ -240,16 +220,6 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
       {structuralComponents.footer && (
         <PreviewFooter 
           config={structuralComponents.footer} 
-          theme={globalTheme}
-          deviceView={editorDeviceView}
-          isEditor={false}
-        />
-      )}
-
-      {/* WhatsApp Widget - if configured */}
-      {structuralComponents.whatsAppWidget && (
-        <PreviewWhatsAppWidgetV2
-          config={structuralComponents.whatsAppWidget}
           theme={globalTheme}
           deviceView={editorDeviceView}
           isEditor={false}

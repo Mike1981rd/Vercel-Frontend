@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { CustomerDetailDto } from '@/types/customer';
-import { getApiEndpoint } from '@/lib/api-url';
 import { SecurityFormData } from '../CustomerDetail';
 
 interface CustomerSecurityTabProps {
@@ -89,7 +88,7 @@ export default function CustomerSecurityTab({
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/customers/${customer?.id}/reset-password`), {
+      const response = await fetch(`http://localhost:5266/api/customers/${customer?.id}/reset-password`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

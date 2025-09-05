@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
 import { Plus, Trash2, GripVertical, ChevronRight, Home, ShoppingBag, Search, FileText, Package, Hash, ExternalLink } from 'lucide-react';
-import { API_URL } from '@/lib/constants';
 
 interface MenuItem {
   label: string;
@@ -64,7 +63,7 @@ export default function MenuForm({ menuId }: Props) {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/NavigationMenu/${menuId}`, {
+      const response = await fetch(`http://localhost:5266/api/NavigationMenu/${menuId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -164,8 +163,8 @@ export default function MenuForm({ menuId }: Props) {
       setSaving(true);
       const token = localStorage.getItem('token');
       const url = menuId 
-        ? `${API_URL}/NavigationMenu/${menuId}`
-        : `${API_URL}/NavigationMenu`;
+        ? `http://localhost:5266/api/NavigationMenu/${menuId}`
+        : 'http://localhost:5266/api/NavigationMenu';
       
       const method = menuId ? 'PUT' : 'POST';
 

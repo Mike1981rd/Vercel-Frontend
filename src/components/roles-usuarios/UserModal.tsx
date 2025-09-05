@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { XIcon, UserIcon } from 'lucide-react';
-import { API_URL } from '@/lib/constants';
 
 interface User {
   id: number;
@@ -73,7 +72,7 @@ export function UserModal({ isOpen, onClose, user, primaryColor }: UserModalProp
   const fetchRoles = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/roles`, {
+      const response = await fetch('http://localhost:5266/api/roles', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -138,8 +137,8 @@ export function UserModal({ isOpen, onClose, user, primaryColor }: UserModalProp
     try {
       const token = localStorage.getItem('token');
       const url = user
-        ? `${API_URL}/users/${user.id}`
-        : `${API_URL}/users`;
+        ? `http://localhost:5266/api/users/${user.id}`
+        : 'http://localhost:5266/api/users';
       
       const method = user ? 'PUT' : 'POST';
 

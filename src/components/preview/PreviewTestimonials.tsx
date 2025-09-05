@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 interface PreviewTestimonialsProps {
   config: TestimonialsConfig;
   theme?: any;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
 }
 

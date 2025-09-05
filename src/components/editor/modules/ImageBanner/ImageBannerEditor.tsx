@@ -33,12 +33,7 @@ export default function ImageBannerEditor({ sectionId }: ImageBannerEditorProps)
   
   // Initialize local state with defaults
   const [localConfig, setLocalConfig] = useState<ImageBannerConfig>(() => {
-    const defaults = getDefaultConfig();
-    if (section?.settings) {
-      // Merge with defaults to ensure all fields are defined
-      return { ...defaults, ...section.settings } as ImageBannerConfig;
-    }
-    return defaults;
+    return (section?.settings || getDefaultConfig()) as ImageBannerConfig;
   });
 
   // Expanded sections state
@@ -55,11 +50,9 @@ export default function ImageBannerEditor({ sectionId }: ImageBannerEditorProps)
   useEffect(() => {
     const currentSection = Object.values(sections).flat().find(s => s.id === sectionId);
     if (currentSection?.settings) {
-      // Merge with defaults to ensure all fields are defined
-      const defaults = getDefaultConfig();
-      const mergedSettings = { ...defaults, ...currentSection.settings };
-      if (JSON.stringify(mergedSettings) !== JSON.stringify(localConfig)) {
-        setLocalConfig(mergedSettings as ImageBannerConfig);
+      const newSettings = currentSection.settings;
+      if (JSON.stringify(newSettings) !== JSON.stringify(localConfig)) {
+        setLocalConfig(newSettings as ImageBannerConfig);
       }
     }
   }, [sectionId, sections]);
@@ -214,7 +207,7 @@ export default function ImageBannerEditor({ sectionId }: ImageBannerEditorProps)
                 <input
                   type="checkbox"
                   id="showOnlyHomePage"
-                  checked={localConfig.showOnlyOnHomePage || false}
+                  checked={localConfig.showOnlyOnHomePage}
                   onChange={(e) => handleChange({ showOnlyOnHomePage: e.target.checked })}
                   className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                 />

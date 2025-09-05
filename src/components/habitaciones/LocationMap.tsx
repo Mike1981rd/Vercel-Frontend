@@ -20,34 +20,16 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const markerRef = useRef<Marker | null>(null);
-  const lastTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || mapRef.current) return;
 
     // Resolve token: prefer override, fallback to env; require it to initialize map
-    // Try override (company), then global window var, then env
-    // @ts-ignore
-    const globalToken = (typeof window !== 'undefined' && window.__MAPBOX_TOKEN) ? String((window as any).__MAPBOX_TOKEN) : '';
-    const resolvedToken = (accessTokenOverride && accessTokenOverride.trim()) || globalToken || (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
+    const resolvedToken = (accessTokenOverride && accessTokenOverride.trim()) || (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
     if (!resolvedToken) {
-      console.warn('Mapbox token not available. Map disabled; form remains usable.');
+      console.warn('Mapbox token not available yet. Skipping map init until token is set.');
       return;
     }
-    // Mapbox GL requires a public (pk.*) token in the browser; never use sk.* here
-    if (!resolvedToken.startsWith('pk.')) {
-      console.warn('Mapbox token is not a public token (pk.*). Map disabled; form remains usable.');
-      return;
-    }
-    // Re-init map if token changed
-    const tokenChanged = lastTokenRef.current && lastTokenRef.current !== resolvedToken;
-    if (tokenChanged && mapRef.current) {
-      try { markerRef.current?.remove(); } catch {}
-      try { mapRef.current?.remove(); } catch {}
-      markerRef.current = null;
-      mapRef.current = null;
-    }
-    lastTokenRef.current = resolvedToken;
     (mapboxgl as any).accessToken = resolvedToken;
 
     // If no coords are passed yet, do not initialize to arbitrary fallback center
@@ -57,18 +39,12 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
 
     const center = [longitude, latitude] as [number, number];
 
-    let map: Map | null = null;
-    try {
-      map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center,
-        zoom,
-      });
-    } catch (e) {
-      console.warn('Mapbox GL initialization failed. Map disabled; form remains usable.', e);
-      return;
-    }
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center,
+      zoom,
+    });
     mapRef.current = map;
 
     const marker = new mapboxgl.Marker({ draggable: true })
@@ -82,10 +58,10 @@ export default function LocationMap({ latitude, longitude, onChange, height = '3
     });
 
     return () => {
-      try { marker.remove(); } catch {}
-      try { map.remove(); } catch {}
-      if (markerRef.current === marker) markerRef.current = null;
-      if (mapRef.current === map) mapRef.current = null;
+      marker.remove();
+      map.remove();
+      markerRef.current = null;
+      mapRef.current = null;
     };
   }, [accessTokenOverride, latitude, longitude, zoom]);
 

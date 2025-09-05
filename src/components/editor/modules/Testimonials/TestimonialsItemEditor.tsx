@@ -6,7 +6,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '@/lib/constants';
 import { ArrowLeft, Upload, X, Trash2 } from 'lucide-react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { TestimonialsConfig, TestimonialsItemConfig } from './types';
@@ -88,7 +87,7 @@ export default function TestimonialsItemEditor({ sectionId, itemId }: Testimonia
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -126,7 +125,7 @@ export default function TestimonialsItemEditor({ sectionId, itemId }: Testimonia
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

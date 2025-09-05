@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { CustomerDetailDto } from '@/types/customer';
 import { customerAPI } from '@/lib/api/customers';
-import { getApiEndpoint } from '@/lib/api-url';
 import { useRouter } from 'next/navigation';
 import { CountryFlag, countries } from '@/components/ui/CountryFlag';
 import { OverviewFormData } from '../CustomerDetail';
@@ -62,7 +61,7 @@ export default function CustomerOverviewTab({
       formData.append('file', file);
       
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/upload/avatar'), {
+      const response = await fetch('http://localhost:5266/api/upload/avatar', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

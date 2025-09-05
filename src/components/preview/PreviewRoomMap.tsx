@@ -20,7 +20,7 @@ interface RoomMapConfig {
 
 interface PreviewRoomMapProps {
   config: RoomMapConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -151,12 +151,7 @@ export default function PreviewRoomMap({
   const mapboxTokenOverride = useMemo(() => {
     const provider = company?.geolocationProvider || 'mapbox';
     const token = (company?.geolocationToken || '').trim();
-    // @ts-ignore
-    const globalToken = (typeof window !== 'undefined' && (window as any).__MAPBOX_TOKEN) ? String((window as any).__MAPBOX_TOKEN) : '';
-    const envToken = (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
     if (provider === 'mapbox' && token) return token;
-    if (globalToken) return globalToken;
-    if (envToken) return envToken;
     return undefined;
   }, [company?.geolocationProvider, company?.geolocationToken]);
 

@@ -25,17 +25,8 @@ export default function NewsletterEditor({
     images: false,
     contentPosition: false,
     contentBackground: false,
-    cardSettings: false,
     paddings: false,
     css: false
-  } as {
-    appearance: boolean;
-    images: boolean;
-    contentPosition: boolean;
-    contentBackground: boolean;
-    cardSettings: boolean;
-    paddings: boolean;
-    css: boolean;
   });
 
   // Sync with props when they change
@@ -67,11 +58,7 @@ export default function NewsletterEditor({
       try {
         const token = localStorage.getItem('token');
         
-        const apiUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-          ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api')
-          : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api');
-        
-        const response = await fetch(`${apiUrl}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -112,11 +99,7 @@ export default function NewsletterEditor({
       try {
         const token = localStorage.getItem('token');
         
-        const apiUrl = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-          ? (process.env.NEXT_PUBLIC_API_URL || 'https://api.test1hotelwebsite.online/api')
-          : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api');
-        
-        const response = await fetch(`${apiUrl}/MediaUpload/video`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/video', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

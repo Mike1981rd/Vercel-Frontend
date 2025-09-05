@@ -6,7 +6,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '@/lib/constants';
 import { ChevronDown, ChevronUp, Upload, Image, X } from 'lucide-react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
@@ -22,7 +21,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
   
   const section = Object.values(sections).flat().find(s => s.id === sectionId);
   const [localConfig, setLocalConfig] = useState<TestimonialsConfig>(
-    (section?.settings as TestimonialsConfig) || getDefaultTestimonialsConfig()
+    section?.settings || getDefaultTestimonialsConfig()
   );
   
   const [expandedSections, setExpandedSections] = useState({
@@ -36,7 +35,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
   });
   
   useEffect(() => {
-    setLocalConfig((section?.settings as TestimonialsConfig) || getDefaultTestimonialsConfig());
+    setLocalConfig(section?.settings || getDefaultTestimonialsConfig());
   }, [section?.settings]);
   
   const handleUpdate = (updates: Partial<TestimonialsConfig>) => {
@@ -64,7 +63,7 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
       
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/MediaUpload/image`, {
+        const response = await fetch('http://localhost:5266/api/MediaUpload/image', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

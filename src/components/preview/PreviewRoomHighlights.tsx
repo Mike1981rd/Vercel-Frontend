@@ -36,7 +36,7 @@ interface RoomHighlightsConfig {
 
 interface PreviewRoomHighlightsProps {
   config: RoomHighlightsConfig;
-  deviceView?: 'desktop' | 'mobile' | 'tablet';
+  deviceView?: 'desktop' | 'mobile';
   isEditor?: boolean;
   theme?: any;
 }
@@ -187,17 +187,15 @@ export default function PreviewRoomHighlights({
       // Find the matching view type option from catalog
       const viewOption = viewTypeOptions.find((opt: any) => opt.value === roomData.viewType);
       if (viewOption) {
-        const viewLabel = (language === 'es' ? viewOption.labelEs : viewOption.labelEn) || '';
-        if (viewLabel) {
-          highlights.push({
-            id: 'view-type',
-            icon: viewOption.icon || 'eye',
-            title: viewLabel,
-            description: language === 'es' 
-              ? `Disfruta de una hermosa ${viewLabel.toLowerCase()} desde esta habitación`
-              : `Enjoy a beautiful ${viewLabel.toLowerCase()} from this room`
-          });
-        }
+        const viewLabel = language === 'es' ? viewOption.labelEs : viewOption.labelEn;
+        highlights.push({
+          id: 'view-type',
+          icon: viewOption.icon || 'eye',
+          title: viewLabel,
+          description: language === 'es' 
+            ? `Disfruta de una hermosa ${viewLabel.toLowerCase()} desde esta habitación`
+            : `Enjoy a beautiful ${viewLabel.toLowerCase()} from this room`
+        });
       }
     }
     
@@ -350,15 +348,16 @@ export default function PreviewRoomHighlights({
       'check': 'Check',
       'check-circle': 'CheckCircle',
       'users': 'Users',
+      'eye': 'Eye',
       // Add more mappings as needed
     };
     
     // Try to find the icon using the mapping or convert the name
     const mappedIconName = iconMap[iconName.toLowerCase()] || convertToPascalCase(iconName);
-    const IconComponent = Icons[mappedIconName as keyof typeof Icons] as React.ComponentType<any>;
+    const IconComponent = Icons[mappedIconName as keyof typeof Icons];
     
     // Use consistent 24px size for both mobile and desktop
-    return IconComponent ? React.createElement(IconComponent, { className: "w-full h-full" }) : <Sparkles className="w-full h-full" />;
+    return IconComponent ? <IconComponent className="w-full h-full" /> : <Sparkles className="w-full h-full" />;
   };
 
   const handleManualRefresh = async () => {

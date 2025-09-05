@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { ShieldIcon, PlusIcon, UsersIcon, CopyIcon, Trash2Icon } from 'lucide-react';
 import { api } from '@/lib/api';
-import { API_URL } from '@/lib/constants';
 
 interface Role {
   id: number;
@@ -74,7 +73,7 @@ export function RolesTab({ primaryColor }: RolesTabProps) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/roles/${role.id}`, {
+      const response = await fetch(`http://localhost:5266/api/roles/${role.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

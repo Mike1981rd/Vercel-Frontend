@@ -64,7 +64,7 @@ export default function Toggle({
         role="switch"
         aria-checked={checked}
         disabled={disabled}
-        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick={(e) => {
           e.preventDefault();
           if (!disabled) {
             onChange(!checked);

@@ -99,9 +99,6 @@ export interface NewsletterConfig {
   // Custom CSS
   customCSS?: string;
   
-  // Visibility toggle
-  enabled?: boolean;
-  
   // Child blocks
   blocks: NewsletterBlock[];
 }

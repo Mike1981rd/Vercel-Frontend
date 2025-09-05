@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Calendar, Users, MapPin, Mail, Phone, Home, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
 import { generateReservationPDF } from '@/lib/utils/pdfGenerator';
 import toast from 'react-hot-toast';
-import { safeLocalStorage } from '@/lib/localStorage';
 
 interface ReservationDetails {
   id: number;
@@ -28,7 +27,7 @@ interface ReservationDetails {
   checkOutTime?: string;
 }
 
-function ReservationConfirmedContent() {
+export default function ReservationConfirmedPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [reservation, setReservation] = useState<ReservationDetails | null>(null);
@@ -39,7 +38,7 @@ function ReservationConfirmedContent() {
 
   useEffect(() => {
     // Get UI settings
-    const settings = safeLocalStorage.getItem('ui-settings');
+    const settings = localStorage.getItem('ui-settings');
     if (settings) {
       try {
         const parsed = JSON.parse(settings);
@@ -58,8 +57,8 @@ function ReservationConfirmedContent() {
 
   const loadCompanyInfo = async () => {
     try {
-      const companyId = safeLocalStorage.getItem('companyId') || '1';
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
+      const companyId = localStorage.getItem('companyId') || '1';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://172.25.64.1:5266/api';
       
       // First get the full company data
       const response = await fetch(`${apiUrl}/company/${companyId}/public`);
@@ -91,7 +90,7 @@ function ReservationConfirmedContent() {
           currency: data.currency || 'USD' // Store the currency from company settings
         };
         
-        safeLocalStorage.setItem('companyInfo', JSON.stringify(companyInfoData));
+        localStorage.setItem('companyInfo', JSON.stringify(companyInfoData));
         setCompanyCurrency(companyInfoData.currency);
       }
     } catch (error) {
@@ -111,7 +110,7 @@ function ReservationConfirmedContent() {
       }
 
       // Try to load confirmation persisted by checkout
-      const stored = safeLocalStorage.getItem('reservation_confirmation');
+      const stored = localStorage.getItem('reservation_confirmation');
       if (stored) {
         const parsed = JSON.parse(stored);
         const details: ReservationDetails = {
@@ -184,7 +183,7 @@ function ReservationConfirmedContent() {
     
     try {
       // Get company info from localStorage or use defaults
-      const companyInfo = safeLocalStorage.getItem('companyInfo');
+      const companyInfo = localStorage.getItem('companyInfo');
       let companyData = {
         name: 'Hotel & Resort',
         address: '',
@@ -455,23 +454,5 @@ function ReservationConfirmedContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Loading component for Suspense
-function LoadingReservation() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-    </div>
-  );
-}
-
-// Main export with Suspense wrapper
-export default function ReservationConfirmedPage() {
-  return (
-    <Suspense fallback={<LoadingReservation />}>
-      <ReservationConfirmedContent />
-    </Suspense>
   );
 }

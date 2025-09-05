@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MoreVertical, Plus, Download, Upload, Filter, ChevronDown } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 
 interface Product {
   id: number;
@@ -86,7 +85,7 @@ export default function ProductsPage() {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      let url = getApiEndpoint(`/products?page=${page}&pageSize=${pageSize}`);
+      let url = `http://localhost:5266/api/products?page=${page}&pageSize=${pageSize}`;
       
       if (searchTerm) {
         url += `&search=${encodeURIComponent(searchTerm)}`;
@@ -132,7 +131,7 @@ export default function ProductsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint(`/products/${id}`), {
+      const response = await fetch(`http://localhost:5266/api/products/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -156,7 +155,7 @@ export default function ProductsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/products/bulk-delete'), {
+      const response = await fetch('http://localhost:5266/api/products/bulk-delete', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

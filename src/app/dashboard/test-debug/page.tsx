@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getApiEndpoint } from '@/lib/api-url';
 
 export default function TestDebugPage() {
   const [debugInfo, setDebugInfo] = useState<any>({});
@@ -35,7 +34,7 @@ export default function TestDebugPage() {
     // Check debug endpoint
     let debugData = null;
     try {
-      const response = await fetch(getApiEndpoint('/setup/debug-roles'));
+      const response = await fetch('http://localhost:5266/api/setup/debug-roles');
       if (response.ok) {
         debugData = await response.json();
       }
@@ -57,7 +56,7 @@ export default function TestDebugPage() {
 
   const fixRoles = async () => {
     try {
-      const response = await fetch(getApiEndpoint('/setup/fix-system-roles'), {
+      const response = await fetch('http://localhost:5266/api/setup/fix-system-roles', {
         method: 'POST'
       });
       if (response.ok) {

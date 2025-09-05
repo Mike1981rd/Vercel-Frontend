@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Section, SectionType } from '@/types/editor.types';
 import { useEditorStore } from '@/stores/useEditorStore';
-import { RichTextConfig } from './modules/RichText/types';
-import { NewsletterConfig } from './modules/Newsletter/types';
 import { HeaderEditor } from './HeaderEditor';
 import AnnouncementBarEditor from './AnnouncementBarEditor';
 import AnnouncementItemEditor from './AnnouncementItemEditor';
@@ -440,7 +438,7 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
         );
 
       case SectionType.IMAGE_BANNER:
-        return <ImageBannerEditor sectionId={section.id ?? ''} />;
+        return <ImageBannerEditor sectionId={section.id} />;
 
       case SectionType.ANNOUNCEMENT_BAR:
         return <AnnouncementBarEditor />;
@@ -449,25 +447,25 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
         return <FooterEditor />;
 
       case SectionType.SLIDESHOW:
-        return <SlideshowEditor sectionId={section.id ?? ''} />;
+        return <SlideshowEditor sectionId={section.id} />;
 
       case SectionType.MULTICOLUMNS:
-        return <MulticolumnsEditor sectionId={section.id ?? ''} />;
+        return <MulticolumnsEditor sectionId={section.id} />;
       
       case SectionType.GALLERY:
-        return <GalleryEditor sectionId={section.id ?? ''} />;
+        return <GalleryEditor sectionId={section.id} />;
 
       case SectionType.IMAGE_WITH_TEXT:
-        return <ImageWithTextEditor sectionId={section.id ?? ''} />;
+        return <ImageWithTextEditor sectionId={section.id} />;
 
       case SectionType.FEATURED_COLLECTION:
-        return <FeaturedCollectionEditor sectionId={section.id ?? ''} />;
+        return <FeaturedCollectionEditor sectionId={section.id} />;
 
       case SectionType.FAQ:
-        return <FAQEditor sectionId={section.id ?? ''} />;
+        return <FAQEditor sectionId={section.id} />;
 
       case SectionType.TESTIMONIALS:
-        return <TestimonialsEditor sectionId={section.id ?? ''} />;
+        return <TestimonialsEditor sectionId={section.id} />;
 
       case SectionType.RICH_TEXT:
         // Find the group ID for this section
@@ -475,21 +473,10 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
           sectionsList.some(s => s.id === section.id)
         )?.[0];
         
-        const richTextConfig = {
-          colorScheme: (section.settings as any)?.colorScheme || '1',
-          colorBackground: (section.settings as any)?.colorBackground || false,
-          width: (section.settings as any)?.width || 'page',
-          contentAlignment: (section.settings as any)?.contentAlignment || 'center',
-          paddingTop: (section.settings as any)?.paddingTop || 64,
-          paddingBottom: (section.settings as any)?.paddingBottom || 64,
-          customCSS: (section.settings as any)?.customCSS || '',
-          blocks: (section.settings as any)?.blocks || []
-        } as RichTextConfig;
-        
         return (
           <RichTextEditor
-            sectionId={section.id ?? ''}
-            config={richTextConfig}
+            sectionId={section.id}
+            config={section.settings}
             onUpdate={(config) => {
               if (richTextGroupId) {
                 updateSectionSettings(richTextGroupId, section.id, config);
@@ -500,67 +487,39 @@ export function ConfigPanel({ section }: ConfigPanelProps) {
         );
 
       case SectionType.CONTACT_FORM:
-        return <ContactFormEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_GALLERY:
-        return <RoomGalleryEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_TITLE_HOST:
-        return <RoomTitleHostEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_HIGHLIGHTS:
-        return <RoomHighlightsEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_DESCRIPTION:
-        return <RoomDescriptionEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_AMENITIES:
-        return <RoomAmenitiesEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_SLEEPING:
-        return <RoomSleepingEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_REVIEWS:
-        return <RoomReviewsEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_MAP:
-        return <RoomMapEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_CALENDAR:
-        return <RoomCalendarEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_HOST_CARD:
-        return <RoomHostCardEditor sectionId={selectedSectionId ?? ''} />;
-      case SectionType.ROOM_THINGS:
-        return <RoomThingsEditor sectionId={selectedSectionId ?? ''} />;
+        return <ContactFormEditor sectionId={selectedSectionId} />;
+      case 'room_gallery' as any:
+        return <RoomGalleryEditor sectionId={selectedSectionId} />;
+      case 'room_title_host' as any:
+        return <RoomTitleHostEditor sectionId={selectedSectionId} />;
+      case 'room_highlights' as any:
+        return <RoomHighlightsEditor sectionId={selectedSectionId} />;
+      case 'room_description' as any:
+        return <RoomDescriptionEditor sectionId={selectedSectionId} />;
+      case 'room_amenities' as any:
+        return <RoomAmenitiesEditor sectionId={selectedSectionId} />;
+      case 'room_sleeping' as any:
+        return <RoomSleepingEditor sectionId={selectedSectionId} />;
+      case 'room_reviews' as any:
+        return <RoomReviewsEditor sectionId={selectedSectionId} />;
+      case 'room_map' as any:
+        return <RoomMapEditor sectionId={selectedSectionId} />;
+      case 'room_calendar' as any:
+        return <RoomCalendarEditor sectionId={selectedSectionId} />;
+      case 'room_host_card' as any:
+        return <RoomHostCardEditor sectionId={selectedSectionId} />;
+      case 'room_things' as any:
+        return <RoomThingsEditor sectionId={selectedSectionId} />;
       case SectionType.NEWSLETTER:
         // Find the group ID for this section
         const newsletterGroupId = Object.entries(sections).find(([_, sectionsList]) =>
           sectionsList.some(s => s.id === section.id)
         )?.[0];
         
-        const newsletterConfig: NewsletterConfig = {
-          colorScheme: (section.settings as any)?.colorScheme || '3',
-          colorBackground: (section.settings as any)?.colorBackground || false,
-          width: (section.settings as any)?.width || 'screen',
-          desktopRatio: (section.settings as any)?.desktopRatio || 0.2,
-          mobileRatio: (section.settings as any)?.mobileRatio || 1.6,
-          desktopImage: (section.settings as any)?.desktopImage || '',
-          mobileImage: (section.settings as any)?.mobileImage || '',
-          video: (section.settings as any)?.video || '',
-          desktopOverlayOpacity: (section.settings as any)?.desktopOverlayOpacity || 0,
-          mobileOverlayOpacity: (section.settings as any)?.mobileOverlayOpacity || 0,
-          desktopPosition: (section.settings as any)?.desktopPosition || 'left',
-          desktopAlignment: (section.settings as any)?.desktopAlignment || 'left',
-          desktopWidth: (section.settings as any)?.desktopWidth || 704,
-          desktopSpacing: (section.settings as any)?.desktopSpacing || 16,
-          mobilePosition: (section.settings as any)?.mobilePosition || 'top',
-          mobileAlignment: (section.settings as any)?.mobileAlignment || 'left',
-          desktopContentBackground: (section.settings as any)?.desktopContentBackground || 'solid',
-          mobileContentBackground: (section.settings as any)?.mobileContentBackground || 'solid',
-          cardStyle: (section.settings as any)?.cardStyle || 'rounded',
-          cardSize: (section.settings as any)?.cardSize || 100,
-          addSidePaddings: (section.settings as any)?.addSidePaddings ?? true,
-          paddingTop: (section.settings as any)?.paddingTop || 10,
-          paddingBottom: (section.settings as any)?.paddingBottom || 85,
-          customCSS: (section.settings as any)?.customCSS || '',
-          blocks: (section.settings as any)?.blocks || []
-        };
-        
         return (
           <NewsletterEditor
-            sectionId={section.id ?? ''}
-            config={newsletterConfig}
+            sectionId={section.id}
+            config={section.settings}
             onUpdate={(config) => {
               if (newsletterGroupId) {
                 updateSectionSettings(newsletterGroupId, section.id, config);

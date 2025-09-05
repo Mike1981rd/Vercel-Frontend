@@ -46,12 +46,6 @@ class FrontendLogger {
    */
   init(): void {
     if (this.isInitialized) return;
-    const silent = typeof window !== 'undefined' && (localStorage.getItem('WB_SILENT_CONSOLE') === '1' || (window as any).__WB_SILENT_CONSOLE__ === true || process.env.NEXT_PUBLIC_SILENT_LOGS === 'true');
-    if (silent) {
-      // In silent mode, don't intercept console or network; just mark initialized
-      this.isInitialized = true;
-      return;
-    }
     
     // Save the original fetch if we haven't already (in case init is called multiple times)
     if (typeof window !== 'undefined' && window.fetch !== this.originalFetch) {

@@ -17,7 +17,6 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from 'lucide-react';
-import { API_URL } from '@/lib/constants';
 
 interface User {
   id: number;
@@ -65,7 +64,7 @@ export function UsersTab({ primaryColor }: UsersTabProps) {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetch('http://localhost:5266/api/users', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -100,7 +99,7 @@ export function UsersTab({ primaryColor }: UsersTabProps) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/users/${userId}`, {
+      const response = await fetch(`http://localhost:5266/api/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

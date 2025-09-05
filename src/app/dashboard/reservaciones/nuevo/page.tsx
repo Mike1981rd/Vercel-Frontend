@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import { useToast } from '@/contexts/ToastContext';
-import { getApiEndpoint } from '@/lib/api-url';
 
 interface Customer {
   id: number;
@@ -76,7 +75,7 @@ export default function NewReservationPage() {
   const fetchCompanyInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/company/current'), {
+      const response = await fetch('http://localhost:5266/api/company/current', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -96,7 +95,7 @@ export default function NewReservationPage() {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/customers?size=100'), {
+      const response = await fetch('http://localhost:5266/api/customers?size=100', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -116,7 +115,7 @@ export default function NewReservationPage() {
   const fetchRooms = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiEndpoint('/rooms'), {
+      const response = await fetch('http://localhost:5266/api/rooms', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -140,7 +139,7 @@ export default function NewReservationPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/reservations/availability?checkIn=${formData.checkInDate}&checkOut=${formData.checkOutDate}`,
+        `http://localhost:5266/api/reservations/availability?checkIn=${formData.checkInDate}&checkOut=${formData.checkOutDate}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -231,7 +230,7 @@ export default function NewReservationPage() {
       
       console.log('Sending reservation data:', dataToSend);
       
-      const response = await fetch(getApiEndpoint('/reservations'), {
+      const response = await fetch('http://localhost:5266/api/reservations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

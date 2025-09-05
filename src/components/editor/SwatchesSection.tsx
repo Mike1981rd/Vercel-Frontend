@@ -12,7 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/Select';
+} from '@/components/ui/select';
 import type { SwatchesConfig, SwatchShape } from '@/types/theme/swatches';
 import { swatchShapeOptions, defaultPrimarySwatchConfig, defaultSecondarySwatchConfig } from '@/types/theme/swatches';
 

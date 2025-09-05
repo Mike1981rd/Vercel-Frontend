@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
-import { getApiEndpoint } from '@/lib/api-url';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -198,7 +197,7 @@ export default function NewOrderPage() {
     try {
       setLoadingCustomers(true);
       const searchParam = customerSearch ? `search=${customerSearch}&` : '';
-      const response = await fetch(getApiEndpoint(`/customers?${searchParam}size=10`), {
+      const response = await fetch(`http://localhost:5266/api/customers?${searchParam}size=10`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -236,7 +235,7 @@ export default function NewOrderPage() {
     try {
       setLoadingProducts(true);
       const searchParam = productSearch ? `search=${productSearch}&` : '';
-      const response = await fetch(getApiEndpoint(`/products?${searchParam}pageSize=10`), {
+      const response = await fetch(`http://localhost:5266/api/products?${searchParam}pageSize=10`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -358,7 +357,7 @@ export default function NewOrderPage() {
         billingAddress: sameAsShipping ? shippingAddress : billingAddress
       };
 
-      const response = await fetch(getApiEndpoint('/orders'), {
+      const response = await fetch('http://localhost:5266/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

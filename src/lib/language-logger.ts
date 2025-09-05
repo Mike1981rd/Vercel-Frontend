@@ -36,7 +36,7 @@ class LanguageLogger {
   
   private async sendToBackend(logEntry: any) {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/logs/frontend`, {
+      await fetch('http://localhost:5266/api/logs/frontend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

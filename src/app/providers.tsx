@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getApiUrl } from '@/lib/api-url';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { I18nProvider } from '@/contexts/I18nContext';
 import { CompanyProvider } from '@/contexts/CompanyContext';
@@ -26,35 +25,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return () => {
       console.error = originalError;
     };
-  }, []);
-
-  // Initialize global Mapbox token for public pages
-  useEffect(() => {
-    try {
-      const w: any = typeof window !== 'undefined' ? window : undefined;
-      if (!w) return;
-
-      // Respect existing token if already set by a layout
-      if (!w.__MAPBOX_TOKEN) {
-        const envToken = (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
-        if (envToken) {
-          w.__MAPBOX_TOKEN = envToken;
-          return;
-        }
-
-        // Fallback: fetch safe public token (Mapbox pk.*) from backend
-        const apiUrl = getApiUrl();
-        fetch(`${apiUrl}/company/1/public`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => {
-            const token = data?.geolocationPublicToken as string | undefined;
-            if (token && token.startsWith('pk.')) {
-              w.__MAPBOX_TOKEN = token;
-            }
-          })
-          .catch(() => {/* silent */});
-      }
-    } catch {/* ignore */}
   }, []);
 
   return (
