@@ -11,6 +11,8 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline'
 import { toast } from 'react-hot-toast'
+import EmailProviderSettings from './EmailProviderSettings'
+import { getApiUrl } from '@/lib/api-url'
 
 interface NotificationSetting {
   id: number
@@ -82,7 +84,7 @@ export function NotificationsTab() {
   const fetchNotificationSettings = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NotificationSettings`, {
+      const response = await fetch(`${getApiUrl()}/NotificationSettings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -132,7 +134,7 @@ export function NotificationsTab() {
         }))
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api'}/NotificationSettings/bulk-update`, {
+      const response = await fetch(`${getApiUrl()}/NotificationSettings/bulk-update`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -184,6 +186,11 @@ export function NotificationsTab() {
 
   return (
     <div className="w-full">
+      {/* Email Provider (Postmark) */}
+      <div className="mb-6">
+        <EmailProviderSettings />
+      </div>
+
       {/* Header Section - Mobile Optimized */}
       <div className="mb-4 sm:mb-6">
         <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white mb-1 sm:mb-2">

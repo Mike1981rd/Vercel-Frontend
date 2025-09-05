@@ -11,9 +11,9 @@ import {
   MenuToggleIcon,
   TranslationIcon,
   ThemeIcon,
-  NotificationIcon,
   SettingsIcon
 } from '@/components/ui/Icons';
+import AppNotificationsBell from '@/components/notifications/AppNotificationsBell';
 
 interface NavbarProps {
   onSidebarToggle?: () => void;
@@ -84,13 +84,7 @@ export function Navbar({
     role: 'Administrator'
   };
 
-  const notifications = [
-    { id: 1, title: 'Nueva reservación', message: 'Habitación deluxe reservada', time: '5 min ago', unread: true },
-    { id: 2, title: 'Producto agotado', message: 'Stock bajo en producto #123', time: '1 hora ago', unread: true },
-    { id: 3, title: 'Nuevo cliente', message: 'Cliente registrado exitosamente', time: '2 horas ago', unread: false },
-  ];
-
-  const unreadCount = notifications.filter(n => n.unread).length;
+  // Notifications UI is now handled by AppNotificationsBell component (fetches from backend)
 
   // Quick options for display names
   const quickOptionsLabels = {
@@ -280,61 +274,8 @@ export function Navbar({
             <ThemeIcon size={20} />
           </button>
 
-          {/* Notifications */}
-          <div className="relative" ref={notificationsRef}>
-            <button
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              title={t('common.notifications', 'Notifications')}
-            >
-              <NotificationIcon size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-error-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            {notificationsOpen && (
-              <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900">{t('common.notifications', 'Notifications')}</h3>
-                  <span className="text-xs text-gray-500">{unreadCount} {t('common.new', 'new')}</span>
-                </div>
-                
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={cn(
-                        'px-4 py-3 hover:bg-gray-50 border-l-4 transition-colors',
-                        notification.unread ? 'border-l-primary-500 bg-primary-50/30' : 'border-l-transparent'
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          'w-2 h-2 rounded-full mt-2 flex-shrink-0',
-                          notification.unread ? 'bg-primary-500' : 'bg-gray-300'
-                        )} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
-                          <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
-                          <p className="text-gray-400 text-xs mt-2">{notification.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="border-t border-gray-100 px-4 py-2">
-                  <button className="text-primary-600 text-sm font-medium hover:text-primary-700 transition-colors">
-                    {t('common.viewAll', 'View All')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Notifications (real-time from backend) */}
+          <AppNotificationsBell />
 
           {/* Customize Sidebar */}
           <button
