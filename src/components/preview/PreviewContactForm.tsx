@@ -296,7 +296,11 @@ export default function PreviewContactForm({
         </div>
 
         {/* Form */}
-        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => e.preventDefault()}
+          data-contact-form
+        >
           <div className={cn(
             "grid gap-4",
             isMobile ? "grid-cols-1" : "grid-cols-2"
@@ -306,6 +310,7 @@ export default function PreviewContactForm({
               <label className="sr-only">{finalConfig.nameLabel || 'Name'}</label>
               <input
                 type="text"
+                name="name"
                 placeholder={finalConfig.nameLabel || 'Nombre'}
                 required
                 className={inputClassName}
@@ -321,6 +326,7 @@ export default function PreviewContactForm({
               <label className="sr-only">{finalConfig.emailLabel || 'Email'}</label>
               <input
                 type="email"
+                name="email"
                 placeholder={finalConfig.emailLabel || 'Correo electrónico'}
                 required
                 className={inputClassName}
@@ -338,6 +344,7 @@ export default function PreviewContactForm({
               <label className="sr-only">{finalConfig.phoneLabel || 'Phone'}</label>
               <input
                 type="tel"
+                name="phone"
                 placeholder={finalConfig.phoneLabel || 'Teléfono'}
                 className={inputClassName}
                 style={{
@@ -353,6 +360,7 @@ export default function PreviewContactForm({
             <label className="sr-only">{finalConfig.messageLabel || 'Message'}</label>
             <textarea
               placeholder={finalConfig.messageLabel || 'Mensaje'}
+              name="message"
               required
               rows={isMobile ? 4 : 6}
               className={cn(inputClassName, "resize-none")}

@@ -1,5 +1,7 @@
 // PreviewNewsletter.tsx - Newsletter Preview Component with Mobile View
 import React, { useState, useEffect } from 'react';
+import { NewsletterSubscribersAPI } from '@/lib/api/newsletter-subscribers';
+import toast from 'react-hot-toast';
 import { NewsletterConfig, defaultNewsletterConfig, createDefaultNewsletterBlocks } from '@/components/editor/modules/Newsletter/types';
 import { GlobalThemeConfig } from '@/types/theme';
 import useThemeConfigStore from '@/stores/useThemeConfigStore'; // SIN destructuring {}
@@ -285,6 +287,7 @@ export default function PreviewNewsletter({
               isMobile ? 'justify-center w-full' : (contentAlignment === 'center' ? 'justify-center' : '')
             )}
           >
+            {/* Solid style - input with inline button */}
             {block.inputStyle === 'solid' ? (
               // Solid style - input with button inside
               <div className={cn(
@@ -293,6 +296,7 @@ export default function PreviewNewsletter({
               )}>
                 <input
                   type="email"
+                  name="newsletterEmail"
                   placeholder={block.placeholder || 'Email address'}
                   className={cn(
                     'flex-1 text-center',
@@ -317,6 +321,25 @@ export default function PreviewNewsletter({
                     color: colorScheme.solidButtonText,
                     fontFamily: typography.buttons?.fontFamily || 'inherit'
                   }}
+                  onClick={async (e) => {
+                    try {
+                      const container = (e.currentTarget.parentElement as HTMLElement) || undefined;
+                      const input = container?.querySelector('input[type="email"]') as HTMLInputElement | null;
+                      const email = (input?.value || '').trim();
+                      if (!email) { toast.error('Enter a valid email'); return; }
+                      await NewsletterSubscribersAPI.publicSubscribe({
+                        Email: email,
+                        AcceptedMarketing: true,
+                        AcceptedTerms: true,
+                        SourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                        Language: 'es'
+                      } as any);
+                      toast.success('Subscribed successfully');
+                      if (input) input.value = '';
+                    } catch (err: any) {
+                      toast.error(err?.message || 'Subscription failed');
+                    }
+                  }}
                 >
                   {block.buttonText || 'Subscribe'}
                 </button>
@@ -329,6 +352,7 @@ export default function PreviewNewsletter({
               )}>
                 <input
                   type="email"
+                  name="newsletterEmail"
                   placeholder={block.placeholder || 'Email address'}
                   className={cn(
                     'rounded-lg bg-transparent border-2 flex-1 text-center',
@@ -352,6 +376,25 @@ export default function PreviewNewsletter({
                     color: colorScheme.outlineButtonText,
                     borderColor: colorScheme.outlineButton,
                     fontFamily: typography.buttons?.fontFamily || 'inherit'
+                  }}
+                  onClick={async (e) => {
+                    try {
+                      const container = (e.currentTarget.parentElement as HTMLElement) || undefined;
+                      const input = container?.querySelector('input[type="email"]') as HTMLInputElement | null;
+                      const email = (input?.value || '').trim();
+                      if (!email) { toast.error('Enter a valid email'); return; }
+                      await NewsletterSubscribersAPI.publicSubscribe({
+                        Email: email,
+                        AcceptedMarketing: true,
+                        AcceptedTerms: true,
+                        SourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                        Language: 'es'
+                      } as any);
+                      toast.success('Subscribed successfully');
+                      if (input) input.value = '';
+                    } catch (err: any) {
+                      toast.error(err?.message || 'Subscription failed');
+                    }
                   }}
                 >
                   {block.buttonText || 'Subscribe'}

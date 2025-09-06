@@ -11,6 +11,16 @@ if [ -z "${VERCEL_TOKEN:-}" ]; then
   elif [ -f "$HOME/.vercel-token" ]; then
     # shellcheck disable=SC2046
     export $(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$HOME/.vercel-token" | xargs)
+  else
+    # WSL-friendly fallback: look for Windows user token under /mnt/c/Users/*/.vercel-token
+    if [ -d "/mnt/c/Users" ]; then
+      # find first match to avoid globbing/exit on no match
+      vercel_win_token=$(find /mnt/c/Users -maxdepth 2 -type f -name .vercel-token 2>/dev/null | head -n 1 || true)
+      if [ -n "${vercel_win_token:-}" ] && [ -f "$vercel_win_token" ]; then
+        # shellcheck disable=SC2046
+        export $(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$vercel_win_token" | xargs)
+      fi
+    fi
   fi
 fi
 
@@ -19,4 +29,3 @@ if [ -z "${VERCEL_TOKEN:-}" ]; then
 fi
 
 exec npx vercel "$@"
-

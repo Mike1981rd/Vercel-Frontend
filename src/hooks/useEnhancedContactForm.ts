@@ -38,7 +38,8 @@ export function useEnhancedContactForm() {
         try {
           e.preventDefault();
           const cidStr = typeof window !== 'undefined' ? localStorage.getItem('companyId') : null;
-          const companyId = cidStr ? parseInt(cidStr) : 0;
+          // Fallback single-tenant: companyId = 1 when not present
+          const companyId = cidStr ? parseInt(cidStr) : 1;
           const data = extractFormData(form);
           options?.onBeforeSubmit?.(data);
           setIsSubmitting(true);
@@ -69,4 +70,3 @@ export function useEnhancedContactForm() {
     enhanceContactForm,
   };
 }
-
