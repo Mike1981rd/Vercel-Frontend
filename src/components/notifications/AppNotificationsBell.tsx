@@ -4,15 +4,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Check, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
+type RawNotification = any;
+
 type AppNotification = {
-  Id: number;
-  Type: string;
-  Title: string;
-  Message?: string;
-  IsRead: boolean;
-  CreatedAt: string;
-  RelatedEntityType?: string;
-  RelatedEntityId?: string;
+  id: number;
+  type: string;
+  title: string;
+  message?: string;
+  isRead: boolean;
+  createdAt: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
 };
 
 interface AppNotificationsBellProps {
@@ -39,9 +41,21 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
   const fetchRecent = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get<AppNotification[]>('/notifications?limit=20');
-      const list = (res as any).data ?? (res as any);
-      setItems(Array.isArray(list) ? list : []);
+      const res = await api.get<RawNotification[]>('/notifications?limit=20');
+      const list: RawNotification[] = ((res as any).data ?? (res as any)) as any[];
+      const normalized: AppNotification[] = Array.isArray(list)
+        ? list.map((n: any) => ({
+            id: n.id ?? n.Id ?? 0,
+            type: n.type ?? n.Type ?? 'unknown',
+            title: (n.title ?? n.Title ?? '').toString() || deriveTitle(n),
+            message: (n.message ?? n.Message ?? '').toString() || deriveMessage(n),
+            isRead: Boolean(n.isRead ?? n.IsRead ?? false),
+            createdAt: (n.createdAt ?? n.CreatedAt ?? '').toString(),
+            relatedEntityType: n.relatedEntityType ?? n.RelatedEntityType,
+            relatedEntityId: n.relatedEntityId ?? n.RelatedEntityId,
+          }))
+        : [];
+      setItems(normalized);
     } catch {
       setItems([]);
     } finally {
@@ -52,7 +66,7 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
   const markAsRead = useCallback(async (id: number) => {
     try {
       await api.post(`/notifications/${id}/read`);
-      setItems((prev) => prev.map((n) => (n.Id === id ? { ...n, IsRead: true } : n)));
+      setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       setCount((c) => Math.max(0, c - 1));
     } catch {}
   }, []);
@@ -100,6 +114,31 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
     }
   };
 
+  function deriveTitle(n: any): string {
+    const type = n.type ?? n.Type;
+    if (type === 'contact_message') return 'New contact message';
+    if (type === 'reservation_paid') return 'Reservation paid';
+    if (type === 'subscription_new') return 'New subscriber';
+    return 'Notification';
+  }
+
+  function deriveMessage(n: any): string {
+    const type = n.type ?? n.Type;
+    if (type === 'contact_message') {
+      const name = n.data?.name ?? n.Name ?? '';
+      const email = n.data?.email ?? n.Email ?? '';
+      return [name, email].filter(Boolean).join(' • ') || 'Contact message received';
+    }
+    return '';
+  }
+
+  function formatDateSafe(input: string): string {
+    if (!input) return 'Just now';
+    const d = new Date(input);
+    if (isNaN(d.getTime())) return 'Just now';
+    return d.toLocaleString();
+  }
+
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       <button
@@ -137,22 +176,22 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
               <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">No notifications</div>
             ) : (
               items.map((n, index) => (
-                <div key={n.Id || `notification-${index}`} className={`p-4 ${!n.IsRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+                <div key={n.id || `notification-${index}`} className={`p-4 ${!n.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
                   <div className="flex items-start gap-3">
                     <div className="text-xl leading-none" aria-hidden>
-                      {iconForType(n.Type)}
+                      {iconForType(n.type)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{n.Title}</p>
-                        <span className="text-xs text-gray-400">{new Date(n.CreatedAt).toLocaleString()}</span>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{n.title}</p>
+                        <span className="text-xs text-gray-400">{formatDateSafe(n.createdAt)}</span>
                       </div>
-                      {n.Message && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{n.Message}</p>
+                      {(n.message ?? '').length > 0 && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{n.message}</p>
                       )}
-                      {!n.IsRead && (
+                      {!n.isRead && (
                         <button
-                          onClick={() => markAsRead(n.Id)}
+                          onClick={() => markAsRead(n.id)}
                           className="mt-2 inline-flex items-center gap-1 text-xs text-green-700 dark:text-green-400 hover:underline"
                         >
                           <Check className="w-3 h-3" /> Mark as read
@@ -169,4 +208,3 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
     </div>
   );
 }
-
