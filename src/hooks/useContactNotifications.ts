@@ -94,8 +94,10 @@ export function useContactNotifications(): UseContactNotificationsReturn {
 
   const fetchUnreadCount = useCallback(async (companyId: number) => {
     try {
-      const { data } = await api.get<{ data: number }>(`/contact/company/${companyId}/unread-count`);
-      setUnreadCount(typeof data === 'number' ? data : (data as any));
+      const res = await api.get<{ data: number } | number>(`/contact/company/${companyId}/unread-count`);
+      const body: any = res.data;
+      const count = typeof body === 'number' ? body : body?.data;
+      if (typeof count === 'number') setUnreadCount(count);
     } catch {
       // Silent; UI can still render without badge
     }
@@ -115,9 +117,8 @@ export function useContactNotifications(): UseContactNotificationsReturn {
         params.set('pageSize', String(pageSize));
         const url = `/contact/company/${companyId}/messages?${params.toString()}`;
         const res = await api.get<{ data: ContactMessage[] } | ContactMessage[]>(url);
-        const list = Array.isArray((res as any).data)
-          ? ((res as any).data as ContactMessage[])
-          : ((res as any) as ContactMessage[]);
+        const body: any = res.data;
+        const list = Array.isArray(body) ? body : body?.data;
         setNotifications(list || []);
       } catch {
         setNotifications([]);
@@ -131,7 +132,8 @@ export function useContactNotifications(): UseContactNotificationsReturn {
       const res = await api.get<{ data: ContactNotificationSettings } | ContactNotificationSettings>(
         `/contact/company/${companyId}/notification-settings`
       );
-      const value = (res as any).data ?? res;
+      const body: any = res.data;
+      const value = body?.data ?? body;
       setSettings(value as ContactNotificationSettings);
     } catch {
       // Provide safe defaults to avoid undefined checks everywhere
@@ -170,8 +172,12 @@ export function useContactNotifications(): UseContactNotificationsReturn {
 
   const updateSettings = useCallback(
     async (companyId: number, data: Partial<ContactNotificationSettings>) => {
-      await api.put(`/contact/company/${companyId}/notification-settings`, data);
-      setSettings((prev) => ({ ...(prev || ({} as ContactNotificationSettings)), ...data }));
+      const res = await api.put<{ data: ContactNotificationSettings } | ContactNotificationSettings>(
+        `/contact/company/${companyId}/notification-settings`, data
+      );
+      const body: any = res.data;
+      const value = body?.data ?? body;
+      setSettings(value as ContactNotificationSettings);
       if ((settings?.toastNotificationsEnabled ?? true) !== false) {
         showSuccessToast('Settings saved');
       }
@@ -228,4 +234,3 @@ export function useContactNotifications(): UseContactNotificationsReturn {
     showErrorToast,
   };
 }
-
