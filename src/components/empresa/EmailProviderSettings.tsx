@@ -22,6 +22,17 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
 
   const API = useMemo(() => `${getApiUrl()}/email/settings`, []);
 
+  // Normalize API payload (camelCase vs PascalCase)
+  const normalizeSettings = (data: any): EmailSettings => {
+    return {
+      Provider: (data?.provider ?? data?.Provider ?? 'Postmark') as Provider,
+      FromEmail: (data?.fromEmail ?? data?.FromEmail) ?? null,
+      FromName: (data?.fromName ?? data?.FromName) ?? null,
+      hasApiKey: !!(data?.hasApiKey ?? data?.HasApiKey),
+      apiKeyMask: (data?.apiKeyMask ?? data?.ApiKeyMask) ?? undefined,
+    };
+  };
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -33,13 +44,7 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
         });
         if (res.ok) {
           const data = await res.json();
-          setSettings({
-            Provider: (data.Provider as Provider) || 'Postmark',
-            FromEmail: data.FromEmail ?? null,
-            FromName: data.FromName ?? null,
-            hasApiKey: !!data.hasApiKey,
-            apiKeyMask: data.apiKeyMask ?? undefined,
-          });
+          setSettings(normalizeSettings(data));
         }
       } finally {
         setLoading(false);
@@ -73,13 +78,7 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
         const refresh = await fetch(API, { headers: { 'Authorization': token ? `Bearer ${token}` : '' } });
         if (refresh.ok) {
           const data = await refresh.json();
-          setSettings({
-            Provider: (data.Provider as Provider) || 'Postmark',
-            FromEmail: data.FromEmail ?? null,
-            FromName: data.FromName ?? null,
-            hasApiKey: !!data.hasApiKey,
-            apiKeyMask: data.apiKeyMask ?? undefined,
-          });
+          setSettings(normalizeSettings(data));
         }
       } catch {}
       // Limpiar input de token si se envió

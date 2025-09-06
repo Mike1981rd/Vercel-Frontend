@@ -21,6 +21,13 @@ if [ -z "${VERCEL_TOKEN:-}" ]; then
         export $(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$vercel_win_token" | xargs)
       fi
     fi
+    # Fallback: use cached Vercel auth token if present
+    if [ -z "${VERCEL_TOKEN:-}" ] && [ -f "$HOME/.vercel/auth.json" ]; then
+      vercel_cached_token=$(sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HOME/.vercel/auth.json" | head -n 1)
+      if [ -n "${vercel_cached_token:-}" ]; then
+        export VERCEL_TOKEN="$vercel_cached_token"
+      fi
+    fi
   fi
 fi
 
@@ -28,4 +35,8 @@ if [ -z "${VERCEL_TOKEN:-}" ]; then
   echo "[vercel-cli] No VERCEL_TOKEN set. Relying on Git-based deploys or existing session." >&2
 fi
 
-exec npx vercel "$@"
+if [ -n "${VERCEL_TOKEN:-}" ]; then
+  exec npx vercel "$@" --token "$VERCEL_TOKEN"
+else
+  exec npx vercel "$@"
+fi
