@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Save, KeyRound, Mail, Info } from 'lucide-react';
 import { getApiUrl } from '@/lib/api-url';
 
-type Provider = 'Postmark' | 'SendGrid';
+type Provider = 'Postmark' | 'SendGrid' | 'Brevo';
 
 interface EmailSettings {
   Provider: Provider;
@@ -104,14 +104,14 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
             <KeyRound className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Email Provider (Postmark)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Email Provider</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">Configura el proveedor de correos para el sistema</p>
           </div>
         </div>
 
         {/* Provider selection */}
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {(['Postmark', 'SendGrid'] as Provider[]).map((p) => (
+          {(['Postmark', 'SendGrid', 'Brevo'] as Provider[]).map((p) => (
             <button
               key={p}
               type="button"
@@ -128,7 +128,7 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
           <label className="text-sm font-medium text-gray-900 dark:text-white">Server API Token</label>
           <input
             type="password"
-            placeholder={settings.hasApiKey ? `Token configurado (${settings.apiKeyMask})` : 'Pega aquí tu API Token de Postmark'}
+            placeholder={settings.hasApiKey ? `Token configurado (${settings.apiKeyMask})` : `Pega aquí tu API Token de ${settings.Provider}`}
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -136,7 +136,7 @@ export default function EmailProviderSettings({ className = '' }: { className?: 
           <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
             <Info className="w-4 h-4 mt-0.5" />
             <p>
-              Este campo es para tu API Key de Postmark. Es la clave que permite enviar correos desde tu sistema. Para obtenerla, entra a tu cuenta de Postmark, crea o usa un servidor existente, ve a la pestaña API Tokens, copia el Server API Token y pégalo aquí. Una vez pegado, todos los correos se enviarán automáticamente con tu configuración de Postmark.
+              Este campo es para tu API Key de {settings.Provider}. Es la clave que permite enviar correos desde tu sistema. {settings.Provider === 'Postmark' ? 'Para obtenerla, entra a tu cuenta de Postmark, crea o usa un servidor existente, ve a la pestaña API Tokens, copia el Server API Token y pégalo aquí.' : settings.Provider === 'Brevo' ? 'Para obtenerla, entra a tu cuenta de Brevo, ve a SMTP & API, crea o copia tu API Key y pégala aquí.' : 'Ingresa tu API Key de SendGrid aquí.'} Una vez pegado, todos los correos se enviarán automáticamente con tu configuración de {settings.Provider}.
             </p>
           </div>
         </div>
