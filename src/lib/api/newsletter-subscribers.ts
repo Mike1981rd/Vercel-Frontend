@@ -265,7 +265,7 @@ class NewsletterSubscribersAPI {
 
   // Public API methods (no auth required)
   static async publicSubscribe(data: PublicSubscribeDto): Promise<{ success: boolean; message: string; subscriber: any }> {
-    const response = await fetch(`${API_BASE_URL}/api/public/newsletter/subscribe`, {
+    const response = await fetch(`${API_BASE_URL}/public/newsletter/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -282,7 +282,7 @@ class NewsletterSubscribersAPI {
   }
 
   static async publicUnsubscribe(email: string, reason?: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/api/public/newsletter/unsubscribe`, {
+    const response = await fetch(`${API_BASE_URL}/public/newsletter/unsubscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -299,7 +299,7 @@ class NewsletterSubscribersAPI {
   }
 
   static async checkSubscriptionStatus(email: string): Promise<{ subscribed: boolean; subscribedAt?: string; language?: string }> {
-    const response = await fetch(`${API_BASE_URL}/api/public/newsletter/status/${encodeURIComponent(email)}`, {
+    const response = await fetch(`${API_BASE_URL}/public/newsletter/status/${encodeURIComponent(email)}`, {
       method: 'GET'
     });
 
