@@ -136,8 +136,8 @@ export default function AppNotificationsBell({ className = '', pollIntervalMs = 
             {items.length === 0 ? (
               <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">No notifications</div>
             ) : (
-              items.map((n) => (
-                <div key={n.Id} className={`p-4 ${!n.IsRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+              items.map((n, index) => (
+                <div key={n.Id || `notification-${index}`} className={`p-4 ${!n.IsRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
                   <div className="flex items-start gap-3">
                     <div className="text-xl leading-none" aria-hidden>
                       {iconForType(n.Type)}

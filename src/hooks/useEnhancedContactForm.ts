@@ -157,11 +157,32 @@ export function useEnhancedContactForm() {
     [submitContactForm]
   );
 
-  // Optionally auto-enhance forms with [data-contact-form]
+  // Auto‑enhance forms with [data-contact-form] and observe future inserts
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const forms = Array.from(document.querySelectorAll<HTMLFormElement>('form[data-contact-form]'));
-    for (const f of forms) enhanceContactForm(f);
+
+    const scan = () => {
+      const forms = Array.from(document.querySelectorAll<HTMLFormElement>('form[data-contact-form]'));
+      for (const f of forms) enhanceContactForm(f);
+    };
+
+    // Initial scan
+    scan();
+
+    // Observe DOM mutations to catch late‑loaded forms
+    const observer = new MutationObserver(() => {
+      scan();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Re‑scan on visibility change (SSR hydration/route swaps)
+    const onVis = () => scan();
+    document.addEventListener('visibilitychange', onVis);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    };
   }, [enhanceContactForm]);
 
   return {
