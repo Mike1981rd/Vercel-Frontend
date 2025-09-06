@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useEnhancedContactForm } from '@/hooks/useEnhancedContactForm';
+import ContactFormModal from '@/components/ui/ContactFormModal';
 
 interface ContactFormEnhancerProps {
   children: React.ReactNode;
@@ -25,7 +26,18 @@ export default function ContactFormEnhancer({
   autoEnhance = true,
   debug = false
 }: ContactFormEnhancerProps) {
-  const { enhancedFormsCount, isSubmitting } = useEnhancedContactForm();
+  const { 
+    enhancedFormsCount, 
+    isSubmitting,
+    showSuccessModal,
+    setShowSuccessModal,
+    lastSubmittedData 
+  } = useEnhancedContactForm();
+  
+  // Get primary color from localStorage
+  const primaryColor = typeof window !== 'undefined' 
+    ? localStorage.getItem('primaryColor') || '#000000'
+    : '#000000';
 
   if (debug) {
     console.log(`ContactFormEnhancer: ${enhancedFormsCount} forms enhanced, submitting: ${isSubmitting}`);
@@ -34,6 +46,22 @@ export default function ContactFormEnhancer({
   return (
     <>
       {children}
+      
+      {/* Success Modal */}
+      <ContactFormModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        formData={{
+          name: lastSubmittedData?.name,
+          email: lastSubmittedData?.email
+        }}
+        theme={{
+          primaryColor,
+          textColor: '#000000',
+          backgroundColor: '#ffffff'
+        }}
+      />
+      
       {/* Invisible status indicator for debugging */}
       {debug && (
         <div 
