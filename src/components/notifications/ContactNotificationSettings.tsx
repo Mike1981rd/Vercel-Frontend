@@ -15,7 +15,7 @@ export default function ContactNotificationSettings({
   className = '',
   onSave
 }: ContactNotificationSettingsProps) {
-  const { settings, updateSettings } = useContactNotifications();
+  const { settings, updateSettings, loadSettings } = useContactNotifications();
   const [currentCompanyId, setCurrentCompanyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -32,24 +32,32 @@ export default function ContactNotificationSettings({
     toastErrorMessage: 'Error sending message. Please try again.'
   });
 
-  // Obtener companyId
-  useEffect(() => {
-    const getCompanyId = () => {
-      if (companyId) {
-        setCurrentCompanyId(companyId);
-        return;
-      }
-
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('companyId');
-        if (stored) {
-          setCurrentCompanyId(parseInt(stored));
+  // Helper para resolver companyId desde prop, localStorage o token
+  const resolveCompanyId = (): number => {
+    if (companyId) return companyId;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('companyId');
+      if (stored && !Number.isNaN(parseInt(stored))) return parseInt(stored);
+      // Intentar desde el token JWT
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const cid = parseInt(payload.companyId || payload.CompanyId || payload.company_id || '');
+          if (!Number.isNaN(cid) && cid > 0) return cid;
         }
-      }
-    };
+      } catch {}
+    }
+    return 1; // fallback single-tenant
+  };
 
-    getCompanyId();
-  }, [companyId]);
+  // Inicializar companyId y cargar settings explícitamente
+  useEffect(() => {
+    const cid = resolveCompanyId();
+    setCurrentCompanyId(cid);
+    loadSettings(cid).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cargar datos del settings cuando esté disponible
   useEffect(() => {
@@ -80,15 +88,12 @@ export default function ContactNotificationSettings({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!currentCompanyId) {
-      console.warn('No company ID available for saving settings');
-      return;
-    }
+    const cid = currentCompanyId || resolveCompanyId();
 
     setIsSaving(true);
     
     try {
-      await updateSettings(currentCompanyId, formData);
+      await updateSettings(cid, formData);
       onSave?.();
     } catch (error) {
       console.error('Error saving notification settings:', error);
