@@ -654,8 +654,4 @@ export default function CustomerAddressBillingTab({
       </div>
     </div>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> dace17d (feat(customers): use payments-history endpoint and base currency in billing tab)
