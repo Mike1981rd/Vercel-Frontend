@@ -68,6 +68,14 @@ export interface CustomerDetail {
   recentDevices: CustomerDevice[];
   wishlistItems: CustomerWishlistItem[];
   coupons: CustomerCoupon[];
+  
+  // Legacy billing properties for backward compatibility
+  billingAddress?: string;
+  billingCity?: string;
+  billingState?: string;
+  billingCountry?: string;
+  billingPostalCode?: string;
+  billingApartment?: string;
 }
 
 export interface CustomerAddress {
@@ -82,6 +90,10 @@ export interface CustomerAddress {
   postalCode?: string;
   isDefault: boolean;
   createdAt: string;
+  
+  // Alternative property names for compatibility
+  addressLine1?: string;
+  addressLine2?: string;
   fullAddress?: string;
 }
 
@@ -522,6 +534,25 @@ class CustomerAPI {
     // Sort by date desc
     results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return results;
+  }
+
+  // Payments history by customerId via dedicated endpoint
+  async getCustomerPayments(customerId: number): Promise<Array<{ reservationId: number; amount: number; method: string; status: string; date: string; transactionId?: string }>> {
+    const response = await fetch(`${API_URL}/customers/${customerId}/payments-history`, { headers: this.getHeaders() });
+    if (!response.ok) {
+      // Fail gracefully returning empty list
+      return [];
+    }
+    const data = await response.json();
+    // Map backend DTO (camelCase via System.Text.Json) into the UI shape
+    return (data || []).map((p: any) => ({
+      reservationId: p.reservationId,
+      amount: p.amount,
+      method: p.paymentMethod,
+      status: p.status,
+      date: (p.paymentDate ? new Date(p.paymentDate).toISOString() : new Date().toISOString()),
+      transactionId: p.transactionId
+    }));
   }
 
   async deletePaymentMethod(customerId: number, paymentMethodId: number): Promise<void> {
