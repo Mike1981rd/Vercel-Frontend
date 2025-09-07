@@ -9,6 +9,7 @@ import {
   Mail, Phone, MapPin, Building, User
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { getApiEndpoint, getBaseUrl } from '@/lib/api-url';
 import { ExportModal } from '@/components/ExportModal';
 
@@ -82,6 +83,7 @@ const Avatar = ({ name, email, image }: { name?: string | null; email?: string |
 export default function ReservacionesPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { /*selectedCurrency,*/ baseCurrency } = useCurrency();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,6 +92,9 @@ export default function ReservacionesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [company, setCompany] = useState<Company | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState<string>('');
+  const [exportEndDate, setExportEndDate] = useState<string>('');
   const [message, setMessage] = useState<{type: 'success' | 'error'; text: string} | null>(null);
   const [primaryColor, setPrimaryColor] = useState('#22c55e');
 
@@ -158,19 +163,38 @@ export default function ReservacionesPage() {
       }
       // Si no hay filtro de fecha, no enviar parámetros de fecha
 
-      const response = await fetch(getApiEndpoint(`/reservations?${params}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const headers: Record<string, string> = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const query = params.toString();
+      const url = getApiEndpoint(query ? `/reservations?${query}` : '/reservations');
+      let response = await fetch(url, { headers });
 
       if (response.ok) {
         const data = await response.json();
         // Ensure data is an array
         setReservations(Array.isArray(data) ? data : []);
       } else {
-        console.error('Failed to fetch reservations:', response.status);
-        setReservations([]);
+        // Fallback retry: try without Authorization header and without querystring
+        try {
+          const fallbackUrl = getApiEndpoint('/reservations');
+          const fallbackResp = await fetch(fallbackUrl);
+          if (fallbackResp.ok) {
+            const data = await fallbackResp.json();
+            setReservations(Array.isArray(data) ? data : []);
+          } else {
+            // Only log as error for server errors; 4xx will be common if unauthorized
+            const status = response.status;
+            if (status >= 500) {
+              console.error('Failed to fetch reservations:', status);
+            }
+            setReservations([]);
+          }
+        } catch (e) {
+          // Network or other error
+          setReservations([]);
+        }
       }
     } catch (error) {
       console.error('Error fetching reservations:', error);
@@ -193,10 +217,92 @@ export default function ReservacionesPage() {
   };
 
   const handleExport = (format: string) => {
-    console.log('Exporting in format:', format);
-    setShowExportModal(false);
-    setMessage({ type: 'success', text: 'Exportación completada exitosamente' });
-    setTimeout(() => setMessage(null), 3000);
+    try {
+      // Parse date range
+      const start = exportStartDate ? new Date(exportStartDate) : null;
+      const end = exportEndDate ? new Date(exportEndDate) : null;
+      if (start) start.setHours(0,0,0,0);
+      if (end) end.setHours(23,59,59,999);
+
+      const inRange = (r: Reservation) => {
+        if (!start && !end) return true;
+        const d = new Date(r.checkInDate);
+        if (start && d < start) return false;
+        if (end && d > end) return false;
+        return true;
+      };
+
+      const rows = (reservations || []).filter(inRange);
+
+      if (rows.length === 0) {
+        setMessage({ type: 'error', text: 'No hay reservaciones en ese rango' });
+        setTimeout(() => setMessage(null), 2500);
+        return;
+      }
+
+      if (format === 'csv') {
+        const headers = ['ID','Cliente','Email','Habitación','Tipo','Check-In','Check-Out','Noches','Estado','Total'];
+        const data = rows.map(r => [
+          r.id,
+          r.guestName || r.customerName || '',
+          r.guestEmail || r.customerEmail || '',
+          r.roomName,
+          r.roomType,
+          new Date(r.checkInDate).toLocaleString(),
+          new Date(r.checkOutDate).toLocaleString(),
+          r.numberOfNights,
+          r.status,
+          (r.totalAmount || 0).toFixed(2)
+        ]);
+        let csv = '\uFEFF' + headers.join(',') + '\n';
+        data.forEach(row => { csv += row.map(c => `"${(c ?? '').toString().replace(/"/g,'""')}"`).join(',') + '\n'; });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `reservations_${exportStartDate || 'all'}_${exportEndDate || 'all'}.csv`;
+        a.click();
+      } else if (format === 'excel') {
+        let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+        html += '<head><meta charset="utf-8"><title>Reservations Export</title></head><body><table border="1">';
+        html += '<tr style="background:#f0f0f0;font-weight:bold;"><th>ID</th><th>Cliente</th><th>Email</th><th>Habitación</th><th>Tipo</th><th>Check-In</th><th>Check-Out</th><th>Noches</th><th>Estado</th><th>Total</th></tr>';
+        rows.forEach(r => {
+          html += `<tr><td>${r.id}</td><td>${(r.guestName||r.customerName)||''}</td><td>${(r.guestEmail||r.customerEmail)||''}</td>`
+               + `<td>${r.roomName}</td><td>${r.roomType}</td><td>${new Date(r.checkInDate).toLocaleString()}</td><td>${new Date(r.checkOutDate).toLocaleString()}</td>`
+               + `<td>${r.numberOfNights}</td><td>${r.status}</td><td>${(r.totalAmount||0).toFixed(2)}</td></tr>`;
+        });
+        html += '</table></body></html>';
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `reservations_${exportStartDate || 'all'}_${exportEndDate || 'all'}.xls`;
+        a.click();
+      } else if (format === 'pdf') {
+        const w = window.open('', '_blank');
+        if (!w) { alert('Permite ventanas emergentes para exportar PDF'); return; }
+        const body = rows.map(r => `<tr>
+          <td>${r.id}</td><td>${(r.guestName||r.customerName)||''}</td><td>${(r.guestEmail||r.customerEmail)||''}</td>
+          <td>${r.roomName}</td><td>${r.roomType}</td><td>${new Date(r.checkInDate).toLocaleString()}</td><td>${new Date(r.checkOutDate).toLocaleString()}</td>
+          <td>${r.numberOfNights}</td><td>${r.status}</td><td>${(r.totalAmount||0).toFixed(2)}</td>
+        </tr>`).join('');
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Reservations</title>
+          <style>body{font-family:Arial;padding:16px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:6px;font-size:12px;} th{background:#f0f0f0;}</style>
+        </head><body>
+          <h1>Reservaciones ${exportStartDate||''} ${exportEndDate?('→ '+exportEndDate):''}</h1>
+          <table><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Hab.</th><th>Tipo</th><th>Check-In</th><th>Check-Out</th><th>Noches</th><th>Estado</th><th>Total</th></tr></thead>
+          <tbody>${body}</tbody></table>
+        </body></html>`;
+        w.document.write(html);
+        w.document.close();
+        w.onload = () => w.print();
+      }
+
+      setShowExportModal(false);
+      setMessage({ type: 'success', text: 'Exportación completada' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (e) {
+      setMessage({ type: 'error', text: 'Error al exportar' });
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   // Filtered reservations
@@ -236,8 +342,19 @@ export default function ReservacionesPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    const currency = company?.currency || 'RD$';
-    return `${currency} ${amount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    try {
+      const currency = (company?.currency as any) || baseCurrency || 'DOP';
+      // Use code display and en-US for separators like 1,500.00
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        currencyDisplay: 'code',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount || 0);
+    } catch {
+      return `${(company?.currency || baseCurrency || 'DOP')} ${(amount || 0).toFixed(2)}`;
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -684,7 +801,7 @@ export default function ReservacionesPage() {
 
             {/* Export Button */}
             <button
-              onClick={() => setShowExportModal(true)}
+              onClick={() => setShowDateRangeModal(true)}
               disabled={saving || filteredReservations.length === 0}
               className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -851,6 +968,29 @@ export default function ReservacionesPage() {
         onExport={handleExport}
         primaryColor={primaryColor}
       />
+
+      {/* Date Range Modal for Export */}
+      {showDateRangeModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-96 max-w-[90%] shadow-2xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('reservations.export.selectRange', 'Selecciona el rango de fechas')}</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('reservations.export.from', 'Desde')}</label>
+                <input type="date" value={exportStartDate} onChange={(e) => setExportStartDate(e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">{t('reservations.export.to', 'Hasta')}</label>
+                <input type="date" value={exportEndDate} onChange={(e) => setExportEndDate(e.target.value)} className="w-full px-3 py-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setShowDateRangeModal(false)} className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">{t('common.cancel','Cancelar')}</button>
+              <button onClick={() => { setShowDateRangeModal(false); setShowExportModal(true); }} className="px-3 py-1.5 text-sm rounded-md text-white" style={{ backgroundColor: primaryColor }}>{t('common.continue','Continuar')}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Message Toast */}
       {message && (
