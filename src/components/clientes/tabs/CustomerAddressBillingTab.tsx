@@ -5,12 +5,8 @@ import { useI18n } from '@/contexts/I18nContext';
 import { CustomerDetailDto } from '@/types/customer';
 import { AddressBillingFormData } from '../CustomerDetail';
 import { customerAPI } from '@/lib/api/customers';
-<<<<<<< HEAD
-import { CountryFlag, countries } from '@/components/ui/CountryFlag';
-=======
 import { CountryFlag, countries } from '@/components/ui/CountryFlag';
 import { useCurrency } from '@/contexts/CurrencyContext';
->>>>>>> dace17d (feat(customers): use payments-history endpoint and base currency in billing tab)
 
 interface CustomerAddressBillingTabProps {
   customer: CustomerDetailDto | null;
@@ -33,21 +29,6 @@ export default function CustomerAddressBillingTab({
   isEditing,
   setIsEditing
 }: CustomerAddressBillingTabProps) {
-<<<<<<< HEAD
-  const { t } = useI18n();
-  const [useSameAddress, setUseSameAddress] = useState(false);
-  const [payments, setPayments] = useState<Array<{ reservationId: number; amount: number; method: string; status: string; date: string; transactionId?: string }>>([]);
-  const formatMoney = (amount?: number, currency?: string) => {
-    if (amount === undefined || amount === null) return '-';
-    try {
-      if (!currency) return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
-      return `${currency} ${formatted.replace(/[^0-9.,\s]/g, '').trim()}`;
-    } catch {
-      return `${currency || ''} ${amount.toFixed(2)}`.trim();
-    }
-  };
-=======
   const { t } = useI18n();
   const { baseCurrency } = useCurrency();
   const [useSameAddress, setUseSameAddress] = useState(false);
@@ -63,7 +44,6 @@ export default function CustomerAddressBillingTab({
       return `${currency || baseCurrency || ''} ${amount.toFixed(2)}`.trim();
     }
   };
->>>>>>> dace17d (feat(customers): use payments-history endpoint and base currency in billing tab)
   
   const handleAddressChange = (field: string, value: any) => {
     // Always update the first address (primary address)
@@ -196,11 +176,7 @@ export default function CustomerAddressBillingTab({
                     {payments.map((p, idx) => (
                       <tr key={idx}>
                         <td className="px-4 py-2">{new Date(p.date).toLocaleString()}</td>
-<<<<<<< HEAD
-                        <td className="px-4 py-2">{formatMoney(p.amount, customer?.preferredCurrency || 'DOP')}</td>
-=======
                         <td className="px-4 py-2">{formatMoney(p.amount, baseCurrency)}</td>
->>>>>>> dace17d (feat(customers): use payments-history endpoint and base currency in billing tab)
                         <td className="px-4 py-2">{p.method}</td>
                         <td className="px-4 py-2">{p.status}</td>
                         <td className="px-4 py-2">#{p.reservationId}</td>
