@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
+import { DateRangeProvider } from '@/contexts/DateRangeContext';
 import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
 
 interface DashboardLayoutProps {
@@ -112,6 +113,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
   }
 
   return (
+    <DateRangeProvider>
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden relative">
       {/* Sidebar - Use mobile state for mobile, collapsed state for desktop */}
       <Sidebar
@@ -156,6 +158,7 @@ export function DashboardLayout({ children, className }: DashboardLayoutProps) {
         onSettingsChange={handleSettingsChange}
       />
     </div>
+    </DateRangeProvider>
   );
 }
 

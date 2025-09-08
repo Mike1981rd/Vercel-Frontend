@@ -5,6 +5,7 @@ import { MetricCard } from '@/components/ui/MetricCard';
 import { useI18n } from '@/contexts/I18nContext';
 import { getApiEndpoint } from '@/lib/api-url';
 import { customersApi } from '@/lib/api/customers';
+import { useDateRange } from '@/contexts/DateRangeContext';
 
 interface ReservationDto {
   id: number;
@@ -17,6 +18,7 @@ interface ReservationDto {
 
 export function StatsGrid() {
   const { t } = useI18n();
+  const { range } = useDateRange();
 
   const [reservations, setReservations] = useState<ReservationDto[]>([]);
   const [totalCustomers, setTotalCustomers] = useState<number>(0);
@@ -31,12 +33,9 @@ export function StatsGrid() {
         const headers: Record<string, string> = {};
         if (token && token !== 'null' && token !== 'undefined') headers['Authorization'] = `Bearer ${token}`;
 
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         const params = new URLSearchParams({
-          startDate: monthStart.toISOString().split('T')[0],
-          endDate: monthEnd.toISOString().split('T')[0],
+          startDate: range.startDate.toISOString().split('T')[0],
+          endDate: range.endDate.toISOString().split('T')[0],
         });
         const url = getApiEndpoint(`/reservations?${params.toString()}`);
 
@@ -62,30 +61,27 @@ export function StatsGrid() {
       }
     };
     fetchData();
-  }, []);
+  }, [range.startDate, range.endDate]);
 
   const metrics = useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const isInCurrentMonth = (d: string) => {
+    const inRange = (d: string) => {
       const dt = new Date(d);
-      return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+      return dt >= new Date(range.startDate.getFullYear(), range.startDate.getMonth(), range.startDate.getDate()) &&
+             dt <= new Date(range.endDate.getFullYear(), range.endDate.getMonth(), range.endDate.getDate(), 23, 59, 59, 999);
     };
 
-    const monthReservations = reservations.filter(r => r.checkInDate && isInCurrentMonth(r.checkInDate));
-    const totalSales = monthReservations.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
-    const cancellations = monthReservations.filter(r => (r.status || '').toLowerCase().includes('cancel')).length;
-    const activeClients = new Set(monthReservations.map(r => r.customerEmail || 'unknown')).size - (monthReservations.some(r => !r.customerEmail) ? 1 : 0);
+    const rangeReservations = reservations.filter(r => r.checkInDate && inRange(r.checkInDate));
+    const totalSales = rangeReservations.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+    const cancellations = rangeReservations.filter(r => (r.status || '').toLowerCase().includes('cancel')).length;
+    const activeClients = new Set(rangeReservations.map(r => r.customerEmail || 'unknown')).size - (rangeReservations.some(r => !r.customerEmail) ? 1 : 0);
 
     return {
       totalSales,
-      reservations: monthReservations.length,
+      reservations: rangeReservations.length,
       cancellations,
       activeClients: Math.max(activeClients, 0),
     };
-  }, [reservations]);
+  }, [reservations, range.startDate, range.endDate]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

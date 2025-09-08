@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/Avatar';
 import { DateRangeSelector } from '@/components/ui/DateRangeSelector';
+import { useDateRange } from '@/contexts/DateRangeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import {
@@ -35,11 +36,7 @@ export function Navbar({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
-  const [selectedDateRange, setSelectedDateRange] = useState({
-    startDate: new Date(2025, 6, 6), // 6 de julio 2025
-    endDate: new Date(2025, 7, 4),   // 4 de agosto 2025
-  });
-  const [selectedQuickOption, setSelectedQuickOption] = useState<string>('last30days');
+  const { range, setRange, quickOption, setQuickOption } = useDateRange();
   
   const userMenuRef = useRef<HTMLDivElement>(null);
   const languageMenuRef = useRef<HTMLDivElement>(null);
@@ -102,16 +99,16 @@ export function Navbar({
   // Format date range for display
   const formatDateRange = () => {
     // If a quick option is selected, show the friendly name
-    if (selectedQuickOption && quickOptionsLabels[selectedQuickOption as keyof typeof quickOptionsLabels]) {
-      return quickOptionsLabels[selectedQuickOption as keyof typeof quickOptionsLabels];
+    if (quickOption && quickOptionsLabels[quickOption as keyof typeof quickOptionsLabels]) {
+      return quickOptionsLabels[quickOption as keyof typeof quickOptionsLabels];
     }
     
     // Otherwise show the date range
-    const start = selectedDateRange.startDate.toLocaleDateString('es-ES', { 
+    const start = range.startDate.toLocaleDateString('es-ES', { 
       day: 'numeric', 
       month: 'short' 
     });
-    const end = selectedDateRange.endDate.toLocaleDateString('es-ES', { 
+    const end = range.endDate.toLocaleDateString('es-ES', { 
       day: 'numeric', 
       month: 'short',
       year: 'numeric'
@@ -120,10 +117,10 @@ export function Navbar({
   };
 
   // Handle date range change
-  const handleDateRangeChange = (range: { startDate: Date; endDate: Date }, quickOption?: string) => {
-    setSelectedDateRange(range);
-    setSelectedQuickOption(quickOption || ''); // Clear quick option if custom range
-    console.log('Date range changed:', range, 'Quick option:', quickOption);
+  const handleDateRangeChange = (newRange: { startDate: Date; endDate: Date }, newQuickOption?: string) => {
+    setRange(newRange);
+    setQuickOption(newQuickOption || null);
+    console.log('Date range changed:', newRange, 'Quick option:', newQuickOption);
   };
 
   // Handle logout with loading state
@@ -340,8 +337,8 @@ export function Navbar({
       {/* Date Range Selector Modal */}
       <DateRangeSelector
         isOpen={dateRangeOpen}
-        value={selectedDateRange}
-        onChange={(range, quickOption) => handleDateRangeChange(range, quickOption)}
+        value={range}
+        onChange={(r, q) => handleDateRangeChange(r, q)}
         onClose={() => setDateRangeOpen(false)}
       />
     </header>
