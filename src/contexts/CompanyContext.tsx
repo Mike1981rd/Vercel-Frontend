@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '@/lib/api';
+import { getApiEndpoint } from '@/lib/api-url';
 
 interface Company {
   id: number;
@@ -73,8 +74,27 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
       const response = await api.get('/company/current');
       setCompany(response.data as Company);
     } catch (err: any) {
-      console.error('Error fetching company:', err);
-      setError(err.response?.data?.message || 'Failed to fetch company data');
+      const status = err?.response?.status;
+      // Fallback a endpoint público si /company/current falla (401/404/500)
+      if (status === 401 || status === 404 || status === 500) {
+        try {
+          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
+          const url = getApiEndpoint(`/company/${companyId}/public`);
+          const publicResp = await fetch(url, { cache: 'no-store' });
+          if (publicResp.ok) {
+            const data = await publicResp.json();
+            setCompany(data as Company);
+            setError(null);
+          } else {
+            setError('Failed to fetch company data');
+          }
+        } catch (e) {
+          setError('Failed to fetch company data');
+        }
+      } else {
+        console.error('Error fetching company:', err);
+        setError(err.response?.data?.message || 'Failed to fetch company data');
+      }
     } finally {
       setLoading(false);
     }
@@ -136,11 +156,24 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   // Fetch company data once on mount
   useEffect(() => {
     if (fetchInitiatedRef.current) return;
-    
+    fetchInitiatedRef.current = true;
     const token = localStorage.getItem('token');
     if (token) {
-      fetchInitiatedRef.current = true;
       fetchCompany();
+    } else {
+      // Sin token: intentar cargar datos públicos para páginas públicas/preview
+      (async () => {
+        try {
+          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
+          const url = getApiEndpoint(`/company/${companyId}/public`);
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            setCompany(data as Company);
+          }
+        } catch {}
+        setLoading(false);
+      })();
     }
   }, []);
 

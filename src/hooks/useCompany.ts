@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { getApiEndpoint } from '@/lib/api-url';
 
 export interface Company {
   id: number;
@@ -84,8 +85,26 @@ export function useCompany() {
       const response = await api.get('/company/current');
       setCompany(response.data as Company);
     } catch (err: any) {
-      console.error('Error fetching company:', err);
-      setError(err.response?.data?.message || 'Error loading company information');
+      const status = err?.response?.status;
+      if (status === 401 || status === 404 || status === 500) {
+        try {
+          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
+          const url = getApiEndpoint(`/company/${companyId}/public`);
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            setCompany(data as Company);
+            setError(null);
+          } else {
+            setError('Error loading company information');
+          }
+        } catch (e) {
+          setError('Error loading company information');
+        }
+      } else {
+        console.error('Error fetching company:', err);
+        setError(err.response?.data?.message || 'Error loading company information');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +181,24 @@ export function useCompany() {
 
   // Load company data on mount
   useEffect(() => {
-    fetchCompany();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchCompany();
+    } else {
+      // Cargar públicos si no hay token
+      (async () => {
+        try {
+          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
+          const url = getApiEndpoint(`/company/${companyId}/public`);
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            setCompany(data as Company);
+          }
+        } catch {}
+        setIsLoading(false);
+      })();
+    }
   }, []);
 
   return {
