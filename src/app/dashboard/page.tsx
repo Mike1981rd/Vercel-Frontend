@@ -27,10 +27,10 @@ export default function DashboardPage() {
 
       {/* Secondary Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Weekly Sales Chart */}
-        <div className="xl:col-span-1">
+        {/* Weekly Sales Chart (hidden: not relevant for rooms) */}
+        {/* <div className="xl:col-span-1">
           <WeeklySales />
-        </div>
+        </div> */}
 
         {/* Total Visits Breakdown */}
         <Card>

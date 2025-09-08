@@ -588,6 +588,26 @@ export default function PreviewRoomTitleHost({
                   </div>
                 </div>
 
+                {/* Mobile: Price per night (before calendar) */}
+                {isMobile && (
+                  <div 
+                    className="rounded-xl shadow-lg p-4 mb-3"
+                    style={{
+                      backgroundColor: colorScheme?.cardBackground || '#ffffff',
+                      border: `1px solid ${colorScheme?.border || '#e5e7eb'}`
+                    }}
+                  >
+                    <div className="flex items-baseline justify-center gap-2">
+                      <span className="text-lg font-semibold" style={{ color: colorScheme?.text || '#000000' }}>
+                        {new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 2 }).format(pricePerNight)}
+                      </span>
+                      <span className="text-xs" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
+                        / noche
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile Reservation Calendar Widget - Below Card */}
                 {config.showReservationWidget !== false && (
                   <div 
@@ -708,14 +728,20 @@ export default function PreviewRoomTitleHost({
                                   ${(isPast || isUnavailable) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'}
                                   ${isSelected ? 'bg-black text-white' : ''}
                                   ${isInRange ? 'bg-gray-200' : ''}
-                                  ${isToday && !isSelected ? 'font-bold' : ''}
-                                `}
+                                   ${isToday && !isSelected ? 'font-bold' : ''}
+                                relative`}
                                 style={{
                                   color: isSelected ? '#ffffff' : (isPast ? colorScheme?.text : colorScheme?.text || '#000000'),
                                   backgroundColor: isSelected ? '#000000' : (isInRange ? '#f3f4f6' : 'transparent')
                                 }}
                               >
                                 {day}
+                                {/* Strike-through for unavailable days (mobile) */}
+                                {isUnavailable && (
+                                  <span className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                                    <span className="w-6 h-[2px] bg-gray-400 rotate-45"></span>
+                                  </span>
+                                )}
                               </button>
                             );
                           }

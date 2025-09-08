@@ -527,7 +527,12 @@ export default function PreviewWhatsAppWidgetV2({
           {/* Chat Header */}
           <div
             className="p-4 text-white flex justify-between items-center flex-shrink-0"
-            style={{ backgroundColor: widgetConfig.primaryColor, paddingTop: isMobile ? ('calc(1rem + env(safe-area-inset-top))' as any) : undefined }}
+            style={{ 
+              backgroundColor: widgetConfig.primaryColor,
+              paddingTop: isMobile ? ('calc(1rem + env(safe-area-inset-top))' as any) : undefined,
+              paddingLeft: isMobile ? ('calc(1rem + env(safe-area-inset-left))' as any) : undefined,
+              paddingRight: isMobile ? ('calc(1rem + env(safe-area-inset-right))' as any) : undefined,
+            }}
           >
             <div className="flex items-center gap-2">
               <WhatsAppIcon size={20} />

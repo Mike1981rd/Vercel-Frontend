@@ -1,43 +1,99 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MetricCard } from '@/components/ui/MetricCard';
-import { Avatar } from '@/components/ui/Avatar';
 import { useI18n } from '@/contexts/I18nContext';
+import { getApiEndpoint } from '@/lib/api-url';
+import { customersApi } from '@/lib/api/customers';
 
-// Mock data for dashboard metrics
-const mockMetrics = {
-  sales: 42500,
-  salesChange: 18.4,
-  orders: 8458,
-  ordersChange: 15.8,
-  reservations: 2450,
-  reservationsChange: -25.6,
-  activeClients: 1422,
-  activeClientsChange: 12.2,
-  cancellations: 145,
-  cancellationsChange: -8.1,
-  visits: 76500,
-  visitsChange: 22.3,
-};
-
-// Mock user avatars (like in Materialize design)
-const avatarUsers = [
-  { name: 'Ana García', image: null },
-  { name: 'Carlos Martínez', image: null },
-  { name: 'María López', image: null },
-];
+interface ReservationDto {
+  id: number;
+  checkInDate: string;
+  checkOutDate: string;
+  totalAmount: number;
+  status: string;
+  customerEmail?: string;
+}
 
 export function StatsGrid() {
   const { t } = useI18n();
-  
+
+  const [reservations, setReservations] = useState<ReservationDto[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch reservations (current month) and total customers
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const headers: Record<string, string> = {};
+        if (token && token !== 'null' && token !== 'undefined') headers['Authorization'] = `Bearer ${token}`;
+
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const params = new URLSearchParams({
+          startDate: monthStart.toISOString().split('T')[0],
+          endDate: monthEnd.toISOString().split('T')[0],
+        });
+        const url = getApiEndpoint(`/reservations?${params.toString()}`);
+
+        let resp = await fetch(url, { headers });
+        if (!resp.ok) {
+          // Fallback without auth
+          resp = await fetch(getApiEndpoint('/reservations'));
+        }
+        const resData = await resp.json();
+        setReservations(Array.isArray(resData) ? resData : []);
+
+        // Customers total (paged endpoint returns totalCount)
+        try {
+          const customers = await customersApi.getCustomers({ page: 1, size: 1 });
+          setTotalCustomers(customers.totalCount);
+        } catch {
+          setTotalCustomers(0);
+        }
+      } catch (e) {
+        console.error('StatsGrid fetch error', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const metrics = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const isInCurrentMonth = (d: string) => {
+      const dt = new Date(d);
+      return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+    };
+
+    const monthReservations = reservations.filter(r => r.checkInDate && isInCurrentMonth(r.checkInDate));
+    const totalSales = monthReservations.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+    const cancellations = monthReservations.filter(r => (r.status || '').toLowerCase().includes('cancel')).length;
+    const activeClients = new Set(monthReservations.map(r => r.customerEmail || 'unknown')).size - (monthReservations.some(r => !r.customerEmail) ? 1 : 0);
+
+    return {
+      totalSales,
+      reservations: monthReservations.length,
+      cancellations,
+      activeClients: Math.max(activeClients, 0),
+    };
+  }, [reservations]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* Sales Overview */}
+      {/* Total Sales (month) */}
       <MetricCard
         title={t('dashboard.totalSales', 'Total Sales')}
-        value={mockMetrics.sales}
-        change={mockMetrics.salesChange}
+        value={metrics.totalSales}
+        change={0}
         format="currency"
         icon={
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -47,38 +103,11 @@ export function StatsGrid() {
         description={t('dashboard.totalSalesMonth', 'Total ventas del mes')}
       />
 
-      {/* Orders */}
-      <MetricCard
-        title={t('dashboard.newOrders', 'New Orders')}
-        value={mockMetrics.orders}
-        change={mockMetrics.ordersChange}
-        format="number"
-        icon={
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM13 13a3 3 0 11-6 0 3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
-        }
-        description={t('dashboard.productOrders', 'Órdenes de productos')}
-        avatar={
-          <div className="flex -space-x-2">
-            {avatarUsers.slice(0, 2).map((user, index) => (
-              <Avatar
-                key={index}
-                name={user.name}
-                src={user.image || undefined}
-                size="sm"
-                className="border-2 border-white"
-              />
-            ))}
-          </div>
-        }
-      />
-
-      {/* Reservations */}
+      {/* Reservations (month) */}
       <MetricCard
         title={t('dashboard.reservations', 'Reservations')}
-        value={mockMetrics.reservations}
-        change={mockMetrics.reservationsChange}
+        value={metrics.reservations}
+        change={0}
         format="number"
         icon={
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -89,11 +118,11 @@ export function StatsGrid() {
         color="success"
       />
 
-      {/* Active Clients */}
+      {/* Active Clients (total) */}
       <MetricCard
         title={t('dashboard.activeClients', 'Active Clients')}
-        value={mockMetrics.activeClients}
-        change={mockMetrics.activeClientsChange}
+        value={totalCustomers}
+        change={0}
         format="number"
         icon={
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -101,20 +130,13 @@ export function StatsGrid() {
           </svg>
         }
         description={t('dashboard.activeClientsMonth', 'Clientes activos este mes')}
-        avatar={
-          <Avatar
-            name="Cliente Premium"
-            src={undefined}
-            size="md"
-          />
-        }
       />
 
-      {/* Cancellations */}
+      {/* Cancellations (month) */}
       <MetricCard
         title={t('dashboard.cancellations', 'Cancellations')}
-        value={mockMetrics.cancellations}
-        change={mockMetrics.cancellationsChange}
+        value={metrics.cancellations}
+        change={0}
         format="number"
         icon={
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -125,11 +147,11 @@ export function StatsGrid() {
         color="error"
       />
 
-      {/* Visits */}
+      {/* Website Visits (placeholder) */}
       <MetricCard
         title={t('dashboard.websiteVisits', 'Website Visits')}
-        value={mockMetrics.visits}
-        change={mockMetrics.visitsChange}
+        value={0}
+        change={0}
         format="number"
         icon={
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
