@@ -132,7 +132,7 @@ export function StatsGrid() {
     const cancellations = reservations.filter(r => (r.status || '').toLowerCase().includes('cancel') && r.checkInDate && inRangeByCheckIn(r.checkInDate)).length;
 
     // Sales fallback: use reservation totalAmount only as last resort; true paid revenue should come from stats
-    const totalSales = stats?.totalRevenue ?? confirmedByCheckIn.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+    const totalSales = confirmedByCheckIn.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
     const activeClients = new Set(confirmedByCheckIn.map(r => r.customerEmail || 'unknown')).size - (confirmedByCheckIn.some(r => !r.customerEmail) ? 1 : 0);
 
     return {
