@@ -186,14 +186,23 @@ export default function PreviewWhatsAppWidgetV2({
   }, [messages]);
 
   // Prevent background scroll on mobile when chat overlay is open
+  const originalOverflowRef = useRef<string>('');
+  
   useEffect(() => {
     if (!isMobile) return;
-    const prevOverflow = typeof document !== 'undefined' ? document.body.style.overflow : '';
+    
     if (showChat) {
-      try { document.body.style.overflow = 'hidden'; } catch {}
+      // Guardar el overflow original
+      originalOverflowRef.current = document.body.style.overflow || '';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restaurar el overflow original
+      document.body.style.overflow = originalOverflowRef.current || 'auto';
     }
+    
+    // Cleanup crítico al desmontar
     return () => {
-      try { document.body.style.overflow = prevOverflow; } catch {}
+      document.body.style.overflow = originalOverflowRef.current || 'auto';
     };
   }, [showChat, isMobile]);
 
@@ -496,8 +505,25 @@ export default function PreviewWhatsAppWidgetV2({
 
   // Handle close chat
   const handleCloseChat = () => {
-    setShowChat(false);
-    setShowChatContent(false);
+    // Quitar focus de cualquier input activo
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    // Resetear scroll y zoom en móvil
+    if (isMobile) {
+      // Resetear cualquier zoom o desplazamiento
+      window.scrollTo(0, 0);
+      
+      // Esperar un momento para que el teclado se cierre
+      setTimeout(() => {
+        setShowChat(false);
+        setShowChatContent(false);
+      }, 100);
+    } else {
+      setShowChat(false);
+      setShowChatContent(false);
+    }
   };
 
   // Don't render if not enabled or not visible for device
@@ -579,9 +605,15 @@ export default function PreviewWhatsAppWidgetV2({
                     placeholder="Tu nombre"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isMobile ? 'text-base' : 'text-sm'
+                    } ${
                       formErrors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
+                    style={{
+                      fontSize: isMobile ? '16px' : '14px',
+                      WebkitTextSizeAdjust: '100%'
+                    }}
                   />
                   {formErrors.name && (
                     <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
@@ -596,9 +628,15 @@ export default function PreviewWhatsAppWidgetV2({
                     placeholder="Tu correo electrónico"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isMobile ? 'text-base' : 'text-sm'
+                    } ${
                       formErrors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
+                    style={{
+                      fontSize: isMobile ? '16px' : '14px',
+                      WebkitTextSizeAdjust: '100%'
+                    }}
                   />
                   {formErrors.email && (
                     <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
@@ -691,7 +729,13 @@ export default function PreviewWhatsAppWidgetV2({
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder={widgetConfig.placeholderText}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500"
+                      className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg ${
+                        isMobile ? 'text-base' : 'text-sm'
+                      } focus:outline-none focus:border-green-500`}
+                      style={{
+                        fontSize: isMobile ? '16px' : '14px',
+                        WebkitTextSizeAdjust: '100%'
+                      }}
                       disabled={conversationClosed}
                     />
                     <button
