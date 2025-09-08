@@ -156,24 +156,13 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   // Fetch company data once on mount
   useEffect(() => {
     if (fetchInitiatedRef.current) return;
-    fetchInitiatedRef.current = true;
     const token = localStorage.getItem('token');
     if (token) {
+      fetchInitiatedRef.current = true;
       fetchCompany();
     } else {
-      // Sin token: intentar cargar datos públicos para páginas públicas/preview
-      (async () => {
-        try {
-          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
-          const url = getApiEndpoint(`/company/${companyId}/public`);
-          const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            const data = await res.json();
-            setCompany(data as Company);
-          }
-        } catch {}
-        setLoading(false);
-      })();
+      // Sin token: no forzar llamadas públicas aquí para no romper login
+      setLoading(false);
     }
   }, []);
 

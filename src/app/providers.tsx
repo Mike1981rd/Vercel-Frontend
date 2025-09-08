@@ -36,13 +36,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
       // Respect existing token if already set by a layout
       if (!w.__MAPBOX_TOKEN) {
+        // In development, do not attempt backend fallback to avoid noisy console/network
+        if (process.env.NODE_ENV === 'development') return;
         const envToken = (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '').trim();
         if (envToken) {
           w.__MAPBOX_TOKEN = envToken;
           return;
         }
 
-        // Fallback: fetch safe public token (Mapbox pk.*) from backend
+        // Avoid calling backend from protected routes (e.g., login/dashboard)
+        const path = (w.location?.pathname || '').toLowerCase();
+        const protectedPrefixes = [
+          '/login', '/dashboard', '/editor', '/empresa', '/roles-usuarios', '/clientes',
+          '/reservaciones', '/metodos-pago', '/colecciones', '/productos', '/paginas', '/politicas', '/dominios'
+        ];
+        if (protectedPrefixes.some(p => path.startsWith(p))) return;
+
+        // Fallback: fetch safe public token (Mapbox pk.*) from backend (public site only)
         const apiUrl = getApiUrl();
         fetch(`${apiUrl}/company/1/public`)
           .then(r => r.ok ? r.json() : null)
@@ -52,7 +62,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               w.__MAPBOX_TOKEN = token;
             }
           })
-          .catch(() => {/* silent */});
+          .catch(() => {/* silent: do not log on dev */});
       }
     } catch {/* ignore */}
   }, []);

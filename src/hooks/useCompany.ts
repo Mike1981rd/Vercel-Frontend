@@ -185,19 +185,8 @@ export function useCompany() {
     if (token) {
       fetchCompany();
     } else {
-      // Cargar públicos si no hay token
-      (async () => {
-        try {
-          const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
-          const url = getApiEndpoint(`/company/${companyId}/public`);
-          const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            const data = await res.json();
-            setCompany(data as Company);
-          }
-        } catch {}
-        setIsLoading(false);
-      })();
+      // Evitar llamadas públicas automáticas en login para no ensuciar consola
+      setIsLoading(false);
     }
   }, []);
 
