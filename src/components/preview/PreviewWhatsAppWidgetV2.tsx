@@ -527,7 +527,7 @@ export default function PreviewWhatsAppWidgetV2({
           {/* Chat Header */}
           <div
             className="p-4 text-white flex justify-between items-center flex-shrink-0"
-            style={{ backgroundColor: widgetConfig.primaryColor }}
+            style={{ backgroundColor: widgetConfig.primaryColor, paddingTop: isMobile ? ('calc(1rem + env(safe-area-inset-top))' as any) : undefined }}
           >
             <div className="flex items-center gap-2">
               <WhatsAppIcon size={20} />
@@ -538,12 +538,10 @@ export default function PreviewWhatsAppWidgetV2({
             </div>
             <button
               onClick={handleCloseChat}
-              className="text-white hover:opacity-80"
+              aria-label="Cerrar chat"
+              className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/30 text-white/90 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              Cerrar
             </button>
           </div>
 

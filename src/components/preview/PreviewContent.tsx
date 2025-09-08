@@ -403,6 +403,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                   theme={theme}
                   deviceView={normalizedDeviceView}
                   isEditor={false}
+                  roomSlug={roomSlug}
                 />
               )}
               
@@ -412,6 +413,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                   theme={theme}
                   deviceView={normalizedDeviceView}
                   isEditor={false}
+                  roomSlug={roomSlug}
                 />
               )}
               

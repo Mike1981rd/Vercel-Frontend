@@ -1,9 +1,9 @@
 // Helper functions for room API calls
 import { getApiUrl } from '@/lib/api-url';
 
-export async function fetchRoomData(companyId: string | number) {
-  // Check if we have a specific room slug in localStorage (set by the preview page)
-  const roomSlug = localStorage.getItem('currentRoomSlug');
+export async function fetchRoomData(companyId: string | number, slugOverride?: string) {
+  // Prefer an explicit slug prop; fallback to localStorage for backward-compat
+  const roomSlug = slugOverride || localStorage.getItem('currentRoomSlug') || undefined;
   
   try {
     let response;

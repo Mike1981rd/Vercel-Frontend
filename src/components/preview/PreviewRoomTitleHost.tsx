@@ -50,13 +50,15 @@ interface PreviewRoomTitleHostProps {
   deviceView?: 'desktop' | 'mobile' | 'tablet';
   isEditor?: boolean;
   theme?: any;
+  roomSlug?: string;
 }
 
 export default function PreviewRoomTitleHost({ 
   config, 
   deviceView, 
   isEditor = false,
-  theme 
+  theme,
+  roomSlug,
 }: PreviewRoomTitleHostProps) {
   const router = useRouter();
   
@@ -90,6 +92,9 @@ export default function PreviewRoomTitleHost({
   const [companyCurrency, setCompanyCurrency] = useState<string>('USD');
   const [showMobileCalendar, setShowMobileCalendar] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
+  const [showPriceDetails, setShowPriceDetails] = useState(false);
+  const [availabilityMobile, setAvailabilityMobile] = useState<Record<string, { available: boolean }>>({});
+  const [loadingAvailabilityMobile, setLoadingAvailabilityMobile] = useState(false);
 
   // Currency: use global CurrencyContext so selector affects this page
   const { selectedCurrency, baseCurrency, convertPrice, formatPrice: formatCurrency } = useCurrency();
@@ -135,42 +140,34 @@ export default function PreviewRoomTitleHost({
   useEffect(() => {
     const loadRoomData = async () => {
       const companyId = localStorage.getItem('companyId') || '1';
-      
       setLoading(true);
       try {
-        // First fetch company data to get currency
         const apiUrl = getApiUrl();
-        const companyIdVal = localStorage.getItem('companyId') || '1';
-        const companyResponse = await fetch(`${apiUrl}/company/${companyIdVal}/public`);
-        if (companyResponse.ok) {
-          const companyData = await companyResponse.json();
+        // Fetch company and room in parallel
+        const companyIdVal = companyId;
+        const [companyResp, room] = await Promise.all([
+          fetch(`${apiUrl}/company/${companyIdVal}/public`).catch(() => undefined),
+          fetchRoomData(companyId, roomSlug || undefined),
+        ]);
+        if (companyResp && companyResp.ok) {
+          const companyData = await companyResp.json();
           setCompanyCurrency((companyData.currency || 'USD').toUpperCase());
         }
-        
-        // Then fetch room data using the helper function
-        const data = await fetchRoomData(companyId);
-        if (data) {
-          console.log('Room data fetched:', data); // Debug log
-          console.log('Base Price:', data.basePrice); // Debug log for price
-          setRoomData(data);
-          
-          // If room has hostId, fetch complete host data
-          if (data.hostId) {
-            try {
-              const hostResponse = await fetch(`${apiUrl}/hosts/by-room/${data.id}`);
-              if (hostResponse.ok) {
-                const fullHostData = await hostResponse.json();
-                console.log('Full host data fetched:', fullHostData); // Debug log
-                setHostData(fullHostData);
-              }
-            } catch (hostError) {
-              console.error('Error fetching host data:', hostError);
-              // Use basic host data from room if available
-              setHostData(data.host);
-            }
-          } else if (data.host) {
-            // Use host data from room if no hostId
-            setHostData(data.host);
+        if (room) {
+          setRoomData(room);
+          // Fetch host data (non-blocking)
+          if (room.hostId) {
+            fetch(`${apiUrl}/hosts/by-room/${room.id}`)
+              .then(r => (r.ok ? r.json() : null))
+              .then(fullHost => {
+                if (fullHost) setHostData(fullHost);
+                else if (room.host) setHostData(room.host);
+              })
+              .catch(() => {
+                if (room.host) setHostData(room.host);
+              });
+          } else if (room.host) {
+            setHostData(room.host);
           }
         }
       } catch (error) {
@@ -179,15 +176,74 @@ export default function PreviewRoomTitleHost({
         setLoading(false);
       }
     };
+    if (config.enabled) loadRoomData();
+  }, [config.enabled, roomSlug]);
 
-    // Fetch in both editor and preview modes when enabled
-    if (config.enabled) {
-      loadRoomData();
+  // Load availability for inline mobile calendar (public/preview)
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!roomData?.id) return;
+      try {
+        setLoadingAvailabilityMobile(true);
+        const start = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), 1);
+        const end = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth() + 2, 0);
+        const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+        const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+        const companyId = (typeof window !== 'undefined' && localStorage.getItem('companyId')) || '1';
+        const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5266/api';
+        const res = await fetch(`${api}/availability/public/room/${roomData.id}?startDate=${startStr}&endDate=${endStr}&companyId=${companyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const map: Record<string, { available: boolean }>= {};
+          if (Array.isArray(data)) {
+            data.forEach((d: any) => {
+              const dateKey = String(d.date || '').split('T')[0];
+              const isAvail = !!(d.isAvailable && !d.hasReservation && !d.isBlocked);
+              if (dateKey) map[dateKey] = { available: isAvail };
+            });
+          } else if (data?.availabilityData && Array.isArray(data.availabilityData)) {
+            data.availabilityData.forEach((d: any) => {
+              const dateKey = String(d.date || '').split('T')[0];
+              const isAvail = !!(d.isAvailable && !d.hasReservation && !d.isBlocked);
+              if (dateKey) map[dateKey] = { available: isAvail };
+            });
+          }
+          setAvailabilityMobile(map);
+        } else {
+          setAvailabilityMobile({});
+        }
+      } catch (e) {
+        console.error('Mobile availability error:', e);
+        setAvailabilityMobile({});
+      } finally {
+        setLoadingAvailabilityMobile(false);
+      }
+    };
+    if (isMobile && config.showReservationWidget !== false && roomData?.id) {
+      fetchAvailability();
     }
-  }, [config.enabled]);
+  }, [isMobile, config.showReservationWidget, roomData?.id, currentCalendarMonth]);
 
   if (!config.enabled) {
     return null;
+  }
+
+  // Avoid flashing default template texts on public/preview: show skeleton until real room data is ready
+  if (!isEditor && loading && !roomData) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-2/3 mb-3"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="h-48 bg-gray-200 rounded mb-6"></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Parse SleepingArrangements if available
@@ -317,7 +373,7 @@ export default function PreviewRoomTitleHost({
   const totalBeforeTaxes = totalNights > 0 
     ? (pricePerNight * totalNights) + cleaningFee + serviceFee
     : 0;
-  const [showPriceDetails, setShowPriceDetails] = useState(false);
+  // moved above to keep hook order consistent across renders
 
   // Handle date selection from calendar
   const handleDatesSelect = (checkIn: Date, checkOut: Date) => {
@@ -624,12 +680,14 @@ export default function PreviewRoomTitleHost({
                             const isCheckOut = checkOutDate?.toDateString() === date.toDateString();
                             const isInRange = checkInDate && checkOutDate && date > checkInDate && date < checkOutDate;
                             const isSelected = isCheckIn || isCheckOut;
+                            const dateKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                            const isUnavailable = availabilityMobile[dateKey] ? !availabilityMobile[dateKey].available : false;
 
                             days.push(
                               <button
                                 key={day}
                                 onClick={() => {
-                                  if (isPast) return;
+                                  if (isPast || isUnavailable) return;
                                   
                                   if (!checkInDate || (checkInDate && checkOutDate)) {
                                     // Start new selection
@@ -644,10 +702,10 @@ export default function PreviewRoomTitleHost({
                                     setCheckOutDate(null);
                                   }
                                 }}
-                                disabled={isPast}
+                                disabled={isPast || isUnavailable}
                                 className={`
                                   h-9 rounded-full text-sm font-medium transition-all
-                                  ${isPast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'}
+                                  ${(isPast || isUnavailable) ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100'}
                                   ${isSelected ? 'bg-black text-white' : ''}
                                   ${isInRange ? 'bg-gray-200' : ''}
                                   ${isToday && !isSelected ? 'font-bold' : ''}
