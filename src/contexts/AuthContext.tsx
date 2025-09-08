@@ -45,9 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await authService.getCurrentUser(token);
       setUser(currentUser);
     } catch (error: any) {
-      // Si es un 404 o 401, es normal cuando no hay usuario autenticado
-      if (error.response?.status === 404 || error.response?.status === 401) {
-        // No mostrar error en consola para estos casos
+      // Si es 404 o 401: caso normal (no autenticado)
+      if (error?.response?.status === 404 || error?.response?.status === 401) {
+        authService.clearAuth();
+      } else if (error?.response?.status === 500) {
+        // En algunos entornos el endpoint /auth/me devuelve 500 en vez de 401.
+        // No ensuciar la consola ni romper la app: considerar como no autenticado.
         authService.clearAuth();
       } else {
         console.error('Error al verificar autenticación:', error);
