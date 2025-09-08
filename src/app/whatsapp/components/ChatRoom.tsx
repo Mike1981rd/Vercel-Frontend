@@ -97,36 +97,47 @@ export default function ChatRoom() {
 
   // Removed fetchUserAvatar until /whatsapp/account/info exists on backend
 
+  // Add debounce timer ref to prevent rapid conversation switching
+  const conversationSelectTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  
   const handleConversationSelect = (conversation: Conversation) => {
-    // Debug in development: inspect selected conversation and avatar
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        // @ts-ignore
-        (window as any).__lastSelectedConversation = conversation;
-        console.log('[ChatRoom] Selected conversation:', conversation);
-      } catch {}
+    // Clear any pending conversation selection
+    if (conversationSelectTimeoutRef.current) {
+      clearTimeout(conversationSelectTimeoutRef.current);
     }
-    setSelectedConversation(conversation);
-    // Mark as read immediately in UI and notify sidebar
-    try {
-      window.dispatchEvent(new CustomEvent('whatsapp:conversationOpened', { detail: { id: conversation.id } }));
-    } catch {}
-    // Fire-and-forget backend mark-as-read
-    (async () => {
-      try {
-        const token = localStorage.getItem('token');
-        await fetch(getApiEndpoint(`/whatsapp/conversations/${conversation.id}/read`), {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token || ''}` },
-        });
-      } catch (e) {
-        console.warn('[ChatRoom] mark-as-read failed (non-blocking)', e);
+    
+    // Add small debounce to prevent rapid switching issues
+    conversationSelectTimeoutRef.current = setTimeout(() => {
+      // Debug in development: inspect selected conversation and avatar
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          // @ts-ignore
+          (window as any).__lastSelectedConversation = conversation;
+          console.log('[ChatRoom] Selected conversation:', conversation);
+        } catch {}
       }
-    })();
-    // On mobile, switch to chat view when selecting a conversation
-    if (window.innerWidth < 768) {
-      setShowMobileView('chat');
-    }
+      setSelectedConversation(conversation);
+      // Mark as read immediately in UI and notify sidebar
+      try {
+        window.dispatchEvent(new CustomEvent('whatsapp:conversationOpened', { detail: { id: conversation.id } }));
+      } catch {}
+      // Fire-and-forget backend mark-as-read
+      (async () => {
+        try {
+          const token = localStorage.getItem('token');
+          await fetch(getApiEndpoint(`/whatsapp/conversations/${conversation.id}/read`), {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token || ''}` },
+          });
+        } catch (e) {
+          console.warn('[ChatRoom] mark-as-read failed (non-blocking)', e);
+        }
+      })();
+      // On mobile, switch to chat view when selecting a conversation
+      if (window.innerWidth < 768) {
+        setShowMobileView('chat');
+      }
+    }, 150); // 150ms debounce
   };
 
   const handleBackToList = () => {

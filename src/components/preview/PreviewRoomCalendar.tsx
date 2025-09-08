@@ -54,8 +54,8 @@ export default function PreviewRoomCalendar({
     return null;
   }
 
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -123,12 +123,12 @@ export default function PreviewRoomCalendar({
           <div>
             <h2 className="text-sm font-medium flex items-center gap-1.5">
               <CalendarDays className="w-4 h-4 text-gray-600" />
-              {config.title || 'Availability'}
+              {config.title || 'Disponibilidad'}
             </h2>
             {config.subtitle && (
               <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
                 <Info className="w-2.5 h-2.5" />
-                {config.subtitle || `Minimum ${config.minimumNights} nights`}
+                {config.subtitle || `Mínimo ${config.minimumNights} noches`}
               </p>
             )}
           </div>
@@ -142,7 +142,7 @@ export default function PreviewRoomCalendar({
               }}
               className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 px-3 py-1 rounded-full hover:bg-gray-100 transition"
             >
-              Clear
+              Limpiar
               <X className="w-3 h-3" />
             </button>
           )}
@@ -177,7 +177,7 @@ export default function PreviewRoomCalendar({
           <div className="p-2">
             <div className="grid grid-cols-7 gap-0">
               {/* Ultra-minimalist weekday headers */}
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+              {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map(day => (
                 <div key={day} className="text-center text-[9px] font-medium text-gray-400 h-4">
                   {day}
                 </div>
@@ -234,14 +234,14 @@ export default function PreviewRoomCalendar({
               <div className="flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-3">
                   <span className="text-gray-600">
-                    ${config.pricePerNight} × {nights}n
+                    ${config.pricePerNight} × {nights} noches
                   </span>
                   <span className="font-medium text-gray-900">
                     Total: ${totalWithFees}
                   </span>
                 </div>
                 <button className="px-3 py-1 bg-blue-600 text-white text-[10px] font-medium rounded-md hover:bg-blue-700 transition">
-                  Reserve
+                  Reservar
                 </button>
               </div>
             </div>
@@ -254,16 +254,16 @@ export default function PreviewRoomCalendar({
             <div className="flex items-center justify-between text-[10px]">
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">
-                  In: <span className="font-medium text-gray-900">
-                    {selectedCheckIn.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  Entrada: <span className="font-medium text-gray-900">
+                    {selectedCheckIn.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
                   </span>
                 </span>
                 {selectedCheckOut && (
                   <>
                     <span className="text-gray-400">→</span>
                     <span className="text-gray-600">
-                      Out: <span className="font-medium text-gray-900">
-                        {selectedCheckOut.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      Salida: <span className="font-medium text-gray-900">
+                        {selectedCheckOut.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
                       </span>
                     </span>
                   </>
@@ -271,7 +271,7 @@ export default function PreviewRoomCalendar({
               </div>
               {nights > 0 && (
                 <span className="font-medium text-blue-600">
-                  {nights}n
+                  {nights} noches
                 </span>
               )}
             </div>

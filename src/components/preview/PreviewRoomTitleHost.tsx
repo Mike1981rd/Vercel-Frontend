@@ -493,13 +493,13 @@ export default function PreviewRoomTitleHost({
                     
                     {/* Property Details - Right below title */}
                     <div className="flex items-center justify-center gap-2 text-xs mb-2" style={{ color: colorScheme?.text || '#000000' }}>
-                      <span>{displayData.guests} guests</span>
+                      <span>{displayData.guests} huéspedes</span>
                       <span style={{ opacity: 0.4 }}>·</span>
-                      <span>{displayData.bedrooms} bedrooms</span>
+                      <span>{displayData.bedrooms} habitaciones</span>
                       <span style={{ opacity: 0.4 }}>·</span>
-                      <span>{displayData.beds} beds</span>
+                      <span>{displayData.beds} camas</span>
                       <span style={{ opacity: 0.4 }}>·</span>
-                      <span>{displayData.baths} bath{displayData.baths > 1 ? 's' : ''}</span>
+                      <span>{displayData.baths} baño{displayData.baths > 1 ? 's' : ''}</span>
                     </div>
                     
                     {/* Location - After property details */}
@@ -554,10 +554,10 @@ export default function PreviewRoomTitleHost({
                       {/* Host Info */}
                       <div>
                         <div className="text-sm font-semibold" style={{ color: colorScheme?.text || '#000000' }}>
-                          Hosted by {displayData.hostName}
+                          Anfitrión: {displayData.hostName}
                         </div>
                         <div className="text-xs" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                          {displayData.hostYears} years hosting
+                          {displayData.hostYears} años como anfitrión
                         </div>
                       </div>
                     </div>
@@ -572,14 +572,14 @@ export default function PreviewRoomTitleHost({
                           </span>
                         </div>
                         <span className="text-xs" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                          ({displayData.reviewCount} reviews)
+                          ({displayData.reviewCount} reseñas)
                         </span>
                         {config.showSuperhost !== false && displayData.hostSuperhost && (
                           <>
                             <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
                             <div className="flex items-center gap-1">
                               <Medal className="w-3 h-3" style={{ color: '#FF385C' }} />
-                              <span className="text-xs" style={{ color: colorScheme?.text || '#000000' }}>Superhost</span>
+                              <span className="text-xs" style={{ color: colorScheme?.text || '#000000' }}>Súper anfitrión</span>
                             </div>
                           </>
                         )}
@@ -622,19 +622,19 @@ export default function PreviewRoomTitleHost({
                     {checkInDate && checkOutDate ? (
                       <div className="mb-4">
                         <h3 className="text-sm font-semibold mb-1" style={{ color: colorScheme?.text || '#000000' }}>
-                          {differenceInDays(checkOutDate, checkInDate)} night{differenceInDays(checkOutDate, checkInDate) > 1 ? 's' : ''} in {displayData.location.split(',')[0]}
+                          {differenceInDays(checkOutDate, checkInDate)} noche{differenceInDays(checkOutDate, checkInDate) > 1 ? 's' : ''} en {displayData.location.split(',')[0]}
                         </h3>
                         <p className="text-xs" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                          {format(checkInDate, 'MMM d, yyyy')} - {format(checkOutDate, 'MMM d, yyyy')}
+                          {format(checkInDate, 'd MMM yyyy')} - {format(checkOutDate, 'd MMM yyyy')}
                         </p>
                       </div>
                     ) : (
                       <div className="mb-4">
                         <h3 className="text-sm font-semibold" style={{ color: colorScheme?.text || '#000000' }}>
-                          Select dates
+                          Seleccionar fechas
                         </h3>
                         <p className="text-xs" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                          Add your travel dates for exact pricing
+                          Agrega tus fechas de viaje para precios exactos
                         </p>
                       </div>
                     )}
@@ -670,7 +670,7 @@ export default function PreviewRoomTitleHost({
 
                       {/* Days of Week */}
                       <div className="grid grid-cols-7 gap-1 mb-2">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                        {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day, idx) => (
                           <div key={idx} className="text-center text-xs font-medium py-1" style={{ color: colorScheme?.text || '#000000', opacity: 0.5 }}>
                             {day}
                           </div>
@@ -761,7 +761,7 @@ export default function PreviewRoomTitleHost({
                         className="text-sm font-medium underline mb-4"
                         style={{ color: colorScheme?.text || '#000000' }}
                       >
-                        Clear dates
+                        Limpiar fechas
                       </button>
                     )}
 
@@ -772,7 +772,7 @@ export default function PreviewRoomTitleHost({
                         <div className="space-y-2 mb-4">
                           <div className="flex justify-between text-sm">
                           <span style={{ color: colorScheme?.text || '#000000' }}>
-                            {formatPriceDisplay(pricePerNight)} x {totalNights} nights
+                            {formatPriceDisplay(pricePerNight)} x {totalNights} noches
                           </span>
                             <span style={{ color: colorScheme?.text || '#000000' }}>
                               {formatPriceDisplay(pricePerNight * totalNights)}
@@ -780,7 +780,7 @@ export default function PreviewRoomTitleHost({
                           </div>
                           {cleaningFee > 0 && (
                             <div className="flex justify-between text-sm">
-                              <span style={{ color: colorScheme?.text || '#000000' }}>Cleaning fee</span>
+                              <span style={{ color: colorScheme?.text || '#000000' }}>Tarifa de limpieza</span>
                               <span style={{ color: colorScheme?.text || '#000000' }}>
                                 {formatPriceDisplay(cleaningFee)}
                               </span>
@@ -788,7 +788,7 @@ export default function PreviewRoomTitleHost({
                           )}
                           {serviceFee > 0 && (
                             <div className="flex justify-between text-sm">
-                              <span style={{ color: colorScheme?.text || '#000000' }}>Service fee</span>
+                              <span style={{ color: colorScheme?.text || '#000000' }}>Tarifa de servicio</span>
                               <span style={{ color: colorScheme?.text || '#000000' }}>
                                 {formatPriceDisplay(serviceFee)}
                               </span>
@@ -811,11 +811,11 @@ export default function PreviewRoomTitleHost({
                             color: colorScheme?.solidButtonText || '#ffffff'
                           }}
                         >
-                          {config.reserveButtonText || 'Reserve'}
+                          {config.reserveButtonText || 'Reservar'}
                         </button>
                         
                         <p className="text-center text-xs mt-2" style={{ color: colorScheme?.text || '#000000', opacity: 0.6 }}>
-                          You won't be charged yet
+                          No se te cobrará todavía
                         </p>
                       </div>
                     )}
@@ -846,7 +846,7 @@ export default function PreviewRoomTitleHost({
                             <Star className="w-4 h-4 fill-current" style={{ color: colorScheme?.text || '#000000' }} />
                             <span className="font-semibold" style={{ color: colorScheme?.text || '#000000' }}>{displayData.rating}</span>
                             <span style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                              ({displayData.reviewCount} reviews)
+                              ({displayData.reviewCount} reseñas)
                             </span>
                             <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
                           </>
@@ -854,7 +854,7 @@ export default function PreviewRoomTitleHost({
                         {config.showSuperhost !== false && displayData.hostSuperhost && (
                           <>
                             <Medal className="w-4 h-4" style={{ color: colorScheme?.text || '#000000' }} />
-                            <span style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>Superhost</span>
+                            <span style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>Súper anfitrión</span>
                             <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
                           </>
                         )}
@@ -870,13 +870,13 @@ export default function PreviewRoomTitleHost({
                     className={`flex ${config.alignment === 'center' ? 'justify-center' : ''} items-center gap-2 text-base mb-6`}
                     style={{ fontSize: fontSizes.details }}
                   >
-                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.guests} guests</span>
+                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.guests} huéspedes</span>
                     <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
-                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.bedrooms} bedrooms</span>
+                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.bedrooms} habitaciones</span>
                     <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
-                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.beds} beds</span>
+                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.beds} camas</span>
                     <span style={{ color: colorScheme?.text || '#000000', opacity: 0.4 }}>·</span>
-                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.baths} bath{displayData.baths > 1 ? 's' : ''}</span>
+                    <span style={{ color: colorScheme?.text || '#000000' }}>{displayData.baths} baño{displayData.baths > 1 ? 's' : ''}</span>
                   </div>
 
                   {/* Host info */}
@@ -917,10 +917,10 @@ export default function PreviewRoomTitleHost({
                     )}
                     <div className={getAlignment()}>
                       <div className="font-semibold text-base" style={{ color: colorScheme?.text || '#000000' }}>
-                        Hosted by {displayData.hostName}
+                        Anfitrión: {displayData.hostName}
                       </div>
                       <div className="text-sm" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                        {displayData.hostYears} years hosting
+                        {displayData.hostYears} años como anfitrión
                       </div>
                     </div>
                   </div>
@@ -990,20 +990,20 @@ export default function PreviewRoomTitleHost({
                       {
                         id: 'great-location',
                         icon: 'MapPin',
-                        title: 'Great location',
-                        description: '90% of recent guests gave the location a 5-star rating.'
+                        title: 'Excelente ubicación',
+                        description: 'El 90% de los huéspedes recientes le dieron 5 estrellas a la ubicación.'
                       },
                       {
                         id: 'self-checkin',
                         icon: 'Key',
-                        title: 'Self check-in',
-                        description: 'Check yourself in with the keypad.'
+                        title: 'Check-in automático',
+                        description: 'Ingresa con el teclado numérico.'
                       },
                       {
                         id: 'superhost',
                         icon: 'Award',
-                        title: `${displayData.hostName} is a Superhost`,
-                        description: 'Superhosts are experienced, highly rated hosts.'
+                        title: `${displayData.hostName} es un Súper anfitrión`,
+                        description: 'Los Súper anfitriones son anfitriones experimentados con excelentes calificaciones.'
                       }
                     ];
 
@@ -1056,7 +1056,7 @@ export default function PreviewRoomTitleHost({
                         {formatPriceDisplay(totalNights > 0 ? totalBeforeTaxes : pricePerNight)}
                       </span>
                       <span className="text-sm" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                        {totalNights > 0 ? `for ${totalNights} night${totalNights > 1 ? 's' : ''}` : 'per night'}
+                        {totalNights > 0 ? `por ${totalNights} noche${totalNights > 1 ? 's' : ''}` : 'por noche'}
                       </span>
                     </div>
                   </div>
@@ -1075,10 +1075,10 @@ export default function PreviewRoomTitleHost({
                       }}
                     >
                       <label className="text-[10px] font-semibold uppercase block" style={{ color: colorScheme?.text || '#000000' }}>
-                        CHECK-IN
+                        ENTRADA
                       </label>
                       <div className="text-sm mt-1" style={{ color: colorScheme?.text || '#000000' }}>
-                        {checkInDate ? format(checkInDate, 'M/d/yyyy') : 'Add date'}
+                        {checkInDate ? format(checkInDate, 'd/M/yyyy') : 'Agregar fecha'}
                       </div>
                     </div>
                     <div 
@@ -1093,10 +1093,10 @@ export default function PreviewRoomTitleHost({
                       }}
                     >
                       <label className="text-[10px] font-semibold uppercase block" style={{ color: colorScheme?.text || '#000000' }}>
-                        CHECKOUT
+                        SALIDA
                       </label>
                       <div className="text-sm mt-1" style={{ color: colorScheme?.text || '#000000' }}>
-                        {checkOutDate ? format(checkOutDate, 'M/d/yyyy') : 'Add date'}
+                        {checkOutDate ? format(checkOutDate, 'd/M/yyyy') : 'Agregar fecha'}
                       </div>
                     </div>
                   </div>
@@ -1110,10 +1110,10 @@ export default function PreviewRoomTitleHost({
                     >
                       <div>
                         <label className="text-[10px] font-semibold uppercase block" style={{ color: colorScheme?.text || '#000000' }}>
-                          GUESTS
+                          HUÉSPEDES
                         </label>
                         <span className="text-sm mt-1 block" style={{ color: colorScheme?.text || '#000000' }}>
-                          {guests} guest{guests > 1 ? 's' : ''}
+                          {guests} huésped{guests > 1 ? 'es' : ''}
                         </span>
                       </div>
                       <ChevronDown className="w-5 h-5" style={{ color: colorScheme?.text || '#000000' }} />
@@ -1126,7 +1126,7 @@ export default function PreviewRoomTitleHost({
                         style={{ borderColor: colorScheme?.border || '#e5e7eb' }}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">Guests</span>
+                          <span className="text-sm font-medium">Huéspedes</span>
                           <div className="flex items-center gap-3">
                             <button 
                               onClick={(e) => {
@@ -1154,7 +1154,7 @@ export default function PreviewRoomTitleHost({
                           </div>
                         </div>
                         <div className="mt-3 text-xs text-gray-500">
-                          Maximum {roomData?.maxOccupancy || 4} guests
+                          Máximo {roomData?.maxOccupancy || 4} huéspedes
                         </div>
                       </div>
                     )}
@@ -1171,12 +1171,12 @@ export default function PreviewRoomTitleHost({
                       fontSize: '16px'
                     }}
                   >
-                    {config.reserveButtonText || 'Reserve'}
+                    {config.reserveButtonText || 'Reservar'}
                   </button>
 
                   {/* Won't be charged message */}
                   <p className="text-center text-sm mt-2 mb-4" style={{ color: colorScheme?.text || '#000000', opacity: 0.7 }}>
-                    You won't be charged yet
+                    No se te cobrará todavía
                   </p>
 
                   {/* Price breakdown */}
@@ -1186,25 +1186,25 @@ export default function PreviewRoomTitleHost({
                       className="w-full flex items-center justify-between text-sm hover:underline"
                       style={{ color: colorScheme?.text || '#000000' }}
                     >
-                      <span>{formatPriceDisplay(pricePerNight)} x {totalNights} nights</span>
+                      <span>{formatPriceDisplay(pricePerNight)} x {totalNights} noches</span>
                       <span>{formatPriceDisplay(pricePerNight * totalNights)}</span>
                     </button>
                     
                     {showPriceDetails && (
                       <>
                         <div className="flex items-center justify-between text-sm" style={{ color: colorScheme?.text || '#000000' }}>
-                          <span className="underline cursor-pointer">Cleaning fee</span>
+                          <span className="underline cursor-pointer">Tarifa de limpieza</span>
                           <span>{formatPriceDisplay(cleaningFee)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm" style={{ color: colorScheme?.text || '#000000' }}>
-                          <span className="underline cursor-pointer">Service fee</span>
+                          <span className="underline cursor-pointer">Tarifa de servicio</span>
                           <span>{formatPriceDisplay(serviceFee)}</span>
                         </div>
                       </>
                     )}
                     
                     <div className="pt-3 border-t flex items-center justify-between font-semibold" style={{ borderColor: colorScheme?.border || '#e5e7eb' }}>
-                      <span style={{ color: colorScheme?.text || '#000000' }}>Total before taxes</span>
+                      <span style={{ color: colorScheme?.text || '#000000' }}>Total antes de impuestos</span>
                       <span style={{ color: colorScheme?.text || '#000000' }}>{formatPriceDisplay(totalBeforeTaxes)}</span>
                     </div>
                   </div>

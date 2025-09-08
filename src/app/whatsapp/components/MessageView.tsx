@@ -62,7 +62,13 @@ export default function MessageView({
   const openViewer = (url: string, type: 'image' | 'video') => setViewer({ open: true, url, type });
   const closeViewer = () => setViewer({ open: false, url: null, type: null });
 
+  // Add conversation ID tracking to prevent race conditions
+  const currentConversationIdRef = useRef<string>(conversation.id);
+  
   useEffect(() => {
+    // Update current conversation ID
+    currentConversationIdRef.current = conversation.id;
+    
     // Reset per-conversation state to avoid cross-contamination
     prevFingerprintRef.current = null;
     const cached = messagesCacheRef?.current?.[conversation.id];
@@ -90,11 +96,23 @@ export default function MessageView({
       setLoading(true);
     }
     loadMessages();
-    // Quick retries only when first-time open (no cache)
+    // Quick retries only when first-time open (no cache) - reduced and with increasing delays
     if (!hasCache) {
-      setTimeout(() => loadMessages(true), 900);
-      setTimeout(() => loadMessages(true), 2500);
-      setTimeout(() => loadMessages(true), 5000);
+      const retry1 = setTimeout(() => loadMessages(true), 1000);
+      const retry2 = setTimeout(() => loadMessages(true), 3000);
+      // Clean up timeouts if conversation changes
+      return () => {
+        clearTimeout(retry1);
+        clearTimeout(retry2);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+        if (abortRef.current) {
+          abortRef.current.abort();
+          abortRef.current = null;
+        }
+      };
     }
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -234,6 +252,9 @@ export default function MessageView({
 
   // Load messages from API (mocks only when NEXT_PUBLIC_USE_MOCKS==='true')
   const loadMessages = async (force: boolean = false) => {
+    // Capture the conversation ID at the start of the request
+    const requestConversationId = conversation.id;
+    
     if (inFlightRef.current && !force) {
       refreshPendingRef.current = true;
       return;
@@ -262,6 +283,13 @@ export default function MessageView({
 
         if (res.ok) {
           const data = await res.json();
+          
+          // IMPORTANT: Validate this response is for the current conversation
+          if (requestConversationId !== currentConversationIdRef.current) {
+            if (DEBUG) console.log('[MessageView] Ignoring stale response for conversation:', requestConversationId, 'current:', currentConversationIdRef.current);
+            return;
+          }
+          
           const raw = firstLoadRef.current
             ? (Array.isArray(data?.data?.messages) ? data.data.messages : [])
             : (Array.isArray(data?.data)
@@ -374,8 +402,14 @@ export default function MessageView({
               if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
               return; // do not update state or scroll
             }
+            // Final validation before updating state
+            if (requestConversationId !== currentConversationIdRef.current) {
+              if (DEBUG) console.log('[MessageView] Aborting update - conversation changed during processing');
+              return;
+            }
+            
             prevFingerprintRef.current = fingerprint;
-            if (messagesCacheRef) messagesCacheRef.current[conversation.id] = merged;
+            if (messagesCacheRef) messagesCacheRef.current[requestConversationId] = merged;
             setMessages(merged);
             firstLoadRef.current = false;
             // Notify sidebar to reorder based on recent activity
