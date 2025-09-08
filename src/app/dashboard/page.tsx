@@ -145,7 +145,8 @@ export default function DashboardPage() {
 
       {/* Live Visitors and Marketing Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Marketing & Sales */}
+        {/* Marketing & Sales (hidden per request) */}
+        {false && (
         <Card>
           <CardHeader>
             <CardTitle>{t('dashboard.marketingSales', 'Marketing & Sales')}</CardTitle>
@@ -213,6 +214,7 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Live Visitors */}
         <Card className="xl:col-span-2">

@@ -85,10 +85,13 @@ export default function ReservacionesPage() {
   const { t } = useI18n();
   const { /*selectedCurrency,*/ baseCurrency } = useCurrency();
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // initial page load spinner
+  const [isFetching, setIsFetching] = useState(false); // subsequent fetches (keep UI)
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all'); // all | today | week | month | custom
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [company, setCompany] = useState<Company | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -139,7 +142,8 @@ export default function ReservacionesPage() {
 
   const fetchReservations = async () => {
     try {
-      setLoading(true);
+      // For first load show full spinner, for subsequent loads keep table
+      setIsFetching(true);
       const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (filter !== 'all') params.append('status', filter);
@@ -160,6 +164,9 @@ export default function ReservacionesPage() {
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
         params.append('startDate', monthStart.toISOString().split('T')[0]);
         params.append('endDate', monthEnd.toISOString().split('T')[0]);
+      } else if (dateFilter === 'custom') {
+        if (customStartDate) params.append('startDate', customStartDate);
+        if (customEndDate) params.append('endDate', customEndDate);
       }
       // Si no hay filtro de fecha, no enviar parámetros de fecha
 
@@ -189,18 +196,17 @@ export default function ReservacionesPage() {
             if (status >= 500) {
               console.error('Failed to fetch reservations:', status);
             }
-            setReservations([]);
+            // Keep previous data to avoid blanking UI
           }
         } catch (e) {
-          // Network or other error
-          setReservations([]);
+          // Network or other error, keep previous data
         }
       }
     } catch (error) {
       console.error('Error fetching reservations:', error);
-      setReservations([]);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -212,8 +218,27 @@ export default function ReservacionesPage() {
 
   const handleDateFilterChange = (newDateFilter: string) => {
     if (newDateFilter !== dateFilter) {
+      // Reset custom when switching presets
+      if (newDateFilter !== 'custom') {
+        setCustomStartDate('');
+        setCustomEndDate('');
+      }
       setDateFilter(newDateFilter);
     }
+  };
+
+  const applyCustomDateRange = () => {
+    // Basic validation: ensure at least one of the dates is set; if both set, start <= end
+    if (customStartDate && customEndDate) {
+      const s = new Date(customStartDate);
+      const e = new Date(customEndDate);
+      if (s > e) {
+        setMessage({ type: 'error', text: t('reservations.errors.invalidRange', 'Rango de fechas inválido') });
+        setTimeout(() => setMessage(null), 2500);
+        return;
+      }
+    }
+    setDateFilter('custom');
   };
 
   const handleExport = (format: string) => {
@@ -799,15 +824,36 @@ export default function ReservacionesPage() {
               </div>
             </div>
 
+            {/* Custom Date Range */}
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2">
+                <input type="date" value={customStartDate} onChange={(e) => setCustomStartDate(e.target.value)} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm dark:text-white" />
+                <span className="text-gray-500">→</span>
+                <input type="date" value={customEndDate} onChange={(e) => setCustomEndDate(e.target.value)} className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm dark:text-white" />
+                <button onClick={applyCustomDateRange} className="px-3 py-2 rounded-xl text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">{t('common.apply','Aplicar')}</button>
+                {(customStartDate || customEndDate) && (
+                  <button onClick={() => { setCustomStartDate(''); setCustomEndDate(''); setDateFilter('all'); }} className="px-3 py-2 rounded-xl text-sm text-gray-500 hover:text-gray-700">{t('common.clear','Limpiar')}</button>
+                )}
+              </div>
+            </div>
+
             {/* Export Button */}
-            <button
+            <div className="flex items-center gap-3">
+              {isFetching && (
+                <div className="hidden sm:flex items-center text-xs text-gray-500 dark:text-gray-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600 mr-2" />
+                  {t('common.loading','Cargando...')}
+                </div>
+              )}
+              <button
               onClick={() => setShowDateRangeModal(true)}
               disabled={saving || filteredReservations.length === 0}
               className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               <span>{t('common.export', 'Exportar')}</span>
-            </button>
+              </button>
+            </div>
           </div>
 
           {/* Status Pills */}

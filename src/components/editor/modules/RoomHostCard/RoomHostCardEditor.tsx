@@ -8,6 +8,11 @@ interface RoomHostCardConfig {
   enabled: boolean;
   title: string;
   showMessageButton?: boolean;
+  // Card visibility settings
+  showHostIdCard?: boolean;
+  showBioCard?: boolean;
+  showDetailsStatsCard?: boolean;
+  showAttributesHobbiesCard?: boolean;
   // Style settings
   buttonColor: string;
   buttonTextColor: string;
@@ -30,6 +35,11 @@ const getDefaultConfig = (): RoomHostCardConfig => ({
   enabled: true,
   title: 'Meet your Host',
   showMessageButton: true,
+  // Card visibility defaults
+  showHostIdCard: true,
+  showBioCard: true,
+  showDetailsStatsCard: true,
+  showAttributesHobbiesCard: true,
   // Style defaults
   buttonColor: '#2563eb',
   buttonTextColor: '#ffffff',
@@ -160,6 +170,53 @@ export default function RoomHostCardEditor({ sectionId }: RoomHostCardEditorProp
               onChange={(e) => handleChange('showMessageButton', e.target.checked)}
               className="rounded"
             />
+          </div>
+
+          {/* Card Visibility Settings */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-gray-600 uppercase">Card Visibility</h3>
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Host ID Card</label>
+                <input
+                  type="checkbox"
+                  checked={localConfig.showHostIdCard !== false}
+                  onChange={(e) => handleChange('showHostIdCard', e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Bio Card</label>
+                <input
+                  type="checkbox"
+                  checked={localConfig.showBioCard !== false}
+                  onChange={(e) => handleChange('showBioCard', e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Details & Stats Card</label>
+                <input
+                  type="checkbox"
+                  checked={localConfig.showDetailsStatsCard !== false}
+                  onChange={(e) => handleChange('showDetailsStatsCard', e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Attributes & Hobbies Card</label>
+                <input
+                  type="checkbox"
+                  checked={localConfig.showAttributesHobbiesCard !== false}
+                  onChange={(e) => handleChange('showAttributesHobbiesCard', e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Color Settings */}

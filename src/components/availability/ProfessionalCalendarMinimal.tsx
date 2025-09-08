@@ -399,6 +399,7 @@ export default function ProfessionalCalendarMinimal({
           {/* Month navigation */}
           <div className="flex items-center gap-1 md:gap-2">
             <button
+              type="button"
               onClick={() => {
                 const prev = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
                 setCurrentMonth(prev);
@@ -413,6 +414,7 @@ export default function ProfessionalCalendarMinimal({
             </span>
             
             <button
+              type="button"
               onClick={() => {
                 const next = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
                 setCurrentMonth(next);

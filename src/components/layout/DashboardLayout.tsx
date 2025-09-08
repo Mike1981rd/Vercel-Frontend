@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
-import { DateRangeProvider } from '@/contexts/DateRangeContext';
 import { ThemeCustomizer } from '@/components/ui/ThemeCustomizer';
+import { DateRangeProvider } from '@/contexts/DateRangeContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

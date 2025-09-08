@@ -21,6 +21,11 @@ interface RoomHostCardConfig {
   work?: string;
   location?: string;
   showMessageButton?: boolean;
+  // Card visibility settings
+  showHostIdCard?: boolean;
+  showBioCard?: boolean;
+  showDetailsStatsCard?: boolean;
+  showAttributesHobbiesCard?: boolean;
   // Style settings
   buttonColor?: string;
   buttonTextColor?: string;
@@ -202,12 +207,22 @@ export default function PreviewRoomHostCard({
         {displayData.title || 'Meet your Host'}
       </h2>
 
+      {/* Check if all cards are hidden */}
+      {config.showHostIdCard === false && 
+       config.showBioCard === false && 
+       config.showDetailsStatsCard === false && 
+       config.showAttributesHobbiesCard === false ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No host information cards are enabled. Please enable at least one card to display host information.</p>
+        </div>
+      ) : (
       <div className="space-y-8">
         {/* Top section with host card and other info cards */}
         <div className={`${isMobile ? 'flex flex-col gap-6' : 'grid lg:grid-cols-2 gap-8'}`}>
           {/* Left column - Host cards stacked */}
           <div className={`flex flex-col gap-4 ${isMobile ? 'w-full' : ''}`}>
             {/* Host ID card */}
+            {config.showHostIdCard !== false && (
             <div 
               className="shadow-xl overflow-hidden flex-1"
               style={{ 
@@ -298,8 +313,10 @@ export default function PreviewRoomHostCard({
                 </div>
               </div>
             </div>
+            )}
 
             {/* Bio Card - Matching height */}
+            {config.showBioCard !== false && (
             <div 
               className="shadow-xl overflow-hidden flex-1"
               style={{ 
@@ -328,12 +345,14 @@ export default function PreviewRoomHostCard({
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* Right column - Other info cards */}
           <div className={`flex flex-col gap-4 ${isMobile ? 'w-full' : ''}`}>
 
           {/* Details & Stats Card */}
+          {config.showDetailsStatsCard !== false && (
           <div className={`bg-gradient-to-br from-purple-50 via-white to-pink-50 rounded-xl shadow-xl ${isMobile ? 'p-4' : 'p-5'} flex-1`} style={{ minHeight: isMobile ? '150px' : '180px' }}>
             <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-2 gap-4'}`}>
               {/* Left Column - Personal Info */}
@@ -391,8 +410,10 @@ export default function PreviewRoomHostCard({
               </div>
             </div>
           </div>
+          )}
 
             {/* Attributes & Hobbies Card */}
+            {config.showAttributesHobbiesCard !== false && (
             <div className={`bg-gradient-to-br from-yellow-50 via-white to-orange-50 rounded-xl shadow-xl ${isMobile ? 'p-4' : 'p-5'} flex-1`} style={{ minHeight: isMobile ? '150px' : '180px' }}>
                 {(displayData.attributes && displayData.attributes.length > 0) || (displayData.hobbies && displayData.hobbies.length > 0) ? (
                   <>
@@ -427,6 +448,7 @@ export default function PreviewRoomHostCard({
                   </div>
                 )}
               </div>
+              )}
 
           </div>
         </div>
@@ -458,6 +480,7 @@ export default function PreviewRoomHostCard({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

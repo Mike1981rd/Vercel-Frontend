@@ -236,10 +236,11 @@ export default function AvailabilityDashboard() {
                 Nueva Reservación
               </button>
               */}
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+              <button type="button" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                 <Download className="w-5 h-5" />
               </button>
               <button 
+                type="button"
                 onClick={() => setSettingsModalOpen(true)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Configuración de disponibilidad"
@@ -392,16 +393,16 @@ export default function AvailabilityDashboard() {
                         ) : (
                           <>
                             {/* Opción para deseleccionar */}
-                            <div
-                              onClick={() => {
-                                setSelectedRoom(null);
-                                setDropdownOpen(false);
-                                setSearchRoom('');
-                              }}
-                              className="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-600 dark:text-gray-400"
-                            >
-                              Ninguna habitación seleccionada
-                            </div>
+                              <div
+                                onClick={() => {
+                                  setSelectedRoom(null);
+                                  setDropdownOpen(false);
+                                  setSearchRoom('');
+                                }}
+                                className="px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-600 dark:text-gray-400"
+                              >
+                                Ninguna habitación seleccionada
+                              </div>
                             
                             {/* Lista de habitaciones */}
                             {filteredRoomsForDropdown.map(room => (
@@ -438,6 +439,7 @@ export default function AvailabilityDashboard() {
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {rooms.map(room => (
                       <button
+                        type="button"
                         key={room.id}
                         onClick={() => setSelectedRoom(room)}
                         className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
@@ -529,6 +531,7 @@ export default function AvailabilityDashboard() {
                   Configuración de Disponibilidad
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setSettingsModalOpen(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
@@ -548,7 +551,7 @@ export default function AvailabilityDashboard() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Actualiza los precios de múltiples habitaciones y fechas a la vez
                 </p>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+                <button type="button" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
                   Configurar Precios
                 </button>
               </div>
@@ -624,7 +627,7 @@ export default function AvailabilityDashboard() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Visualiza reportes detallados de ocupación, ingresos y tendencias
                 </p>
-                <button className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm">
+                <button type="button" className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm">
                   Ver Estadísticas
                 </button>
               </div>
@@ -667,6 +670,7 @@ export default function AvailabilityDashboard() {
                   Períodos de Bloqueo Activos
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setViewBlockPeriodsOpen(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
@@ -721,6 +725,7 @@ export default function AvailabilityDashboard() {
                         </div>
                         <div className="flex gap-2">
                           <button 
+                            type="button"
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400"
                             title="Editar"
                           >
@@ -729,6 +734,7 @@ export default function AvailabilityDashboard() {
                             </svg>
                           </button>
                           <button 
+                            type="button"
                             className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg text-red-600"
                             title="Eliminar"
                           >
@@ -745,6 +751,7 @@ export default function AvailabilityDashboard() {
               
               <div className="mt-6 flex justify-end">
                 <button
+                  type="button"
                   onClick={() => {
                     setViewBlockPeriodsOpen(false);
                     setBlockPeriodModalOpen(true);

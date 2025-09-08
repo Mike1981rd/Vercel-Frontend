@@ -185,6 +185,18 @@ export default function PreviewWhatsAppWidgetV2({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Prevent background scroll on mobile when chat overlay is open
+  useEffect(() => {
+    if (!isMobile) return;
+    const prevOverflow = typeof document !== 'undefined' ? document.body.style.overflow : '';
+    if (showChat) {
+      try { document.body.style.overflow = 'hidden'; } catch {}
+    }
+    return () => {
+      try { document.body.style.overflow = prevOverflow; } catch {}
+    };
+  }, [showChat, isMobile]);
+
   // Poll for new messages
   useEffect(() => {
     if (!showChat || !showChatContent || conversationClosed) {
@@ -500,7 +512,9 @@ export default function PreviewWhatsAppWidgetV2({
   const chatPosition = widgetConfig.position === 'bottom-right'
     ? 'bottom-20 right-0'
     : 'bottom-20 left-0';
-  const chatWidth = isMobile ? 'w-screen h-screen fixed inset-0' : 'w-96 h-[600px]';
+  // On mobile, avoid using w-screen/h-screen to prevent horizontal scrollbars (100vw issue).
+  // Use fixed inset-0 with w-full/h-full so safe areas and scrollbars don't cause overflow.
+  const chatWidth = isMobile ? 'fixed inset-0 w-full h-full' : 'w-96 h-[600px]';
 
   return (
     <div className={`fixed ${buttonPosition} z-50`}>
@@ -521,7 +535,7 @@ export default function PreviewWhatsAppWidgetV2({
       {/* Chat Popup */}
       {showChat && (
         <div
-          className={`${isMobile ? '' : 'absolute'} ${chatPosition} ${chatWidth} bg-white rounded-lg shadow-xl z-50 flex flex-col`}
+          className={`${isMobile ? '' : 'absolute'} ${isMobile ? '' : chatPosition} ${chatWidth} bg-white rounded-lg shadow-xl z-50 flex flex-col`}
           style={{ borderTop: `4px solid ${widgetConfig.primaryColor}` }}
         >
           {/* Chat Header */}

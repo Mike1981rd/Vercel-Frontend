@@ -21,6 +21,7 @@ export function StatsGrid() {
   const { range } = useDateRange();
 
   const [reservations, setReservations] = useState<ReservationDto[]>([]);
+  const [stats, setStats] = useState<{ totalReservations: number; cancelledReservations: number; totalRevenue: number } | null>(null);
   const [totalCustomers, setTotalCustomers] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -33,19 +34,51 @@ export function StatsGrid() {
         const headers: Record<string, string> = {};
         if (token && token !== 'null' && token !== 'undefined') headers['Authorization'] = `Bearer ${token}`;
 
+        // Respect external date range (dual calendar). Default to last 30 days.
+        const rangeStart = range.startDate;
+        const rangeEnd = range.endDate;
         const params = new URLSearchParams({
-          startDate: range.startDate.toISOString().split('T')[0],
-          endDate: range.endDate.toISOString().split('T')[0],
+          startDate: rangeStart.toISOString().split('T')[0],
+          endDate: rangeEnd.toISOString().split('T')[0],
         });
         const url = getApiEndpoint(`/reservations?${params.toString()}`);
+        const statsUrl = getApiEndpoint(`/reservations/stats?${params.toString()}`);
 
-        let resp = await fetch(url, { headers });
-        if (!resp.ok) {
-          // Fallback without auth
-          resp = await fetch(getApiEndpoint('/reservations'));
+        // Prefer aggregated stats for accuracy and performance
+        try {
+          const statsResp = await fetch(statsUrl, { headers });
+          if (statsResp.ok) {
+            const payload = await statsResp.json();
+            const data = payload?.data || payload;
+            if (data && typeof data === 'object') {
+              setStats({
+                totalReservations: Number(data.totalReservations) || 0,
+                cancelledReservations: Number(data.cancelledReservations) || 0,
+                totalRevenue: Number(
+                  // Prefer paidRevenue if available; fallback to totalRevenue
+                  (data.paidRevenue ?? data.totalPaidRevenue ?? data.totalRevenue)
+                ) || 0,
+              });
+            }
+          }
+        } catch (e) {
+          // Non-fatal; will fall back to list computation below
+          console.warn('Stats endpoint unavailable, falling back to list.', e);
         }
-        const resData = await resp.json();
-        setReservations(Array.isArray(resData) ? resData : []);
+
+        // Also fetch list for secondary displays or as fallback
+        try {
+          let resp = await fetch(url, { headers });
+          if (!resp.ok) {
+            // If unauthorized/missing token, don't retry without auth (endpoint requires auth)
+            throw new Error(`Reservations fetch failed: ${resp.status}`);
+          }
+          const resData = await resp.json();
+          setReservations(Array.isArray(resData) ? resData : []);
+        } catch (e) {
+          console.error('Reservations fetch error', e);
+          setReservations([]);
+        }
 
         // Customers total (paged endpoint returns totalCount)
         try {
@@ -64,24 +97,51 @@ export function StatsGrid() {
   }, [range.startDate, range.endDate]);
 
   const metrics = useMemo(() => {
-    const inRange = (d: string) => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const isInCurrentMonth = (d: string) => {
       const dt = new Date(d);
-      return dt >= new Date(range.startDate.getFullYear(), range.startDate.getMonth(), range.startDate.getDate()) &&
-             dt <= new Date(range.endDate.getFullYear(), range.endDate.getMonth(), range.endDate.getDate(), 23, 59, 59, 999);
+      return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
     };
 
-    const rangeReservations = reservations.filter(r => r.checkInDate && inRange(r.checkInDate));
-    const totalSales = rangeReservations.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
-    const cancellations = rangeReservations.filter(r => (r.status || '').toLowerCase().includes('cancel')).length;
-    const activeClients = new Set(rangeReservations.map(r => r.customerEmail || 'unknown')).size - (rangeReservations.some(r => !r.customerEmail) ? 1 : 0);
+    // Prefer API-provided stats
+    if (stats) {
+      return {
+        totalSales: stats.totalRevenue,
+        reservations: (stats as any).confirmedCheckIns ?? stats.totalReservations,
+        cancellations: stats.cancelledReservations,
+        activeClients: 0, // computed below from customers API
+      };
+    }
+
+    // Fallback: compute from list
+    // Filter to range
+    const rangeStart = range.startDate ? new Date(range.startDate) : null;
+    const rangeEnd = range.endDate ? new Date(range.endDate) : null;
+
+    const inRangeByCheckIn = (d: string) => {
+      const dt = new Date(d);
+      const okStart = !rangeStart || dt >= new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+      const okEnd = !rangeEnd || dt <= new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate(), 23, 59, 59, 999);
+      return okStart && okEnd;
+    };
+
+    const confirmedByCheckIn = reservations.filter(r => (r.status || '').toLowerCase() === 'confirmed' && r.checkInDate && inRangeByCheckIn(r.checkInDate));
+    const cancellations = reservations.filter(r => (r.status || '').toLowerCase().includes('cancel') && r.checkInDate && inRangeByCheckIn(r.checkInDate)).length;
+
+    // Sales fallback: use reservation totalAmount only as last resort; true paid revenue should come from stats
+    const totalSales = stats?.totalRevenue ?? confirmedByCheckIn.reduce((sum, r) => sum + (Number(r.totalAmount) || 0), 0);
+    const activeClients = new Set(confirmedByCheckIn.map(r => r.customerEmail || 'unknown')).size - (confirmedByCheckIn.some(r => !r.customerEmail) ? 1 : 0);
 
     return {
       totalSales,
-      reservations: rangeReservations.length,
+      reservations: confirmedByCheckIn.length,
       cancellations,
       activeClients: Math.max(activeClients, 0),
     };
-  }, [reservations, range.startDate, range.endDate]);
+  }, [reservations, stats, range.startDate, range.endDate]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

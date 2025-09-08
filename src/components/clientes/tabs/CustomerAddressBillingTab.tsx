@@ -45,101 +45,6 @@ export default function CustomerAddressBillingTab({
       return `${currency || baseCurrency || ''} ${amount.toFixed(2)}`.trim();
     }
   };
-
-  // Export helpers for payments history
-  const exportPaymentsToCSV = () => {
-    try {
-      const headers = ['Fecha', 'Monto', 'Moneda', 'Método', 'Estado', 'Reserva', 'Transacción'];
-      const rows = payments.map(p => [
-        new Date(p.date).toLocaleString(),
-        (p.amount ?? 0).toFixed(2),
-        baseCurrency || 'DOP',
-        p.method || '',
-        p.status || '',
-        `#${p.reservationId}`,
-        p.transactionId || ''
-      ]);
-
-      let csv = '\uFEFF' + headers.join(',') + '\n';
-      rows.forEach(r => { csv += r.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',') + '\n'; });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
-      link.click();
-    } catch (e) { /* no-op */ }
-  };
-
-  const exportPaymentsToExcel = () => {
-      try {
-        let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
-        html += '<head><meta charset="utf-8"><title>Payments Export</title></head>';
-        html += '<body><table border="1">';
-        html += '<tr style="background-color:#f0f0f0;font-weight:bold;">';
-        html += '<th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th></tr>';
-        payments.forEach(p => {
-          html += '<tr>';
-          html += `<td>${new Date(p.date).toLocaleString()}</td>`;
-          html += `<td>${(p.amount ?? 0).toFixed(2)}</td>`;
-          html += `<td>${baseCurrency || 'DOP'}</td>`;
-          html += `<td>${p.method || ''}</td>`;
-          html += `<td>${p.status || ''}</td>`;
-          html += `<td>#${p.reservationId}</td>`;
-          html += `<td>${p.transactionId || ''}</td>`;
-          html += '</tr>';
-        });
-        html += '</table></body></html>';
-
-        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `payments_${new Date().toISOString().split('T')[0]}.xls`;
-        link.click();
-      } catch (e) { /* no-op */ }
-  };
-
-  const exportPaymentsToPDF = () => {
-    try {
-      const w = window.open('', '_blank');
-      if (!w) { alert(t('rolesUsers.popupBlocked', 'Please allow popups to export PDF')); return; }
-      const rows = payments.map(p => `
-        <tr>
-          <td>${new Date(p.date).toLocaleString()}</td>
-          <td>${(p.amount ?? 0).toFixed(2)}</td>
-          <td>${baseCurrency || 'DOP'}</td>
-          <td>${p.method || ''}</td>
-          <td>${p.status || ''}</td>
-          <td>#${p.reservationId}</td>
-          <td>${p.transactionId || ''}</td>
-        </tr>`).join('');
-      const html = `<!DOCTYPE html>
-      <html><head><meta charset="utf-8"/>
-        <title>Payments Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 16px; }
-          h1 { font-size: 18px; margin-bottom: 12px; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
-          th { background-color: #f0f0f0; }
-        </style>
-      </head>
-      <body>
-        <h1>${t('customers.payments.history','Historial de Pagos')} - ${new Date().toLocaleDateString()}</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </body></html>`;
-      w.document.write(html);
-      w.document.close();
-      w.onload = () => w.print();
-    } catch (e) { /* no-op */ }
-  };
   
   const handleAddressChange = (field: string, value: any) => {
     // Always update the first address (primary address)
@@ -224,6 +129,101 @@ export default function CustomerAddressBillingTab({
     })();
   }, [customer?.id]);
 
+  // Export helpers for payments history
+  const exportPaymentsToCSV = () => {
+    try {
+      const headers = ['Fecha', 'Monto', 'Moneda', 'Método', 'Estado', 'Reserva', 'Transacción'];
+      const rows = payments.map(p => [
+        new Date(p.date).toLocaleString(),
+        (p.amount ?? 0).toFixed(2),
+        baseCurrency || 'DOP',
+        p.method || '',
+        p.status || '',
+        `#${p.reservationId}`,
+        p.transactionId || ''
+      ]);
+
+      let csv = '\uFEFF' + headers.join(',') + '\n';
+      rows.forEach(r => { csv += r.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',') + '\n'; });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    } catch (e) { /* no-op */ }
+  };
+
+  const exportPaymentsToExcel = () => {
+    try {
+      let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+      html += '<head><meta charset="utf-8"><title>Payments Export</title></head>';
+      html += '<body><table border="1">';
+      html += '<tr style="background-color:#f0f0f0;font-weight:bold;">';
+      html += '<th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th></tr>';
+      payments.forEach(p => {
+        html += '<tr>';
+        html += `<td>${new Date(p.date).toLocaleString()}</td>`;
+        html += `<td>${(p.amount ?? 0).toFixed(2)}</td>`;
+        html += `<td>${baseCurrency || 'DOP'}</td>`;
+        html += `<td>${p.method || ''}</td>`;
+        html += `<td>${p.status || ''}</td>`;
+        html += `<td>#${p.reservationId}</td>`;
+        html += `<td>${p.transactionId || ''}</td>`;
+        html += '</tr>';
+      });
+      html += '</table></body></html>';
+
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `payments_${new Date().toISOString().split('T')[0]}.xls`;
+      link.click();
+    } catch (e) { /* no-op */ }
+  };
+
+  const exportPaymentsToPDF = () => {
+    try {
+      const w = window.open('', '_blank');
+      if (!w) { alert(t('rolesUsers.popupBlocked', 'Please allow popups to export PDF')); return; }
+      const rows = payments.map(p => `
+        <tr>
+          <td>${new Date(p.date).toLocaleString()}</td>
+          <td>${(p.amount ?? 0).toFixed(2)}</td>
+          <td>${baseCurrency || 'DOP'}</td>
+          <td>${p.method || ''}</td>
+          <td>${p.status || ''}</td>
+          <td>#${p.reservationId}</td>
+          <td>${p.transactionId || ''}</td>
+        </tr>`).join('');
+      const html = `<!DOCTYPE html>
+      <html><head><meta charset="utf-8"/>
+        <title>Payments Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 16px; }
+          h1 { font-size: 18px; margin-bottom: 12px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+          th { background-color: #f0f0f0; }
+        </style>
+      </head>
+      <body>
+        <h1>${t('customers.payments.history','Historial de Pagos')} - ${new Date().toLocaleDateString()}</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body></html>`;
+      w.document.write(html);
+      w.document.close();
+      w.onload = () => w.print();
+    } catch (e) { /* no-op */ }
+  };
+
   return (
     <div className="relative min-h-screen pb-20 md:pb-6">
       <div className="p-4 md:p-6">
@@ -298,7 +298,6 @@ export default function CustomerAddressBillingTab({
           </div>
         )}
 
-        {/* Export Modal */}
         {showExportModal && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-96 max-w-[90%] shadow-2xl">
