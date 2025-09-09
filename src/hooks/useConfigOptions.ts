@@ -39,7 +39,7 @@ const transformFallbackOptions = (fallbackOptions: { value: string; label: strin
   }));
 };
 
-export function useConfigOptions(type: string) {
+export function useConfigOptions(type: string, companyId?: string | number) {
   const { language } = useI18n();
   const [options, setOptions] = useState<ConfigOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +136,7 @@ export function useConfigOptions(type: string) {
 
   useEffect(() => {
     fetchOptions();
-  }, [type, language]);
+  }, [type, language, companyId]);
 
   const fetchOptions = async () => {
     try {
@@ -144,51 +144,72 @@ export function useConfigOptions(type: string) {
       setError(null);
       
       const token = localStorage.getItem('token');
-      if (!token) {
-        // No token means not authenticated - don't use hardcoded fallback
-        console.warn(`⚠️ No authentication token found for ConfigOptions/${type}`);
-        setOptions([]);
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch(getApiEndpoint(`/ConfigOptions/type/${type}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        // Log the actual error for debugging
-        console.error(`❌ API call failed for ConfigOptions/${type}:`, {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url,
-          endpoint: getApiEndpoint(`/ConfigOptions/type/${type}`)
+      
+      // Try to fetch with auth token first (editor mode)
+      if (token) {
+        const response = await fetch(getApiEndpoint(`/ConfigOptions/type/${type}`), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
-        // Don't use hardcoded fallback - let the real catalog data come through
-        setOptions([]);
-        setError(`Failed to load catalog options (${response.status})`);
-        return;
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`📊 ConfigOptions received from API for type "${type}" (authenticated):`, data);
+          
+          // Map options with correct language
+          const mappedOptions: ConfigOption[] = data.map((opt: ConfigOption) => ({
+            ...opt,
+            label: language === 'es' ? opt.labelEs : opt.labelEn
+          }));
+          
+          console.log(`🔄 Mapped options for display:`, mappedOptions);
+          setOptions(mappedOptions);
+          return;
+        }
+        
+        console.warn(`⚠️ Authenticated fetch failed for ConfigOptions/${type}, status: ${response.status}`);
       }
+      
+      // If no token or auth failed, try public endpoint with company ID
+      if (companyId) {
+        console.log(`🔓 Attempting public fetch for ConfigOptions/${type} with companyId: ${companyId}`);
+        
+        const publicResponse = await fetch(getApiEndpoint(`/ConfigOptions/public/company/${companyId}/type/${type}`), {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
 
-      const data = await response.json();
+        if (publicResponse.ok) {
+          const data = await publicResponse.json();
+          console.log(`📊 ConfigOptions received from PUBLIC API for type "${type}":`, data);
+          
+          // Map options with correct language
+          const mappedOptions: ConfigOption[] = data.map((opt: ConfigOption) => ({
+            ...opt,
+            label: language === 'es' ? opt.labelEs : opt.labelEn
+          }));
+          
+          console.log(`🔄 Mapped PUBLIC options for display:`, mappedOptions);
+          setOptions(mappedOptions);
+          return;
+        }
+        
+        console.error(`❌ Public API call failed for ConfigOptions/${type}:`, {
+          status: publicResponse.status,
+          statusText: publicResponse.statusText,
+          companyId
+        });
+      }
       
-      console.log(`📊 ConfigOptions received from API for type "${type}":`, data);
+      // If both methods fail, set empty options
+      console.warn(`⚠️ Could not load ConfigOptions for ${type} - no auth token and no company ID`);
+      setOptions([]);
+      setError('Unable to load catalog options');
       
-      // Mapear las opciones con el idioma correcto y todos los campos necesarios
-      const mappedOptions: ConfigOption[] = data.map((opt: ConfigOption) => ({
-        ...opt, // Include all original fields
-        label: language === 'es' ? opt.labelEs : opt.labelEn
-      }));
-      
-      console.log(`🔄 Mapped options for display:`, mappedOptions);
-
-      setOptions(mappedOptions);
     } catch (err) {
-      // Log the actual network error for debugging
       console.error(`❌ Network error fetching ConfigOptions for ${type}:`, err);
-      // Don't use hardcoded fallback - let the real catalog data come through
       setOptions([]);
       setError(`Network error loading catalog options`);
     } finally {

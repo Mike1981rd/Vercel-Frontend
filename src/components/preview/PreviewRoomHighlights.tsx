@@ -57,8 +57,9 @@ export default function PreviewRoomHighlights({
   
   // Get i18n and config options for common spaces
   const { language } = useI18n();
-  const { options: commonSpacesOptions } = useConfigOptions('common_spaces');
-  const { options: viewTypeOptions } = useConfigOptions('view_type');
+  const companyId = '1'; // Single-tenant: always company 1
+  const { options: commonSpacesOptions } = useConfigOptions('common_spaces', companyId);
+  const { options: viewTypeOptions } = useConfigOptions('view_type', companyId);
   
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (deviceView !== undefined) return deviceView === 'mobile';

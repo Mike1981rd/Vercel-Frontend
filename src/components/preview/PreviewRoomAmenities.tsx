@@ -59,7 +59,8 @@ export default function PreviewRoomAmenities({
   const [roomData, setRoomData] = useState<any>(null);
   
   // Get amenity options from ConfigOptions for icon mapping
-  const { options: amenityOptions } = useConfigOptions('amenity');
+  const companyId = '1'; // Single-tenant: always company 1
+  const { options: amenityOptions } = useConfigOptions('amenity', companyId);
 
   useEffect(() => {
     if (deviceView !== undefined) {

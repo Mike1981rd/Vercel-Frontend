@@ -37,9 +37,10 @@ export default function PreviewRoomThings({
   const { language } = useI18n();
   
   // Load config options from catalog
-  const { options: houseRulesOptions } = useConfigOptions('house_rules');
-  const { options: safetyOptions } = useConfigOptions('safety_property');
-  const { options: cancellationOptions } = useConfigOptions('cancellation_policies');
+  const companyId = '1'; // Single-tenant: always company 1
+  const { options: houseRulesOptions } = useConfigOptions('house_rules', companyId);
+  const { options: safetyOptions } = useConfigOptions('safety_property', companyId);
+  const { options: cancellationOptions } = useConfigOptions('cancellation_policies', companyId);
   
   // Get theme config from store if not passed as prop
   const { config: themeConfigFromStore } = useThemeConfigStore();

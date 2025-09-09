@@ -58,9 +58,10 @@ export default function RoomThingsPreview({
   const [roomData, setRoomData] = useState<any>(null);
 
   // Catalog options for mapping boolean flags to labels
-  const { options: houseRulesOptions } = useConfigOptions('house_rules');
-  const { options: safetyOptions } = useConfigOptions('safety_property');
-  const { options: cancellationOptions } = useConfigOptions('cancellation_policies');
+  const companyId = '1'; // Single-tenant: always company 1
+  const { options: houseRulesOptions } = useConfigOptions('house_rules', companyId);
+  const { options: safetyOptions } = useConfigOptions('safety_property', companyId);
+  const { options: cancellationOptions } = useConfigOptions('cancellation_policies', companyId);
   
   // Get theme config from store if not passed as prop
   const { config: themeConfigFromStore } = useThemeConfigStore();
