@@ -119,6 +119,11 @@ export default function PreviewRoomReviews({
           createdAt: new Date(Date.now() - 86400000).toISOString(),
           roomId: 1,
           isVerifiedPurchase: true,
+          likesCount: 5,
+          dislikesCount: 1,
+          helpfulCount: 3,
+          media: [],
+          userHasInteracted: false,
           customer: {
             id: 2,
             fullName: 'John Smith',
@@ -140,6 +145,11 @@ export default function PreviewRoomReviews({
           createdAt: new Date(Date.now() - 172800000).toISOString(),
           roomId: 1,
           isVerifiedPurchase: false,
+          likesCount: 8,
+          dislikesCount: 0,
+          helpfulCount: 6,
+          media: [],
+          userHasInteracted: false,
           customer: {
             id: 3,
             fullName: 'Ana Rodriguez',
