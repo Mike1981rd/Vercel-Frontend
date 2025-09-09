@@ -172,14 +172,51 @@ export default function PreviewRoomHighlights({
     }
   }, [roomData]);
 
-  // NOTE: We intentionally ignore roomData.highlights for this section
-  // because "Room Highlights" in this project refers to Common Spaces
-  // toggles from the room form (sleepingArrangements.commonSpaces) and viewType.
+  // Parse highlights from room data - MUST be before using them
+  const roomHighlights = useMemo(() => {
+    if (!roomData?.highlights) return null;
+    
+    try {
+      if (typeof roomData.highlights === 'string') {
+        const parsed = JSON.parse(roomData.highlights);
+        console.log('Parsed highlights from string:', parsed);
+        return parsed;
+      } else if (roomData.highlights && typeof roomData.highlights === 'object') {
+        console.log('highlights is already an object:', roomData.highlights);
+        return roomData.highlights;
+      }
+    } catch (error) {
+      console.error('Error parsing highlights:', error);
+      return null;
+    }
+    return null;
+  }, [roomData]);
 
-  // Build display highlights from real common spaces and (optionally) view type
+  // Build display highlights. Priority: room saved highlights; fallback to viewType/commonSpaces
   const displayHighlights = useMemo(() => {
+    // 1) Prefer explicit highlights saved in the room record
+    try {
+      const items = Array.isArray(roomHighlights) ? roomHighlights : [];
+      if (items.length > 0) {
+        const normalized: Highlight[] = items
+          .filter((h: any) => h && (h.isActive !== false))
+          .map((h: any, idx: number) => ({
+            id: String(h.id ?? h.key ?? h.displayOrder ?? idx),
+            icon: typeof h.icon === 'string' ? h.icon : 'sparkles',
+            title: String(h.title ?? ''),
+            description: String(h.description ?? '')
+          }))
+          .sort((a: any, b: any) => {
+            const ao = (items.find((x: any) => String(x.id ?? x.key ?? x.displayOrder ?? '') === a.id)?.displayOrder) ?? 9999;
+            const bo = (items.find((x: any) => String(x.id ?? x.key ?? x.displayOrder ?? '') === b.id)?.displayOrder) ?? 9999;
+            return ao - bo;
+          });
+        if (normalized.length > 0) return normalized;
+      }
+    } catch {}
+
     const derived: Highlight[] = [];
-    // Add view type highlight if available
+    // 2) Derive from view type if available
     if (roomData?.viewType && viewTypeOptions.length > 0) {
       const viewOption = viewTypeOptions.find((opt: any) => opt.value === roomData.viewType);
       if (viewOption) {
@@ -197,7 +234,7 @@ export default function PreviewRoomHighlights({
       }
     }
 
-    // Derive from common spaces (real room data)
+    // 3) Derive from common spaces (real room data)
     if (commonSpaces && commonSpacesOptions.length > 0) {
       console.log('🎯 Generating highlights from common spaces:', commonSpaces);
       console.log('📚 Available common space options:', commonSpacesOptions);
@@ -275,7 +312,7 @@ export default function PreviewRoomHighlights({
     }
 
     return derived;
-  }, [roomData, viewTypeOptions, commonSpaces, commonSpacesOptions, language]);
+  }, [roomHighlights, roomData, viewTypeOptions, commonSpaces, commonSpacesOptions, language]);
 
   // Helper functions
   const getIcon = (iconName: string) => {

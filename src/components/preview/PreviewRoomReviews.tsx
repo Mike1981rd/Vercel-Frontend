@@ -48,7 +48,7 @@ export default function PreviewRoomReviews({
   const [statistics, setStatistics] = useState<ReviewStatisticsDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [firstActiveRoomId, setFirstActiveRoomId] = useState<number | null>(null);
+  const [effectiveRoomId, setEffectiveRoomId] = useState<number | null>(null);
   
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (deviceView !== undefined) return deviceView === 'mobile';
@@ -69,46 +69,51 @@ export default function PreviewRoomReviews({
     return () => window.removeEventListener('resize', onResize);
   }, [deviceView]);
 
-  // Fetch first active room ID when needed (only in live mode when no roomId provided)
+  // Consolidated effect for loading room data and reviews
   useEffect(() => {
-    const loadRoomData = async () => {
+    // Don't do anything if disabled
+    if (!config.enabled) return;
+
+    const configRoomId = (config as any)?.roomId as number | undefined;
+    
+    // If we have a roomId from props or config, use it directly
+    if (roomId || configRoomId) {
+      const targetRoomId = roomId || configRoomId;
+      setEffectiveRoomId(targetRoomId);
+      loadReviews(targetRoomId);
+      return;
+    }
+
+    // In editor mode without roomId, just show placeholder
+    if (isEditor) {
+      return;
+    }
+
+    // In live mode without roomId, fetch first active room and then load reviews
+    const loadRoomAndReviews = async () => {
       const companyId = localStorage.getItem('companyId') || '1';
       
       try {
-        // Use helper function that checks for slug
         const data = await fetchRoomData(companyId);
         if (data?.id) {
-          setFirstActiveRoomId(data.id);
+          setEffectiveRoomId(data.id);
+          await loadReviews(data.id);
         }
       } catch (error) {
-        console.error('Error fetching first active room:', error);
+        console.error('Error fetching room data:', error);
+        setError('Failed to load room information');
       }
     };
 
-    const configRoomId = (config as any)?.roomId as number | undefined;
-    // Only fetch in live mode when no room id is provided
-    // In editor, we'll just show a placeholder
-    if (config.enabled && !isEditor && !roomId && !configRoomId) {
-      loadRoomData();
-    }
-  }, [isEditor, config.enabled, roomId]);
-
-  // Load reviews when roomId (prop or config) is available or when we have firstActiveRoomId
-  useEffect(() => {
-    const roomIdFromConfig = (config as any)?.roomId as number | undefined;
-    const effectiveRoomId = roomId || roomIdFromConfig || firstActiveRoomId;
-    // Only load reviews if we have a roomId (don't load in editor without roomId)
-    if (effectiveRoomId && (!isEditor || roomId || roomIdFromConfig)) {
-      loadReviews(effectiveRoomId);
-    }
-  }, [roomId, firstActiveRoomId, isEditor]);
+    loadRoomAndReviews();
+  }, [config.enabled, roomId, isEditor]);
 
   // Listen to cross-tab updates (from backoffice approvals) and reload
   useEffect(() => {
+    if (!effectiveRoomId) return;
+    
     const onUpdated = () => {
-      const roomIdFromConfig = (config as any)?.roomId as number | undefined;
-      const effectiveRoomId = roomId || roomIdFromConfig || firstActiveRoomId;
-      if (effectiveRoomId) loadReviews(effectiveRoomId);
+      loadReviews(effectiveRoomId);
     };
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'reviews_updated') onUpdated();
@@ -119,10 +124,15 @@ export default function PreviewRoomReviews({
       window.removeEventListener('reviews:updated', onUpdated as EventListener);
       window.removeEventListener('storage', onStorage);
     };
-  }, [roomId, firstActiveRoomId]);
+  }, [effectiveRoomId]);
 
   const loadReviews = async (reviewRoomId: number) => {
     if (!reviewRoomId) return;
+    
+    // Prevent duplicate loads for the same room
+    if (effectiveRoomId === reviewRoomId && reviews.length > 0 && !error) {
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
@@ -151,8 +161,6 @@ export default function PreviewRoomReviews({
 
   const handleReviewSubmitted = () => {
     // Reload reviews after successful submission
-    const configRoomId = (config as any)?.roomId as number | undefined;
-    const effectiveRoomId = roomId || configRoomId || firstActiveRoomId;
     if (effectiveRoomId) {
       loadReviews(effectiveRoomId);
     }
@@ -756,12 +764,12 @@ export default function PreviewRoomReviews({
       )}
 
       {/* Write Review Modal */}
-      {(roomId || firstActiveRoomId) && (
+      {effectiveRoomId && (
         <WriteReviewModal
           isOpen={showWriteReview}
           onClose={() => setShowWriteReview(false)}
           onSuccess={handleReviewSubmitted}
-          roomId={roomId || firstActiveRoomId!}
+          roomId={effectiveRoomId}
           ratingIcon={ratingIcon}
           ratingIconColor={ratingIconColor}
           colorScheme={colorScheme}
