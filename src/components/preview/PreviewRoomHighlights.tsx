@@ -279,7 +279,13 @@ export default function PreviewRoomHighlights({
         gym: ['gym', 'gimnasio'],
         spa: ['spa'],
         parking: ['parking', 'estacionamiento', 'parqueo', 'parqueadero', 'aparcamiento'],
-        lobby: ['lobby']
+        lobby: ['lobby'],
+        pasillo: ['pasillo', 'hallway', 'corridor', 'hall'],
+        // Add reverse mappings for catalog values
+        Terraza: ['terrace', 'terraza'],
+        Lobby: ['lobby'],
+        Pool: ['pool', 'piscina'],
+        Pasillo: ['pasillo', 'hallway']
       };
       const coerceBool = (v: any): boolean | undefined => {
         if (typeof v === 'boolean') return v;
