@@ -181,6 +181,8 @@ export default function PreviewRoomHighlights({
           });
           
           console.log('📊 Normalized commonSpaces:', JSON.stringify(normalized, null, 2));
+          // Replace the original commonSpaces with the normalized version
+          commonSpaces = normalized;
           return normalized;
         }
       }
@@ -210,6 +212,8 @@ export default function PreviewRoomHighlights({
             normalized[normalizedKey] = value;
           });
           
+          // Replace the original commonSpaces with the normalized version
+          commonSpaces = normalized;
           return normalized;
         }
         return cs || null;
