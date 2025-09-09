@@ -249,6 +249,26 @@ export default function RoomThingsPreview({
         rules.push(...hr.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof hr === 'object') {
         // If catalog options exist, respect order + labels; otherwise, fall back to object keys
+        const aliasMap: Record<string, string[]> = {
+          smokingAllowed: ['smokingAllowed', 'fumar', 'sePermiteFumar', 'smoking', 'smoking_allowed'],
+          petsAllowed: ['petsAllowed', 'mascotas', 'sePermitenMascotas', 'pets'],
+          eventsAllowed: ['eventsAllowed', 'eventos', 'sePermitenEventos', 'events'],
+          partiesAllowed: ['partiesAllowed', 'fiestas', 'sePermitenFiestas', 'party', 'parties_allowed'],
+          childrenAllowed: ['childrenAllowed', 'ninos', 'niños', 'sePermitenNinos', 'sePermitenNiños', 'children'],
+          visitorsAllowed: ['visitorsAllowed', 'visitantes', 'sePermitenVisitantes', 'visitors'],
+          loudMusicAllowed: ['loudMusicAllowed', 'musicaAlta', 'músicaAlta', 'sePermiteMusicaAlta', 'loud_music_allowed']
+        };
+        const readFlagAliased = (obj: any, key: string) => {
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const aliases = aliasMap[key] || [];
+          const candidates = [key, snake, pascal, lower, ...aliases];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+          }
+          return undefined;
+        };
         if (houseRulesOptions.length > 0) {
           let order: string[] = [];
           try {
@@ -266,7 +286,7 @@ export default function RoomThingsPreview({
           ];
           orderedValues.forEach((valueKey) => {
             const opt = houseRulesOptions.find(o => o.value === valueKey) as any;
-            const value = readFlag(hr, String(valueKey));
+            const value = readFlagAliased(hr, String(valueKey));
             if (value === true) {
               rules.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
             } else if (value === false && String(valueKey).includes('Allowed')) {

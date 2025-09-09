@@ -222,19 +222,45 @@ export default function PreviewRoomHighlights({
       console.log('🔍 Checking each option against commonSpaces object...');
       
       // Iterate through each common space option from the catalog
+      const aliasMap: Record<string, string[]> = {
+        kitchen: ['kitchen', 'cocina'],
+        livingRoom: ['livingRoom', 'living_room', 'sala', 'salaDeEstar', 'sala_de_estar'],
+        diningRoom: ['diningRoom', 'dining_room', 'comedor'],
+        balcony: ['balcony', 'balcon', 'balcón'],
+        terrace: ['terrace', 'terraza'],
+        garden: ['garden', 'jardin', 'jardín'],
+        pool: ['pool', 'piscina'],
+        gym: ['gym', 'gimnasio'],
+        spa: ['spa'],
+        parking: ['parking', 'estacionamiento', 'parqueo', 'parqueadero', 'aparcamiento'],
+        lobby: ['lobby']
+      };
       const readFlag = (obj: any, key: string) => {
         if (!obj) return undefined;
         const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
         const pascal = key.charAt(0).toUpperCase() + key.slice(1);
         const lower = key.toLowerCase();
-        const candidates = [key, snake, pascal, lower];
+        const aliases = aliasMap[key as keyof typeof aliasMap] || [];
+        const candidates = [key, snake, pascal, lower, ...aliases];
         for (const k of candidates) {
           if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
         }
         return undefined;
       };
+      const includesAlias = (arr: any, key: string) => {
+        try {
+          const values = Array.isArray(arr) ? arr.map((v: any) => String(v).toLowerCase()) : [];
+          const aliases = (aliasMap[key] || [key]).map(s => s.toLowerCase());
+          return aliases.some(a => values.includes(a));
+        } catch { return false; }
+      };
       commonSpacesOptions.forEach((spaceOption: any) => {
-        const enabled = readFlag(commonSpaces, spaceOption.value);
+        // Check object-style flags
+        let enabled = readFlag(commonSpaces, spaceOption.value);
+        // If not found and commonSpaces is array, check aliases by inclusion
+        if (enabled === undefined && Array.isArray(commonSpaces)) {
+          enabled = includesAlias(commonSpaces, spaceOption.value) ? true : undefined;
+        }
         console.log(`  Checking ${spaceOption.value}:`, enabled);
         // Check if this common space is enabled for the room
         if (enabled) {
