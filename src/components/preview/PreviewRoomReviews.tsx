@@ -88,7 +88,7 @@ export default function PreviewRoomReviews({
           isVerified: true,
           customer: {
             id: 1,
-            name: 'Maria Garcia',
+            fullName: 'Maria Garcia',
             email: 'maria@example.com'
           }
         },
@@ -102,7 +102,7 @@ export default function PreviewRoomReviews({
           isVerified: true,
           customer: {
             id: 2,
-            name: 'John Smith',
+            fullName: 'John Smith',
             email: 'john@example.com'
           }
         },
@@ -116,7 +116,7 @@ export default function PreviewRoomReviews({
           isVerified: false,
           customer: {
             id: 3,
-            name: 'Ana Rodriguez',
+            fullName: 'Ana Rodriguez',
             email: 'ana@example.com'
           }
         },
@@ -130,7 +130,7 @@ export default function PreviewRoomReviews({
           isVerified: true,
           customer: {
             id: 4,
-            name: 'Robert Johnson',
+            fullName: 'Robert Johnson',
             email: 'robert@example.com'
           }
         }
