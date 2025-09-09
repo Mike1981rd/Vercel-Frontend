@@ -172,14 +172,51 @@ export default function PreviewRoomHighlights({
     }
   }, [roomData]);
 
-  // NOTE: We intentionally ignore roomData.highlights for this section
-  // because "Room Highlights" in this project refers to Common Spaces
-  // toggles from the room form (sleepingArrangements.commonSpaces) and viewType.
+  // Parse highlights from room data - MUST be before using them
+  const roomHighlights = useMemo(() => {
+    if (!roomData?.highlights) return null;
+    
+    try {
+      if (typeof roomData.highlights === 'string') {
+        const parsed = JSON.parse(roomData.highlights);
+        console.log('Parsed highlights from string:', parsed);
+        return parsed;
+      } else if (roomData.highlights && typeof roomData.highlights === 'object') {
+        console.log('highlights is already an object:', roomData.highlights);
+        return roomData.highlights;
+      }
+    } catch (error) {
+      console.error('Error parsing highlights:', error);
+      return null;
+    }
+    return null;
+  }, [roomData]);
 
-  // Build display highlights from real common spaces and (optionally) view type
+  // Build display highlights. Priority: room saved highlights; fallback to viewType/commonSpaces
   const displayHighlights = useMemo(() => {
+    // 1) Prefer explicit highlights saved in the room record
+    try {
+      const items = Array.isArray(roomHighlights) ? roomHighlights : [];
+      if (items.length > 0) {
+        const normalized: Highlight[] = items
+          .filter((h: any) => h && (h.isActive !== false))
+          .map((h: any, idx: number) => ({
+            id: String(h.id ?? h.key ?? h.displayOrder ?? idx),
+            icon: typeof h.icon === 'string' ? h.icon : 'sparkles',
+            title: String(h.title ?? ''),
+            description: String(h.description ?? '')
+          }))
+          .sort((a: any, b: any) => {
+            const ao = (items.find((x: any) => String(x.id ?? x.key ?? x.displayOrder ?? '') === a.id)?.displayOrder) ?? 9999;
+            const bo = (items.find((x: any) => String(x.id ?? x.key ?? x.displayOrder ?? '') === b.id)?.displayOrder) ?? 9999;
+            return ao - bo;
+          });
+        if (normalized.length > 0) return normalized;
+      }
+    } catch {}
+
     const derived: Highlight[] = [];
-    // Add view type highlight if available
+    // 2) Derive from view type if available
     if (roomData?.viewType && viewTypeOptions.length > 0) {
       const viewOption = viewTypeOptions.find((opt: any) => opt.value === roomData.viewType);
       if (viewOption) {
@@ -197,7 +234,7 @@ export default function PreviewRoomHighlights({
       }
     }
 
-    // Derive from common spaces (real room data)
+    // 3) Derive from common spaces (real room data)
     if (commonSpaces && commonSpacesOptions.length > 0) {
       console.log('🎯 Generating highlights from common spaces:', commonSpaces);
       console.log('📚 Available common space options:', commonSpacesOptions);
@@ -215,16 +252,6 @@ export default function PreviewRoomHighlights({
         parking: ['parking', 'estacionamiento', 'parqueo', 'parqueadero', 'aparcamiento'],
         lobby: ['lobby']
       };
-      const coerceBool = (v: any): boolean | undefined => {
-        if (typeof v === 'boolean') return v;
-        if (typeof v === 'number') return v === 1 ? true : v === 0 ? false : undefined;
-        if (typeof v === 'string') {
-          const s = v.trim().toLowerCase();
-          if (['true','1','yes','si','sí','enabled','on'].includes(s)) return true;
-          if (['false','0','no','disabled','off','none'].includes(s)) return false;
-        }
-        return undefined;
-      };
       const readFlag = (obj: any, key: string) => {
         if (!obj) return undefined;
         const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -233,25 +260,7 @@ export default function PreviewRoomHighlights({
         const aliases = aliasMap[key as keyof typeof aliasMap] || [];
         const candidates = [key, snake, pascal, lower, ...aliases];
         for (const k of candidates) {
-          if (Object.prototype.hasOwnProperty.call(obj, k)) {
-            const val = (obj as any)[k];
-            // support nested shapes: { pool: { enabled: true } }
-            if (typeof val === 'object' && val !== null) {
-              const nested = coerceBool((val as any).enabled ?? (val as any).value ?? (val as any).active);
-              if (nested !== undefined) return nested;
-            }
-            const coerced = coerceBool(val);
-            if (coerced !== undefined) return coerced;
-            // any non-empty truthy value considered enabled
-            if (val) return true;
-            return false;
-          }
-        }
-        // also support available array under commonSpaces
-        if (Array.isArray((obj as any).available)) {
-          const values = (obj as any).available.map((v: any) => String(v).toLowerCase());
-          const aliases = (aliasMap[key] || [key]).map(s => s.toLowerCase());
-          return aliases.some(a => values.includes(a));
+          if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
         }
         return undefined;
       };
@@ -271,8 +280,27 @@ export default function PreviewRoomHighlights({
         if (enabled) {
           console.log(`    ✅ ${spaceOption.value} is enabled!`);
           const spaceLabel = language === 'es' ? spaceOption.labelEs : spaceOption.labelEn;
-          // No generar descripciones por defecto; mostrar solo el label real
-          const description = '';
+          let description = '';
+          if (spaceOption.descriptionEs && language === 'es') description = spaceOption.descriptionEs;
+          else if (spaceOption.descriptionEn && language === 'en') description = spaceOption.descriptionEn;
+          else {
+            switch(spaceOption.value) {
+              case 'kitchen': description = language === 'es' ? 'Cocina totalmente equipada para preparar comidas' : 'Fully equipped kitchen for preparing meals'; break;
+              case 'library': description = language === 'es' ? 'Biblioteca con colección de libros para lectura' : 'Library with book collection for reading'; break;
+              case 'pool': description = language === 'es' ? 'Acceso a área de piscina' : 'Access to swimming pool area'; break;
+              case 'gym': description = language === 'es' ? 'Gimnasio moderno con equipo de ejercicio' : 'Modern gym with exercise equipment'; break;
+              case 'garden': description = language === 'es' ? 'Hermoso espacio de jardín para relajación' : 'Beautiful garden space for relaxation'; break;
+              case 'parking': description = language === 'es' ? 'Espacio de estacionamiento gratuito disponible' : 'Complimentary parking space available'; break;
+              case 'livingRoom': description = language === 'es' ? 'Sala de estar compartida con asientos cómodos' : 'Shared living room with comfortable seating'; break;
+              case 'diningRoom': description = language === 'es' ? 'Área de comedor para comidas' : 'Dining area for meals'; break;
+              case 'balcony': description = language === 'es' ? 'Acceso a balcón privado o compartido' : 'Private or shared balcony access'; break;
+              case 'terrace': description = language === 'es' ? 'Terraza al aire libre con área de asientos' : 'Outdoor terrace with seating area'; break;
+              case 'spa': description = language === 'es' ? 'Acceso a spa y centro de bienestar' : 'Spa and wellness center access'; break;
+              case 'Cafe':
+              case 'cafe': description = language === 'es' ? 'Servicio de café disponible en las instalaciones' : 'Coffee service available on premises'; break;
+              default: description = language === 'es' ? `${spaceLabel} disponible en las instalaciones` : `${spaceLabel} available on premises`;
+            }
+          }
           derived.push({
             id: `common-${spaceOption.value}`,
             icon: spaceOption.icon || 'sparkles',
@@ -284,7 +312,7 @@ export default function PreviewRoomHighlights({
     }
 
     return derived;
-  }, [roomData, viewTypeOptions, commonSpaces, commonSpacesOptions, language]);
+  }, [roomHighlights, roomData, viewTypeOptions, commonSpaces, commonSpacesOptions, language]);
 
   // Helper functions
   const getIcon = (iconName: string) => {
