@@ -86,7 +86,7 @@ export default function RoomThingsPreview({
   // Load real room data when syncing is enabled (default true in editor)
   useEffect(() => {
     const loadRoomData = async () => {
-      const companyId = localStorage.getItem('companyId') || '1';
+      const companyId = '1'; // Single-tenant: always company 1
       const currentSlug = localStorage.getItem('currentRoomSlug');
       
       console.log('=== ROOM THINGS TO KNOW DEBUG ===');

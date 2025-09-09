@@ -417,7 +417,7 @@ export default function PreviewRoomHighlights({
 
   const handleManualRefresh = async () => {
     console.log('Manual refresh triggered');
-    const companyId = localStorage.getItem('companyId') || '1';
+    const companyId = '1'; // Single-tenant: always company 1
     
     setLoading(true);
     try {
@@ -449,7 +449,7 @@ export default function PreviewRoomHighlights({
   // Auto-fetch room data for both editor and preview
   useEffect(() => {
     const loadRoomData = async () => {
-      const companyId = localStorage.getItem('companyId') || '1';
+      const companyId = '1'; // Single-tenant: always company 1
       
       setLoading(true);
       try {
