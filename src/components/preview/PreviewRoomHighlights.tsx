@@ -166,6 +166,10 @@ export default function PreviewRoomHighlights({
           Object.entries(spaces).forEach(([key, value]) => {
             // Convert key to lowercase and handle special cases
             let normalizedKey = key.toLowerCase();
+            
+            // Log each key being processed
+            console.log(`  🔑 Processing key: "${key}" -> "${normalizedKey}", value: ${value}`);
+            
             // Special mapping for Spanish terms
             if (normalizedKey === 'terraza') normalizedKey = 'terrace';
             if (normalizedKey === 'gimnasio') normalizedKey = 'gym';
@@ -176,6 +180,11 @@ export default function PreviewRoomHighlights({
             if (normalizedKey === 'balcon' || normalizedKey === 'balcón') normalizedKey = 'balcony';
             if (normalizedKey === 'jardin' || normalizedKey === 'jardín') normalizedKey = 'garden';
             if (normalizedKey === 'piscina') normalizedKey = 'pool';
+            
+            // If key changed after normalization, log it
+            if (normalizedKey !== key.toLowerCase()) {
+              console.log(`    ✨ Normalized to: "${normalizedKey}"`);
+            }
             
             normalized[normalizedKey] = value;
           });
