@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Star, Heart, Smile, ThumbsUp, Loader2 } from 'lucide-react';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
 import WriteReviewModal from '@/components/reviews/WriteReviewModal';
@@ -74,8 +74,80 @@ export default function PreviewRoomReviews({
     // Don't do anything if disabled
     if (!config.enabled) return;
     
-    // CRITICAL: In editor mode, NEVER fetch data - just show placeholder
+    // In editor mode, show sample data for design purposes
     if (isEditor) {
+      // Sample data for editor preview
+      const sampleReviews: ReviewDto[] = [
+        {
+          id: 1,
+          authorName: 'Maria Garcia',
+          rating: 5,
+          comment: 'Excelente habitación, muy cómoda y limpia. El servicio fue impecable y la ubicación perfecta.',
+          createdAt: new Date().toISOString(),
+          roomId: 1,
+          isVerified: true,
+          customer: {
+            id: 1,
+            name: 'Maria Garcia',
+            email: 'maria@example.com'
+          }
+        },
+        {
+          id: 2,
+          authorName: 'John Smith',
+          rating: 4,
+          comment: 'Great room with amazing views. Very comfortable bed and excellent amenities.',
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          roomId: 1,
+          isVerified: true,
+          customer: {
+            id: 2,
+            name: 'John Smith',
+            email: 'john@example.com'
+          }
+        },
+        {
+          id: 3,
+          authorName: 'Ana Rodriguez',
+          rating: 5,
+          comment: 'La mejor experiencia! Todo estuvo perfecto desde el check-in hasta el check-out.',
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
+          roomId: 1,
+          isVerified: false,
+          customer: {
+            id: 3,
+            name: 'Ana Rodriguez',
+            email: 'ana@example.com'
+          }
+        },
+        {
+          id: 4,
+          authorName: 'Robert Johnson',
+          rating: 5,
+          comment: 'Outstanding service and beautiful room. Will definitely come back!',
+          createdAt: new Date(Date.now() - 259200000).toISOString(),
+          roomId: 1,
+          isVerified: true,
+          customer: {
+            id: 4,
+            name: 'Robert Johnson',
+            email: 'robert@example.com'
+          }
+        }
+      ];
+
+      const sampleStatistics: ReviewStatisticsDto = {
+        averageRating: 4.8,
+        totalReviews: 4,
+        fiveStarCount: 3,
+        fourStarCount: 1,
+        threeStarCount: 0,
+        twoStarCount: 0,
+        oneStarCount: 0
+      };
+
+      setReviews(sampleReviews);
+      setStatistics(sampleStatistics);
       return;
     }
 
@@ -168,33 +240,53 @@ export default function PreviewRoomReviews({
     }
   };
 
+  // Memoize configuration values to match other Room components
+  const configValues = useMemo(() => {
+    const colorSchemeId = config.colorSchemeId || 'scheme-1';
+    const colorScheme = themeConfig?.colorSchemes?.schemes?.find(s => s.id === colorSchemeId) || null;
+    const bgColor = colorScheme?.background || '#FFFFFF';
+    const textColor = colorScheme?.text || '#000000';
+    const borderColor = colorScheme?.border || '#E5E7EB';
+    
+    return {
+      ratingIcon: config.ratingIcon || 'star',
+      ratingIconColor: config.ratingIconColor || '#FFB800',
+      bodyType: config.bodyType || 'standard',
+      cardStyle: config.cardStyle || 'elegant',
+      headerSize: config.headerSize || 32,
+      topPadding: config.topPadding || 40,
+      bottomPadding: config.bottomPadding || 40,
+      bgColor,
+      textColor,
+      borderColor,
+      outlineButtonColor: colorScheme?.outlineButton || '#000000',
+      outlineButtonText: colorScheme?.outlineButtonText || '#000000',
+      cardBg: config.cardBackgroundColor || bgColor,
+      cardBorder: config.cardBorderColor || borderColor
+    };
+  }, [config, themeConfig]);
+
   if (!config.enabled) {
     return null;
   }
 
-  // Get configuration values with defaults
-  const colorSchemeId = config.colorSchemeId || 'scheme-1';
-  const ratingIcon = config.ratingIcon || 'star';
-  const ratingIconColor = config.ratingIconColor || '#FFB800';
-  const bodyType = config.bodyType || 'standard';
-  const cardStyle = config.cardStyle || 'elegant';
-  const headerSize = config.headerSize || 32;
-  const topPadding = config.topPadding || 40;
-  const bottomPadding = config.bottomPadding || 40;
-
-  // Get the selected color scheme from theme config
-  const colorScheme = themeConfig?.colorSchemes?.schemes?.find(s => s.id === colorSchemeId) || null;
-  
-  // Use color scheme colors or fallback to defaults
-  const bgColor = colorScheme?.background || '#FFFFFF';
-  const textColor = colorScheme?.text || '#000000';
-  const borderColor = colorScheme?.border || '#E5E7EB';
-  const outlineButtonColor = colorScheme?.outlineButton || '#000000';
-  const outlineButtonText = colorScheme?.outlineButtonText || '#000000';
-
-  // Card colors (derive after borderColor is available)
-  const cardBg = config.cardBackgroundColor || bgColor;
-  const cardBorder = config.cardBorderColor || borderColor;
+  // Destructure memoized values
+  const {
+    ratingIcon,
+    ratingIconColor,
+    bodyType,
+    cardStyle,
+    headerSize,
+    topPadding,
+    bottomPadding,
+    bgColor,
+    textColor,
+    borderColor,
+    outlineButtonColor,
+    outlineButtonText,
+    cardBg,
+    cardBorder
+  } = configValues;
 
   // Calculate display values
   const averageRating = statistics?.averageRating || 0;
@@ -358,8 +450,8 @@ export default function PreviewRoomReviews({
         backgroundColor: bgColor
       }}
     >
-      {/* Header Design Based on Style - NEVER show in editor mode */}
-      {!isEditor && config.headerStyle === 'style2' ? (
+      {/* Header Design Based on Style */}
+      {config.headerStyle === 'style2' ? (
         // Style 2 - Box Rating Design
         <div className="mb-8">
           <div className="flex items-start justify-between gap-4">
@@ -429,7 +521,7 @@ export default function PreviewRoomReviews({
             </button>
           </div>
         </div>
-      ) : !isEditor ? (
+      ) : (
         // Style 1 - Trophy Design (Default)
         <div className="mb-8">
           {/* Trophy Rating Display */}
@@ -499,7 +591,7 @@ export default function PreviewRoomReviews({
             </button>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* Loading State - Never show in editor */}
       {!isEditor && isLoading && (
@@ -515,8 +607,8 @@ export default function PreviewRoomReviews({
         </div>
       )}
 
-      {/* Reviews Grid - NEVER show in editor mode */}
-      {!isEditor && !isLoading && !error && reviews.length > 0 && (
+      {/* Reviews Grid - Show sample data in editor */}
+      {(!isEditor || (isEditor && reviews.length > 0)) && !isLoading && !error && reviews.length > 0 && (
         <>
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mb-8`}>
             {displayedReviews.map((review) => {

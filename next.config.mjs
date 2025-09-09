@@ -23,6 +23,19 @@ const nextConfig = {
         port: '5266',
         pathname: '/**',
       },
+      // WSL IP address for local development
+      {
+        protocol: 'http',
+        hostname: '172.25.64.1',
+        port: '5266',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '172.25.64.1',
+        port: '5266',
+        pathname: '/**',
+      },
       // Render staging backend (for assets like company logos)
       {
         protocol: 'https',

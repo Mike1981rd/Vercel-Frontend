@@ -861,28 +861,26 @@ export function EditorPreview({ deviceView: originalDeviceView = 'desktop' }: Ed
         );
       // @ts-ignore
       case SectionType.ROOM_REVIEWS:
-        const roomReviewsConfig = useMemo(() => ({
-          enabled: section.settings?.enabled ?? true,
-          colorSchemeId: section.settings?.colorSchemeId || 'scheme-1',
-          ratingIcon: section.settings?.ratingIcon || 'star',
-          ratingIconColor: section.settings?.ratingIconColor || '#FFB800',
-          bodyType: section.settings?.bodyType || 'standard',
-          cardStyle: section.settings?.cardStyle || 'elegant',
-          cardBackgroundColor: section.settings?.cardBackgroundColor || '#FFFFFF',
-          cardBorderColor: section.settings?.cardBorderColor || '#E5E7EB',
-          headerSize: section.settings?.headerSize || 32,
-          topPadding: section.settings?.topPadding || 40,
-          bottomPadding: section.settings?.bottomPadding || 40,
-          showBusinessReplies: section.settings?.showBusinessReplies ?? true,
-          headerStyle: section.settings?.headerStyle || 'style1',
-          headerBackgroundColor: section.settings?.headerBackgroundColor || '#FACC15',
-          cardBorderRadius: section.settings?.cardBorderRadius || 8,
-          ...(section.settings as any)
-        }), [section.settings]);
-        
         return (
           <PreviewRoomReviews
-            config={roomReviewsConfig as any}
+            config={{
+              enabled: section.settings?.enabled ?? true,
+              colorSchemeId: section.settings?.colorSchemeId || 'scheme-1',
+              ratingIcon: section.settings?.ratingIcon || 'star',
+              ratingIconColor: section.settings?.ratingIconColor || '#FFB800',
+              bodyType: section.settings?.bodyType || 'standard',
+              cardStyle: section.settings?.cardStyle || 'elegant',
+              cardBackgroundColor: section.settings?.cardBackgroundColor || '#FFFFFF',
+              cardBorderColor: section.settings?.cardBorderColor || '#E5E7EB',
+              headerSize: section.settings?.headerSize || 32,
+              topPadding: section.settings?.topPadding || 40,
+              bottomPadding: section.settings?.bottomPadding || 40,
+              showBusinessReplies: section.settings?.showBusinessReplies ?? true,
+              headerStyle: section.settings?.headerStyle || 'style1',
+              headerBackgroundColor: section.settings?.headerBackgroundColor || '#FACC15',
+              cardBorderRadius: section.settings?.cardBorderRadius || 8,
+              ...(section.settings as any)
+            } as any}
             theme={normalizedThemeConfig}
             deviceView={deviceView as 'desktop' | 'mobile'}
             isEditor={true}
