@@ -156,13 +156,22 @@ export default function PreviewRoomHighlights({
           ? JSON.parse(roomData.sleepingArrangements) 
           : roomData.sleepingArrangements;
         spaces = sa?.commonSpaces || null;
-        if (spaces) return spaces;
+        if (spaces) {
+          console.log('📊 CommonSpaces structure from sleepingArrangements:', JSON.stringify(spaces, null, 2));
+          console.log('📊 CommonSpaces keys:', Object.keys(spaces));
+          console.log('📊 CommonSpaces typeof:', typeof spaces);
+          return spaces;
+        }
       }
       // Fallback: some datasets may store this under dedicated CommonSpaces
       if (roomData?.commonSpaces) {
         const cs = typeof roomData.commonSpaces === 'string'
           ? JSON.parse(roomData.commonSpaces)
           : roomData.commonSpaces;
+        if (cs) {
+          console.log('📊 CommonSpaces structure from top-level:', JSON.stringify(cs, null, 2));
+          console.log('📊 CommonSpaces keys:', Object.keys(cs));
+        }
         return cs || null;
       }
       return null;
@@ -202,6 +211,11 @@ export default function PreviewRoomHighlights({
       console.log('🎯 Generating highlights from common spaces:', commonSpaces);
       console.log('📚 Available common space options:', commonSpacesOptions);
       console.log('🔍 Checking each option against commonSpaces object...');
+      console.log('🔍 CommonSpaces object type:', typeof commonSpaces);
+      console.log('🔍 CommonSpaces is array?:', Array.isArray(commonSpaces));
+      if (commonSpaces && typeof commonSpaces === 'object') {
+        console.log('🔍 CommonSpaces properties:', Object.getOwnPropertyNames(commonSpaces));
+      }
       const aliasMap: Record<string, string[]> = {
         kitchen: ['kitchen', 'cocina'],
         livingRoom: ['livingRoom', 'living_room', 'sala', 'salaDeEstar', 'sala_de_estar'],
@@ -226,15 +240,30 @@ export default function PreviewRoomHighlights({
         return undefined;
       };
       const readFlag = (obj: any, key: string) => {
-        if (!obj) return undefined;
+        if (!obj) {
+          console.log(`  🔍 Checking ${key}: obj is null/undefined`);
+          return undefined;
+        }
+        
+        // First try direct access with the original key
+        if (obj[key] !== undefined) {
+          console.log(`  ✅ Direct access ${key}:`, obj[key]);
+          const directValue = coerceBool(obj[key]);
+          if (directValue !== undefined) return directValue;
+        }
+        
         const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
         const pascal = key.charAt(0).toUpperCase() + key.slice(1);
         const lower = key.toLowerCase();
         const aliases = aliasMap[key as keyof typeof aliasMap] || [];
         const candidates = [key, snake, pascal, lower, ...aliases];
+        
+        console.log(`  🔍 Checking ${key} with candidates:`, candidates);
+        
         for (const k of candidates) {
           if (Object.prototype.hasOwnProperty.call(obj, k)) {
             const val = (obj as any)[k];
+            console.log(`    Found ${k}:`, val);
             // support nested shapes: { pool: { enabled: true } }
             if (typeof val === 'object' && val !== null) {
               const nested = coerceBool((val as any).enabled ?? (val as any).value ?? (val as any).active);
@@ -253,6 +282,31 @@ export default function PreviewRoomHighlights({
           const aliases = (aliasMap[key] || [key]).map(s => s.toLowerCase());
           return aliases.some(a => values.includes(a));
         }
+        
+        // Additional fallback: check if the entire object might be stored differently
+        // For example, if commonSpaces is stored as a JSON string within the object
+        if (typeof obj === 'string') {
+          try {
+            const parsed = JSON.parse(obj);
+            console.log(`  🔄 Parsed string to object for ${key}:`, parsed);
+            return readFlag(parsed, key);
+          } catch (e) {
+            console.log(`  ❌ Failed to parse string for ${key}`);
+          }
+        }
+        
+        // Final fallback: check for numbered keys (e.g., "0", "1", "2" for array-like structures)
+        if (obj['0'] !== undefined) {
+          console.log(`  🔢 Object has numbered keys, might be array-like`);
+          const arrayLike = Object.values(obj);
+          for (const item of arrayLike) {
+            if (typeof item === 'string' && aliasMap[key]?.includes(item.toLowerCase())) {
+              return true;
+            }
+          }
+        }
+        
+        console.log(`  ❌ ${key}: not found in object`);
         return undefined;
       };
       const includesAlias = (arr: any, key: string) => {
