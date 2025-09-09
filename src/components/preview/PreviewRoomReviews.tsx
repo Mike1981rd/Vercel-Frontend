@@ -73,19 +73,21 @@ export default function PreviewRoomReviews({
   useEffect(() => {
     // Don't do anything if disabled
     if (!config.enabled) return;
+    
+    // CRITICAL: In editor mode, NEVER fetch data - just show placeholder
+    if (isEditor) {
+      return;
+    }
 
     const configRoomId = (config as any)?.roomId as number | undefined;
     
     // If we have a roomId from props or config, use it directly
     if (roomId || configRoomId) {
-      const targetRoomId = roomId || configRoomId;
+      const targetRoomId = roomId ?? configRoomId ?? null;
       setEffectiveRoomId(targetRoomId);
-      loadReviews(targetRoomId);
-      return;
-    }
-
-    // In editor mode without roomId, just show placeholder
-    if (isEditor) {
+      if (typeof targetRoomId === 'number') {
+        loadReviews(targetRoomId);
+      }
       return;
     }
 
@@ -356,8 +358,8 @@ export default function PreviewRoomReviews({
         backgroundColor: bgColor
       }}
     >
-      {/* Header Design Based on Style */}
-      {config.headerStyle === 'style2' ? (
+      {/* Header Design Based on Style - NEVER show in editor mode */}
+      {!isEditor && config.headerStyle === 'style2' ? (
         // Style 2 - Box Rating Design
         <div className="mb-8">
           <div className="flex items-start justify-between gap-4">
@@ -427,7 +429,7 @@ export default function PreviewRoomReviews({
             </button>
           </div>
         </div>
-      ) : (
+      ) : !isEditor ? (
         // Style 1 - Trophy Design (Default)
         <div className="mb-8">
           {/* Trophy Rating Display */}
@@ -497,24 +499,24 @@ export default function PreviewRoomReviews({
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Loading State */}
-      {isLoading && (
+      {/* Loading State - Never show in editor */}
+      {!isEditor && isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: borderColor }} />
         </div>
       )}
 
-      {/* Error State */}
-      {error && !isLoading && (
+      {/* Error State - Never show in editor */}
+      {!isEditor && error && !isLoading && (
         <div className="text-center py-8" style={{ color: textColor }}>
           <p className="opacity-70">Unable to load reviews at this time.</p>
         </div>
       )}
 
-      {/* Reviews Grid */}
-      {!isLoading && !error && reviews.length > 0 && (
+      {/* Reviews Grid - NEVER show in editor mode */}
+      {!isEditor && !isLoading && !error && reviews.length > 0 && (
         <>
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mb-8`}>
             {displayedReviews.map((review) => {
@@ -730,8 +732,8 @@ export default function PreviewRoomReviews({
         </>
       )}
 
-      {/* Empty State for Editor - only show if there are no reviews */}
-      {isEditor && !isLoading && reviews.length === 0 && (
+      {/* Empty State for Editor - ALWAYS show in editor mode */}
+      {isEditor && (
         <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor }}>
           <p className="text-sm opacity-70" style={{ color: textColor }}>
             Room Reviews Section
