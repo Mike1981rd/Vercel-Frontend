@@ -271,6 +271,8 @@ export default function NavigationMenuForm({ menuId }: Props) {
         const convertSubItemsToChildren = (item: any): MenuItem => ({
           ...item,
           id: item.id || generateItemId(),
+          // Normalizar enlaces provenientes del backend
+          link: normalizeLink(item.link || item.Link || ''),
           children: item.subItems ? item.subItems.map(convertSubItemsToChildren) : [],
           subItems: undefined // Remover subItems del objeto
         });
@@ -363,11 +365,30 @@ export default function NavigationMenuForm({ menuId }: Props) {
     }));
   };
 
+  // Normalize internal links to avoid broken routes
+  const normalizeLink = (val: string) => {
+    if (!val) return val;
+    const trimmed = val.trim();
+    // Ignore full URLs and anchors/mailto/tel
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('mailto:') || lower.startsWith('tel:') || lower.startsWith('#')) {
+      return trimmed;
+    }
+    // Ensure leading slash for internal paths
+    let result = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    // Rooms listing normalization
+    if (result === '/habitaciones') result = '/habitaciones-lista';
+    if (result === 'habitaciones') result = '/habitaciones-lista';
+    if (result === '/habitaciones-lista' || result === 'habitaciones-lista') result = '/habitaciones-lista';
+    return result;
+  };
+
   const handleUpdateItem = (itemId: string, field: keyof MenuItem, value: string) => {
     const updateInItems = (items: MenuItem[]): MenuItem[] => {
       return items.map(item => {
         if (item.id === itemId) {
-          return { ...item, [field]: value };
+          const newValue = field === 'link' ? normalizeLink(value) : value;
+          return { ...item, [field]: newValue };
         }
         if (item.children) {
           return {
@@ -478,7 +499,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
       const cleanItems = (items: MenuItem[]): any[] => {
         return items.map((item, index) => ({
           label: item.label,
-          link: item.link,
+          link: normalizeLink(item.link),
           type: item.type || 'external',
           order: index,
           subItems: item.children && item.children.length > 0 
@@ -598,7 +619,8 @@ export default function NavigationMenuForm({ menuId }: Props) {
     const options = [
       { icon: <Home className="w-4 h-4" />, label: t('menus.links.homePage'), value: '/' },
       { icon: <Search className="w-4 h-4" />, label: t('menus.links.search'), value: '/search' },
-      { icon: <Bed className="w-4 h-4" />, label: 'Lista de Habitaciones', value: '/habitaciones' },
+      // Rooms listing page (public route)
+      { icon: <Bed className="w-4 h-4" />, label: 'Lista de Habitaciones', value: '/habitaciones-lista' },
     ];
 
     // Agregar colecciones
@@ -633,11 +655,14 @@ export default function NavigationMenuForm({ menuId }: Props) {
     // Agregar páginas
     if (pages.length > 0) {
       pages.forEach(page => {
-        // Usar el slug directamente para que funcione con el router dinámico
+        const slug = (page.slug || '').toLowerCase();
+        const normalizedValue = slug === 'habitaciones' ? '/habitaciones-lista' : `/${slug}`;
+        // Mostrar slug para desambiguar opciones similares
+        const pageLabel = `${t('menus.links.page', 'Página')}: ${page.title}${slug ? ` (${slug})` : ''}`;
         options.push({
           icon: <FileText className="w-4 h-4" />,
-          label: `${t('menus.links.page', 'Página')}: ${page.title}`,
-          value: `/${page.slug}` // Cambio: usar solo el slug
+          label: pageLabel,
+          value: normalizedValue
         });
       });
     }
@@ -769,6 +794,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
                 type="text"
                 value={item.link}
                 onChange={(e) => handleUpdateItem(item.id!, 'link', e.target.value)}
+                onBlur={(e) => handleUpdateItem(item.id!, 'link', e.target.value)}
                 className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2"
                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                 placeholder="#"
@@ -823,7 +849,8 @@ export default function NavigationMenuForm({ menuId }: Props) {
                       <button
                         key={idx}
                         onClick={() => {
-                          handleUpdateItem(item.id!, 'link', option.value);
+                          const normalized = normalizeLink(option.value);
+                          handleUpdateItem(item.id!, 'link', normalized);
                           // Si el usuario no ha personalizado el label, actualizarlo con el de la opción
                           if (!item.label || item.label === 'Menu Item') {
                             handleUpdateItem(item.id!, 'label', option.label);

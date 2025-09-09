@@ -51,7 +51,7 @@ const nextConfig = {
     return [
       {
         source: '/custom',
-        destination: '/habitaciones',
+        destination: '/habitaciones-lista',
         permanent: true,
       },
     ];

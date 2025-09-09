@@ -48,6 +48,9 @@ export default function PreviewRoomHighlights({
   theme 
 }: PreviewRoomHighlightsProps) {
   
+  console.log('🚀 PreviewRoomHighlights mounted with config:', config);
+  console.log('📝 Config.highlights (fallback):', config.highlights);
+  
   // Get theme config from store if not passed as prop
   const { config: themeConfigFromStore } = useThemeConfigStore();
   const themeConfig = theme || themeConfigFromStore;
@@ -146,7 +149,10 @@ export default function PreviewRoomHighlights({
   
   const commonSpaces = useMemo(() => {
     // Common spaces are actually inside sleepingArrangements.commonSpaces
-    if (!roomData?.sleepingArrangements) return null;
+    if (!roomData?.sleepingArrangements) {
+      console.log('⚠️ No sleepingArrangements in roomData');
+      return null;
+    }
     
     try {
       // Parse sleepingArrangements if it's a string
@@ -154,11 +160,16 @@ export default function PreviewRoomHighlights({
         ? JSON.parse(roomData.sleepingArrangements) 
         : roomData.sleepingArrangements;
       
+      console.log('📊 Full sleepingArrangements object:', sleepingArrangements);
+      
       const spaces = sleepingArrangements?.commonSpaces;
-      console.log('Common spaces from parsed sleepingArrangements:', spaces);
+      console.log('🏠 Common spaces from parsed sleepingArrangements:', spaces);
+      console.log('🔑 Common spaces keys:', spaces ? Object.keys(spaces) : 'null');
+      console.log('✅ Common spaces values:', spaces ? Object.entries(spaces).filter(([k, v]) => v === true).map(([k]) => k) : 'null');
+      
       return spaces;
     } catch (error) {
-      console.error('Error accessing commonSpaces:', error);
+      console.error('❌ Error accessing commonSpaces:', error);
       return null;
     }
   }, [roomData]);
@@ -208,13 +219,16 @@ export default function PreviewRoomHighlights({
     
     // THEN: Generate highlights from common spaces using catalog options
     if (commonSpaces && commonSpacesOptions.length > 0) {
-      console.log('Generating highlights from common spaces:', commonSpaces);
-      console.log('Available common space options:', commonSpacesOptions);
+      console.log('🎯 Generating highlights from common spaces:', commonSpaces);
+      console.log('📚 Available common space options:', commonSpacesOptions);
+      console.log('🔍 Checking each option against commonSpaces object...');
       
       // Iterate through each common space option from the catalog
       commonSpacesOptions.forEach((spaceOption: any) => {
+        console.log(`  Checking ${spaceOption.value}:`, commonSpaces[spaceOption.value]);
         // Check if this common space is enabled for the room
         if (commonSpaces[spaceOption.value]) {
+          console.log(`    ✅ ${spaceOption.value} is enabled!`);
           const spaceLabel = language === 'es' ? spaceOption.labelEs : spaceOption.labelEn;
           
           // Use description from catalog if available, otherwise generate a default one
@@ -309,10 +323,12 @@ export default function PreviewRoomHighlights({
     
     // If no common spaces, check if there's fallback config
     if (highlights.length === 0 && config.highlights) {
+      console.log('⚠️ No highlights generated from room data, using fallback config.highlights:', config.highlights);
       return config.highlights;
     }
     
-    console.log('Generated common spaces highlights:', highlights);
+    console.log('🎉 Final generated common spaces highlights:', highlights);
+    console.log('📋 Number of highlights:', highlights.length);
     return highlights;
   }, [commonSpaces, commonSpacesOptions, viewTypeOptions, language, config.highlights]);
 
