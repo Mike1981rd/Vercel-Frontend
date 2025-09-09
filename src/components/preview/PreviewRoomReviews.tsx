@@ -314,7 +314,8 @@ export default function PreviewRoomReviews({
       outlineButtonColor: colorScheme?.outlineButton || '#000000',
       outlineButtonText: colorScheme?.outlineButtonText || '#000000',
       cardBg: config.cardBackgroundColor || bgColor,
-      cardBorder: config.cardBorderColor || borderColor
+      cardBorder: config.cardBorderColor || borderColor,
+      colorScheme // Add colorScheme to the return object
     };
   }, [config, themeConfig]);
 
@@ -337,7 +338,8 @@ export default function PreviewRoomReviews({
     outlineButtonColor,
     outlineButtonText,
     cardBg,
-    cardBorder
+    cardBorder,
+    colorScheme
   } = configValues;
 
   // Calculate display values
