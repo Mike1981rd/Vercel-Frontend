@@ -248,16 +248,6 @@ export default function RoomThingsPreview({
       } else if (Array.isArray(hr)) {
         rules.push(...hr.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof hr === 'object') {
-        // Include time-based rules if present
-        if (hr.checkInTime) {
-          rules.push(`Check-in: ${hr.checkInTime}`);
-        }
-        if (hr.checkOutTime) {
-          rules.push(`Check-out: ${hr.checkOutTime}`);
-        }
-        if (hr.quietHours) {
-          rules.push(`Quiet hours: ${hr.quietHours}`);
-        }
         // If catalog options exist, respect order + labels; otherwise, fall back to object keys
         const aliasMap: Record<string, string[]> = {
           smokingAllowed: ['smokingAllowed', 'fumar', 'sePermiteFumar', 'smoking', 'smoking_allowed'],
