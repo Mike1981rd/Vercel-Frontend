@@ -191,7 +191,11 @@ export default function PreviewRoomReviews({
         fourStarCount: 1,
         threeStarCount: 0,
         twoStarCount: 0,
-        oneStarCount: 0
+        oneStarCount: 0,
+        positiveReviewsCount: 4,
+        positivePercentage: 100,
+        newReviewsThisWeek: 2,
+        weeklyGrowthPercentage: 50
       };
 
       setReviews(sampleReviews);
