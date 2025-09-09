@@ -1,58 +1,73 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+'use server';
 
-// Rutas públicas que no requieren autenticación
-const publicPaths = ['/login', '/register', '/forgot-password'];
+import { NextRequest, NextResponse } from 'next/server';
 
-// Rutas que requieren autenticación
-const protectedPaths = [
-  '/dashboard',
-  '/empresa',
-  '/roles-usuarios',
-  '/clientes',
-  '/reservaciones',
-  '/metodos-pago',
-  '/colecciones',
-  '/productos',
-  '/paginas',
-  '/politicas',
-  '/website-builder',
-  '/dominios'
-];
+// Domains considered admin/dev where we should NOT set x-company-id
+const ADMIN_HOSTS = ['localhost', '127.0.0.1', 'websitebuilder-admin', 'vercel.app'];
 
-export function middleware(request: NextRequest) {
-  const { pathname, hostname } = request.nextUrl;
+function isAdminHost(host: string): boolean {
+  const lower = host.toLowerCase();
+  return ADMIN_HOSTS.some(h => lower === h || lower.endsWith(`.${h}`));
+}
 
-  // Redirección inteligente de root según dominio
-  if (pathname === '/') {
-    const host = (hostname || '').toLowerCase();
+// Attempt to resolve companyId from multiple sources
+function resolveCompanyId(req: NextRequest): string | null {
+  // 1) Header already present (proxy or platform)
+  const headerVal = req.headers.get('x-company-id');
+  if (headerVal && /^\d+$/.test(headerVal)) return headerVal;
 
-    // Considerar dominios de administración (dev y vercel) para enviar a /login
-    const isAdminHost =
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === 'websitebuilder-admin.vercel.app' ||
-      (host.startsWith('websitebuilder-admin-') && host.endsWith('.vercel.app'));
+  const host = req.headers.get('host') || '';
+  if (!host) return null;
 
-    // Si es host de admin → /login; si es dominio público (alias) → /home
-    const target = isAdminHost ? '/login' : '/home';
-    return NextResponse.redirect(new URL(target, request.url));
+  // 2) Environment mapping DOMAIN_COMPANY_MAP (JSON object: {"domain.com": 1, "www.domain.com": 1})
+  const envMap = process.env.DOMAIN_COMPANY_MAP || process.env.NEXT_PUBLIC_DOMAIN_COMPANY_MAP;
+  if (envMap) {
+    try {
+      const map = JSON.parse(envMap) as Record<string, number | string>;
+      // Exact host match first
+      if (map[host] && String(map[host]).match(/^\d+$/)) return String(map[host]);
+      // Try without port
+      const noPort = host.split(':')[0];
+      if (map[noPort] && String(map[noPort]).match(/^\d+$/)) return String(map[noPort]);
+      // Try without www
+      if (noPort.startsWith('www.')) {
+        const bare = noPort.slice(4);
+        if (map[bare] && String(map[bare]).match(/^\d+$/)) return String(map[bare]);
+      }
+    } catch {}
   }
 
-  // Permitir todas las demás rutas sin verificación
-  // La protección se maneja en el cliente con useAuth
-  return NextResponse.next();
+  // 3) Cookie (optional)
+  const cookieId = req.cookies.get('companyId')?.value;
+  if (cookieId && /^\d+$/.test(cookieId)) return cookieId;
+
+  return null;
+}
+
+export function middleware(req: NextRequest) {
+  const host = (req.headers.get('host') || '').toLowerCase();
+  if (!host || isAdminHost(host)) {
+    return NextResponse.next();
+  }
+
+  // For custom domains, ensure x-company-id is present to satisfy rewrites
+  const companyId = resolveCompanyId(req);
+  if (companyId) {
+    const res = NextResponse.next({ request: { headers: req.headers } });
+    res.headers.set('x-company-id', companyId);
+    // Also set a cookie to help client-side fetches
+    res.cookies.set('companyId', companyId, { path: '/', httpOnly: false });
+    return res;
+  }
+
+  // No mapping available -> proceed without header (pages may fallback), but we set no-store to avoid caching wrong content
+  const res = NextResponse.next({ request: { headers: req.headers } });
+  res.headers.set('cache-control', 'no-store');
+  return res;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  // Run on all pages
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
+
