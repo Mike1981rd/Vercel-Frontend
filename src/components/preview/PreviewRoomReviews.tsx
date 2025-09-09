@@ -918,7 +918,6 @@ export default function PreviewRoomReviews({
           roomId={effectiveRoomId}
           ratingIcon={ratingIcon}
           ratingIconColor={ratingIconColor}
-          colorScheme={colorScheme}
         />
       )}
     </div>
