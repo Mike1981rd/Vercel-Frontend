@@ -160,7 +160,28 @@ export default function PreviewRoomHighlights({
           console.log('📊 CommonSpaces structure from sleepingArrangements:', JSON.stringify(spaces, null, 2));
           console.log('📊 CommonSpaces keys:', Object.keys(spaces));
           console.log('📊 CommonSpaces typeof:', typeof spaces);
-          return spaces;
+          
+          // Normalize keys to lowercase for consistent access
+          const normalized: any = {};
+          Object.entries(spaces).forEach(([key, value]) => {
+            // Convert key to lowercase and handle special cases
+            let normalizedKey = key.toLowerCase();
+            // Special mapping for Spanish terms
+            if (normalizedKey === 'terraza') normalizedKey = 'terrace';
+            if (normalizedKey === 'gimnasio') normalizedKey = 'gym';
+            if (normalizedKey === 'estacionamiento' || normalizedKey === 'parqueo') normalizedKey = 'parking';
+            if (normalizedKey === 'cocina') normalizedKey = 'kitchen';
+            if (normalizedKey === 'sala' || normalizedKey === 'saladestar') normalizedKey = 'livingroom';
+            if (normalizedKey === 'comedor') normalizedKey = 'diningroom';
+            if (normalizedKey === 'balcon' || normalizedKey === 'balcón') normalizedKey = 'balcony';
+            if (normalizedKey === 'jardin' || normalizedKey === 'jardín') normalizedKey = 'garden';
+            if (normalizedKey === 'piscina') normalizedKey = 'pool';
+            
+            normalized[normalizedKey] = value;
+          });
+          
+          console.log('📊 Normalized commonSpaces:', JSON.stringify(normalized, null, 2));
+          return normalized;
         }
       }
       // Fallback: some datasets may store this under dedicated CommonSpaces
@@ -171,6 +192,25 @@ export default function PreviewRoomHighlights({
         if (cs) {
           console.log('📊 CommonSpaces structure from top-level:', JSON.stringify(cs, null, 2));
           console.log('📊 CommonSpaces keys:', Object.keys(cs));
+          
+          // Normalize this too
+          const normalized: any = {};
+          Object.entries(cs).forEach(([key, value]) => {
+            let normalizedKey = key.toLowerCase();
+            if (normalizedKey === 'terraza') normalizedKey = 'terrace';
+            if (normalizedKey === 'gimnasio') normalizedKey = 'gym';
+            if (normalizedKey === 'estacionamiento' || normalizedKey === 'parqueo') normalizedKey = 'parking';
+            if (normalizedKey === 'cocina') normalizedKey = 'kitchen';
+            if (normalizedKey === 'sala' || normalizedKey === 'saladestar') normalizedKey = 'livingroom';
+            if (normalizedKey === 'comedor') normalizedKey = 'diningroom';
+            if (normalizedKey === 'balcon' || normalizedKey === 'balcón') normalizedKey = 'balcony';
+            if (normalizedKey === 'jardin' || normalizedKey === 'jardín') normalizedKey = 'garden';
+            if (normalizedKey === 'piscina') normalizedKey = 'pool';
+            
+            normalized[normalizedKey] = value;
+          });
+          
+          return normalized;
         }
         return cs || null;
       }
