@@ -15,8 +15,9 @@ import {
   Settings, Search, Eye, EyeOff, User, ThumbsDown, Lightbulb, Trash2, FileText, Copy, Share2, Plus, Minus, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ChevronUp, ChevronDown,
   // Hotel & Services icons
   Wifi, Shield, Bed, Coffee, Car, Utensils, Users, MapPin, Calendar, Clock, DollarSign, Home, Building, Mountain, Trees, Waves, Umbrella, Gamepad2, Music, Tv,
+  Droplets, Dumbbell, Bell, Shirt, Wind, Wine, Sparkles, Plane, UserCheck, Presentation, Briefcase,
   // Social Media icons
-  Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Globe, MessageCircle, Send, Camera, Video, Mic, Headphones, Radio, Bookmark, Bell, Hash, AtSign, Link, Share
+  Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Globe, MessageCircle, Send, Camera, Video, Mic, Headphones, Radio, Bookmark, Hash, AtSign, Link, Share
 } from 'lucide-react';
 import { MulticolumnsConfig } from '@/components/editor/modules/Multicolumns/types';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
@@ -99,6 +100,23 @@ const iconMap: Record<string, any> = {
   'gamepad-2': Gamepad2,
   'music': Music,
   'tv': Tv,
+  // Additional hotel service mappings
+  'restaurant': Utensils,
+  'hot-water': Droplets,
+  'parking': Car,
+  'pool': Waves,
+  'gym': Dumbbell,
+  'room-service': Bell,
+  'laundry': Shirt,
+  'pet-friendly': Heart,
+  'ac': Wind,
+  'minibar': Wine,
+  'safe': Lock,
+  'spa': Sparkles,
+  'airport-shuttle': Plane,
+  'concierge': UserCheck,
+  'conference-room': Presentation,
+  'business-center': Briefcase,
   // Social Media icons
   'facebook': Facebook,
   'twitter': Twitter,

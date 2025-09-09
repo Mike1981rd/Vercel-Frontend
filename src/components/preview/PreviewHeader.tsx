@@ -109,9 +109,9 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
     edgeRounding: config?.edgeRounding || 'size0',
     customCss: config?.customCss || '',
     height: config?.height || 145,
-    showSearchIcon: config?.showSearchIcon !== false, // default true
-    showUserIcon: config?.showUserIcon !== false, // default true
-    showCartIcon: config?.showCartIcon !== false, // default true
+    showSearchIcon: config?.showSearchIcon ?? true, // default true if undefined
+    showUserIcon: config?.showUserIcon ?? true, // default true if undefined
+    showCartIcon: config?.showCartIcon ?? true, // default true if undefined
     wishlist: config?.wishlist || {
       show: false,
       style: 'heart-outline',

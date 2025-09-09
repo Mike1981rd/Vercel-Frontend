@@ -200,12 +200,11 @@ export default function FAQItemEditor({ sectionId, itemId }: FAQItemEditorProps)
                 <button className="p-1 hover:bg-gray-100 rounded"><ListOrdered className="w-3 h-3" /></button>
               </div>
               <div className="px-2 py-1.5">
-                <div 
-                  contentEditable
-                  className="min-h-[150px] text-sm outline-none"
-                  dangerouslySetInnerHTML={{ __html: localItem.source }}
-                  onInput={(e) => handleChange('source', e.currentTarget.innerHTML)}
-                  suppressContentEditableWarning={true}
+                <textarea
+                  className="w-full min-h-[150px] text-sm outline-none resize-none"
+                  value={localItem.source}
+                  onChange={(e) => handleChange('source', e.target.value)}
+                  placeholder="Sí, contamos con material de apoyo para que puedas estudiar mejor..."
                 />
               </div>
             </div>
