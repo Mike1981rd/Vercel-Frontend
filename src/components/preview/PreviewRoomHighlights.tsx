@@ -49,7 +49,7 @@ export default function PreviewRoomHighlights({
 }: PreviewRoomHighlightsProps) {
   
   console.log('🚀 PreviewRoomHighlights mounted with config:', config);
-  console.log('📝 Config.highlights (fallback):', config.highlights);
+  // Avoid relying on fallback highlights; only show real room data
   
   // Get theme config from store if not passed as prop
   const { config: themeConfigFromStore } = useThemeConfigStore();
@@ -344,11 +344,8 @@ export default function PreviewRoomHighlights({
       });
     }
     
-    // If no common spaces, check if there's fallback config
-    if (highlights.length === 0 && config.highlights) {
-      console.log('⚠️ No highlights generated from room data, using fallback config.highlights:', config.highlights);
-      return config.highlights;
-    }
+    // If no common spaces, do not fallback; show nothing
+    if (highlights.length === 0) return [];
     
     console.log('🎉 Final generated common spaces highlights:', highlights);
     console.log('📋 Number of highlights:', highlights.length);
