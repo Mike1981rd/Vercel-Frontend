@@ -29,7 +29,16 @@ class LocalAuthService {
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post('/auth/login', credentials);
+      // Asegurar que no se envíe un Authorization previo en el login
+      try {
+        delete (api.defaults.headers as any)?.common?.Authorization;
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
+      } catch {}
+
+      const response = await api.post('/auth/login', credentials, {
+        headers: { Authorization: undefined }
+      });
       const authData = response.data as AuthResponse;
       
       // Guardar token y usuario en localStorage

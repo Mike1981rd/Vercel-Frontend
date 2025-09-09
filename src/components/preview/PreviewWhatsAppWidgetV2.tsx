@@ -185,6 +185,27 @@ export default function PreviewWhatsAppWidgetV2({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Prevent background scroll on mobile when chat overlay is open
+  const originalOverflowRef = useRef<string>('');
+  
+  useEffect(() => {
+    if (!isMobile) return;
+    
+    if (showChat) {
+      // Guardar el overflow original
+      originalOverflowRef.current = document.body.style.overflow || '';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restaurar el overflow original
+      document.body.style.overflow = originalOverflowRef.current || 'auto';
+    }
+    
+    // Cleanup crítico al desmontar
+    return () => {
+      document.body.style.overflow = originalOverflowRef.current || 'auto';
+    };
+  }, [showChat, isMobile]);
+
   // Poll for new messages
   useEffect(() => {
     if (!showChat || !showChatContent || conversationClosed) {
@@ -484,8 +505,25 @@ export default function PreviewWhatsAppWidgetV2({
 
   // Handle close chat
   const handleCloseChat = () => {
-    setShowChat(false);
-    setShowChatContent(false);
+    // Quitar focus de cualquier input activo
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    // Resetear scroll y zoom en móvil
+    if (isMobile) {
+      // Resetear cualquier zoom o desplazamiento
+      window.scrollTo(0, 0);
+      
+      // Esperar un momento para que el teclado se cierre
+      setTimeout(() => {
+        setShowChat(false);
+        setShowChatContent(false);
+      }, 100);
+    } else {
+      setShowChat(false);
+      setShowChatContent(false);
+    }
   };
 
   // Don't render if not enabled or not visible for device
@@ -500,7 +538,9 @@ export default function PreviewWhatsAppWidgetV2({
   const chatPosition = widgetConfig.position === 'bottom-right'
     ? 'bottom-20 right-0'
     : 'bottom-20 left-0';
-  const chatWidth = isMobile ? 'w-screen h-screen fixed inset-0' : 'w-96 h-[600px]';
+  // On mobile, avoid using w-screen/h-screen to prevent horizontal scrollbars (100vw issue).
+  // Use fixed inset-0 with w-full/h-full so safe areas and scrollbars don't cause overflow.
+  const chatWidth = isMobile ? 'fixed inset-0 w-full h-full' : 'w-96 h-[600px]';
 
   return (
     <div className={`fixed ${buttonPosition} z-50`}>
@@ -521,13 +561,18 @@ export default function PreviewWhatsAppWidgetV2({
       {/* Chat Popup */}
       {showChat && (
         <div
-          className={`${isMobile ? '' : 'absolute'} ${chatPosition} ${chatWidth} bg-white rounded-lg shadow-xl z-50 flex flex-col`}
+          className={`${isMobile ? '' : 'absolute'} ${isMobile ? '' : chatPosition} ${chatWidth} bg-white rounded-lg shadow-xl z-50 flex flex-col`}
           style={{ borderTop: `4px solid ${widgetConfig.primaryColor}` }}
         >
           {/* Chat Header */}
           <div
             className="p-4 text-white flex justify-between items-center flex-shrink-0"
-            style={{ backgroundColor: widgetConfig.primaryColor }}
+            style={{ 
+              backgroundColor: widgetConfig.primaryColor,
+              paddingTop: isMobile ? ('calc(1rem + env(safe-area-inset-top))' as any) : undefined,
+              paddingLeft: isMobile ? ('calc(1rem + env(safe-area-inset-left))' as any) : undefined,
+              paddingRight: isMobile ? ('calc(1rem + env(safe-area-inset-right))' as any) : undefined,
+            }}
           >
             <div className="flex items-center gap-2">
               <WhatsAppIcon size={20} />
@@ -538,12 +583,10 @@ export default function PreviewWhatsAppWidgetV2({
             </div>
             <button
               onClick={handleCloseChat}
-              className="text-white hover:opacity-80"
+              aria-label="Cerrar chat"
+              className="px-3 py-1.5 rounded-full text-sm font-medium border border-white/30 text-white/90 hover:text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              Cerrar
             </button>
           </div>
 
@@ -562,9 +605,15 @@ export default function PreviewWhatsAppWidgetV2({
                     placeholder="Tu nombre"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isMobile ? 'text-base' : 'text-sm'
+                    } ${
                       formErrors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
+                    style={{
+                      fontSize: isMobile ? '16px' : '14px',
+                      WebkitTextSizeAdjust: '100%'
+                    }}
                   />
                   {formErrors.name && (
                     <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
@@ -579,9 +628,15 @@ export default function PreviewWhatsAppWidgetV2({
                     placeholder="Tu correo electrónico"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                    className={`w-full px-3 py-2 border rounded-lg ${
+                      isMobile ? 'text-base' : 'text-sm'
+                    } ${
                       formErrors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
+                    style={{
+                      fontSize: isMobile ? '16px' : '14px',
+                      WebkitTextSizeAdjust: '100%'
+                    }}
                   />
                   {formErrors.email && (
                     <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
@@ -674,7 +729,13 @@ export default function PreviewWhatsAppWidgetV2({
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       placeholder={widgetConfig.placeholderText}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500"
+                      className={`flex-1 px-3 py-2 border border-gray-300 rounded-lg ${
+                        isMobile ? 'text-base' : 'text-sm'
+                      } focus:outline-none focus:border-green-500`}
+                      style={{
+                        fontSize: isMobile ? '16px' : '14px',
+                        WebkitTextSizeAdjust: '100%'
+                      }}
                       disabled={conversationClosed}
                     />
                     <button

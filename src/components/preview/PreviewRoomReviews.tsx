@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Star, Heart, Smile, ThumbsUp, Loader2 } from 'lucide-react';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
 import WriteReviewModal from '@/components/reviews/WriteReviewModal';
@@ -48,7 +48,7 @@ export default function PreviewRoomReviews({
   const [statistics, setStatistics] = useState<ReviewStatisticsDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [firstActiveRoomId, setFirstActiveRoomId] = useState<number | null>(null);
+  const [effectiveRoomId, setEffectiveRoomId] = useState<number | null>(null);
   
   const [isMobile, setIsMobile] = useState<boolean>(() => {
     if (deviceView !== undefined) return deviceView === 'mobile';
@@ -69,44 +69,173 @@ export default function PreviewRoomReviews({
     return () => window.removeEventListener('resize', onResize);
   }, [deviceView]);
 
-  // Fetch first active room ID when needed (editor or no roomId provided in live)
+  // Consolidated effect for loading room data and reviews
   useEffect(() => {
-    const loadRoomData = async () => {
+    // Don't do anything if disabled
+    if (!config.enabled) return;
+    
+    // In editor mode, show sample data for design purposes
+    if (isEditor) {
+      // Sample data for editor preview
+      const sampleReviews: ReviewDto[] = [
+        {
+          id: 1,
+          companyId: 1,
+          authorName: 'Maria Garcia',
+          rating: 5,
+          content: 'Excelente habitación, muy cómoda y limpia. El servicio fue impecable y la ubicación perfecta.',
+          title: 'Excelente experiencia',
+          authorEmail: 'maria@example.com',
+          country: 'Spain',
+          status: 'Approved' as const,
+          source: 'Website',
+          isPinned: false,
+          createdAt: new Date().toISOString(),
+          roomId: 1,
+          isVerifiedPurchase: true,
+          likesCount: 12,
+          dislikesCount: 0,
+          helpfulCount: 8,
+          media: [],
+          userHasInteracted: false,
+          customer: {
+            id: 1,
+            fullName: 'Maria Garcia',
+            email: 'maria@example.com'
+          }
+        },
+        {
+          id: 2,
+          companyId: 1,
+          authorName: 'John Smith',
+          rating: 4,
+          content: 'Great room with amazing views. Very comfortable bed and excellent amenities.',
+          title: 'Amazing stay',
+          authorEmail: 'john@example.com',
+          country: 'USA',
+          status: 'Approved' as const,
+          source: 'Website',
+          isPinned: false,
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          roomId: 1,
+          isVerifiedPurchase: true,
+          likesCount: 5,
+          dislikesCount: 1,
+          helpfulCount: 3,
+          media: [],
+          userHasInteracted: false,
+          customer: {
+            id: 2,
+            fullName: 'John Smith',
+            email: 'john@example.com'
+          }
+        },
+        {
+          id: 3,
+          companyId: 1,
+          authorName: 'Ana Rodriguez',
+          rating: 5,
+          content: 'La mejor experiencia! Todo estuvo perfecto desde el check-in hasta el check-out.',
+          title: 'Perfecto!',
+          authorEmail: 'ana@example.com',
+          country: 'Mexico',
+          status: 'Approved' as const,
+          source: 'Website',
+          isPinned: false,
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
+          roomId: 1,
+          isVerifiedPurchase: false,
+          likesCount: 8,
+          dislikesCount: 0,
+          helpfulCount: 6,
+          media: [],
+          userHasInteracted: false,
+          customer: {
+            id: 3,
+            fullName: 'Ana Rodriguez',
+            email: 'ana@example.com'
+          }
+        },
+        {
+          id: 4,
+          companyId: 1,
+          authorName: 'Robert Johnson',
+          rating: 5,
+          content: 'Outstanding service and beautiful room. Will definitely come back!',
+          title: 'Will come back',
+          authorEmail: 'robert@example.com',
+          country: 'Canada',
+          status: 'Approved' as const,
+          source: 'Website',
+          isPinned: false,
+          createdAt: new Date(Date.now() - 259200000).toISOString(),
+          roomId: 1,
+          isVerifiedPurchase: true,
+          likesCount: 2,
+          dislikesCount: 3,
+          helpfulCount: 4,
+          media: [],
+          userHasInteracted: false,
+          customer: {
+            id: 4,
+            fullName: 'Robert Johnson',
+            email: 'robert@example.com'
+          }
+        }
+      ];
+
+      const sampleStatistics: ReviewStatisticsDto = {
+        averageRating: 4.8,
+        totalReviews: 4,
+        fiveStarCount: 3,
+        fourStarCount: 1,
+        threeStarCount: 0,
+        twoStarCount: 0,
+        oneStarCount: 0
+      };
+
+      setReviews(sampleReviews);
+      setStatistics(sampleStatistics);
+      return;
+    }
+
+    const configRoomId = (config as any)?.roomId as number | undefined;
+    
+    // If we have a roomId from props or config, use it directly
+    if (roomId || configRoomId) {
+      const targetRoomId = roomId ?? configRoomId ?? null;
+      setEffectiveRoomId(targetRoomId);
+      if (typeof targetRoomId === 'number') {
+        loadReviews(targetRoomId);
+      }
+      return;
+    }
+
+    // In live mode without roomId, fetch first active room and then load reviews
+    const loadRoomAndReviews = async () => {
       const companyId = localStorage.getItem('companyId') || '1';
       
       try {
-        // Use helper function that checks for slug
         const data = await fetchRoomData(companyId);
         if (data?.id) {
-          setFirstActiveRoomId(data.id);
+          setEffectiveRoomId(data.id);
+          await loadReviews(data.id);
         }
       } catch (error) {
-        console.error('Error fetching first active room:', error);
+        console.error('Error fetching room data:', error);
+        setError('Failed to load room information');
       }
     };
 
-    const configRoomId = (config as any)?.roomId as number | undefined;
-    // Fetch when enabled and either in editor OR no room id is provided in live
-    if (config.enabled && (isEditor || (!roomId && !configRoomId))) {
-      loadRoomData();
-    }
-  }, [isEditor, config.enabled, roomId, config]);
-
-  // Load reviews when roomId (prop or config) is available or when we have firstActiveRoomId
-  useEffect(() => {
-    const roomIdFromConfig = (config as any)?.roomId as number | undefined;
-    const effectiveRoomId = roomId || roomIdFromConfig || firstActiveRoomId;
-    if (effectiveRoomId) {
-      loadReviews(effectiveRoomId);
-    }
-  }, [roomId, firstActiveRoomId, isEditor, config]);
+    loadRoomAndReviews();
+  }, [config.enabled, roomId, isEditor]);
 
   // Listen to cross-tab updates (from backoffice approvals) and reload
   useEffect(() => {
+    if (!effectiveRoomId) return;
+    
     const onUpdated = () => {
-      const roomIdFromConfig = (config as any)?.roomId as number | undefined;
-      const effectiveRoomId = roomId || roomIdFromConfig || firstActiveRoomId;
-      if (effectiveRoomId) loadReviews(effectiveRoomId);
+      loadReviews(effectiveRoomId);
     };
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'reviews_updated') onUpdated();
@@ -117,10 +246,15 @@ export default function PreviewRoomReviews({
       window.removeEventListener('reviews:updated', onUpdated as EventListener);
       window.removeEventListener('storage', onStorage);
     };
-  }, [roomId, firstActiveRoomId]);
+  }, [effectiveRoomId]);
 
   const loadReviews = async (reviewRoomId: number) => {
     if (!reviewRoomId) return;
+    
+    // Prevent duplicate loads for the same room
+    if (effectiveRoomId === reviewRoomId && reviews.length > 0 && !error) {
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
@@ -149,40 +283,58 @@ export default function PreviewRoomReviews({
 
   const handleReviewSubmitted = () => {
     // Reload reviews after successful submission
-    const configRoomId = (config as any)?.roomId as number | undefined;
-    const effectiveRoomId = roomId || configRoomId || firstActiveRoomId;
     if (effectiveRoomId) {
       loadReviews(effectiveRoomId);
     }
   };
 
+  // Memoize configuration values to match other Room components
+  const configValues = useMemo(() => {
+    const colorSchemeId = config.colorSchemeId || 'scheme-1';
+    const colorScheme = themeConfig?.colorSchemes?.schemes?.find(s => s.id === colorSchemeId) || null;
+    const bgColor = colorScheme?.background || '#FFFFFF';
+    const textColor = colorScheme?.text || '#000000';
+    const borderColor = colorScheme?.border || '#E5E7EB';
+    
+    return {
+      ratingIcon: config.ratingIcon || 'star',
+      ratingIconColor: config.ratingIconColor || '#FFB800',
+      bodyType: config.bodyType || 'standard',
+      cardStyle: config.cardStyle || 'elegant',
+      headerSize: config.headerSize || 32,
+      topPadding: config.topPadding || 40,
+      bottomPadding: config.bottomPadding || 40,
+      bgColor,
+      textColor,
+      borderColor,
+      outlineButtonColor: colorScheme?.outlineButton || '#000000',
+      outlineButtonText: colorScheme?.outlineButtonText || '#000000',
+      cardBg: config.cardBackgroundColor || bgColor,
+      cardBorder: config.cardBorderColor || borderColor
+    };
+  }, [config, themeConfig]);
+
   if (!config.enabled) {
     return null;
   }
 
-  // Get configuration values with defaults
-  const colorSchemeId = config.colorSchemeId || 'scheme-1';
-  const ratingIcon = config.ratingIcon || 'star';
-  const ratingIconColor = config.ratingIconColor || '#FFB800';
-  const bodyType = config.bodyType || 'standard';
-  const cardStyle = config.cardStyle || 'elegant';
-  const headerSize = config.headerSize || 32;
-  const topPadding = config.topPadding || 40;
-  const bottomPadding = config.bottomPadding || 40;
-
-  // Get the selected color scheme from theme config
-  const colorScheme = themeConfig?.colorSchemes?.schemes?.find(s => s.id === colorSchemeId) || null;
-  
-  // Use color scheme colors or fallback to defaults
-  const bgColor = colorScheme?.background || '#FFFFFF';
-  const textColor = colorScheme?.text || '#000000';
-  const borderColor = colorScheme?.border || '#E5E7EB';
-  const outlineButtonColor = colorScheme?.outlineButton || '#000000';
-  const outlineButtonText = colorScheme?.outlineButtonText || '#000000';
-
-  // Card colors (derive after borderColor is available)
-  const cardBg = config.cardBackgroundColor || bgColor;
-  const cardBorder = config.cardBorderColor || borderColor;
+  // Destructure memoized values
+  const {
+    ratingIcon,
+    ratingIconColor,
+    bodyType,
+    cardStyle,
+    headerSize,
+    topPadding,
+    bottomPadding,
+    bgColor,
+    textColor,
+    borderColor,
+    outlineButtonColor,
+    outlineButtonText,
+    cardBg,
+    cardBorder
+  } = configValues;
 
   // Calculate display values
   const averageRating = statistics?.averageRating || 0;
@@ -489,22 +641,22 @@ export default function PreviewRoomReviews({
         </div>
       )}
 
-      {/* Loading State */}
-      {isLoading && (
+      {/* Loading State - Never show in editor */}
+      {!isEditor && isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: borderColor }} />
         </div>
       )}
 
-      {/* Error State */}
-      {error && !isLoading && (
+      {/* Error State - Never show in editor */}
+      {!isEditor && error && !isLoading && (
         <div className="text-center py-8" style={{ color: textColor }}>
           <p className="opacity-70">Unable to load reviews at this time.</p>
         </div>
       )}
 
-      {/* Reviews Grid */}
-      {!isLoading && !error && reviews.length > 0 && (
+      {/* Reviews Grid - Show sample data in editor */}
+      {(!isEditor || (isEditor && reviews.length > 0)) && !isLoading && !error && reviews.length > 0 && (
         <>
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mb-8`}>
             {displayedReviews.map((review) => {
@@ -720,16 +872,14 @@ export default function PreviewRoomReviews({
         </>
       )}
 
-      {/* Empty State for Editor - only show if there are no reviews */}
-      {isEditor && !isLoading && reviews.length === 0 && (
+      {/* Empty State for Editor - ALWAYS show in editor mode */}
+      {isEditor && (
         <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor }}>
           <p className="text-sm opacity-70" style={{ color: textColor }}>
-            {firstActiveRoomId 
-              ? "No reviews yet for this room. Reviews will appear here when customers submit them."
-              : "No active room found. Please create and activate a room first."}
+            Room Reviews Section
           </p>
           <p className="text-xs opacity-50 mt-2" style={{ color: textColor }}>
-            This is a preview showing data from the first active room.
+            Reviews will be displayed here in the live site
           </p>
         </div>
       )}
@@ -756,12 +906,12 @@ export default function PreviewRoomReviews({
       )}
 
       {/* Write Review Modal */}
-      {(roomId || firstActiveRoomId) && (
+      {effectiveRoomId && (
         <WriteReviewModal
           isOpen={showWriteReview}
           onClose={() => setShowWriteReview(false)}
           onSuccess={handleReviewSubmitted}
-          roomId={roomId || firstActiveRoomId!}
+          roomId={effectiveRoomId}
           ratingIcon={ratingIcon}
           ratingIconColor={ratingIconColor}
           colorScheme={colorScheme}

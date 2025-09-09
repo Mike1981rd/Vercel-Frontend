@@ -6,6 +6,7 @@ import { PageType } from '@/types/editor.types';
 import PreviewHeader from './PreviewHeader';
 import PreviewFooter from './PreviewFooter';
 import PreviewContent from './PreviewContent';
+import ContactFormEnhancer from '@/components/notifications/ContactFormEnhancer';
 import PreviewAnnouncementBar from './PreviewAnnouncementBar';
 import PreviewWhatsAppWidgetV2 from './PreviewWhatsAppWidgetV2';
 
@@ -224,16 +225,18 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
 
       {/* Structural ImageBanner fallback removed: ImageBanner now renders only when added as a section */}
 
-      {/* Page Content */}
+      {/* Page Content (wrapped to enhance contact forms automatically) */}
       <main className="flex-1">
-        <PreviewContent 
-          pageType={pageType} 
-          handle={effectiveHandle}
-          theme={globalTheme}
-          companyId={companyId || undefined}
-          deviceView={editorDeviceView}
-          roomSlug={roomSlug}
-        />
+        <ContactFormEnhancer autoEnhance={true}>
+          <PreviewContent 
+            pageType={pageType} 
+            handle={effectiveHandle}
+            theme={globalTheme}
+            companyId={companyId || undefined}
+            deviceView={editorDeviceView}
+            roomSlug={roomSlug}
+          />
+        </ContactFormEnhancer>
       </main>
 
       {/* Footer - if configured */}

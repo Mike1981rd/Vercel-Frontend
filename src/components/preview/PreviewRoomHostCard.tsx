@@ -21,6 +21,11 @@ interface RoomHostCardConfig {
   work?: string;
   location?: string;
   showMessageButton?: boolean;
+  // Card visibility settings
+  showHostIdCard?: boolean;
+  showBioCard?: boolean;
+  showDetailsStatsCard?: boolean;
+  showAttributesHobbiesCard?: boolean;
   // Style settings
   buttonColor?: string;
   buttonTextColor?: string;
@@ -199,15 +204,25 @@ export default function PreviewRoomHostCard({
       }}
     >
       <h2 className={`${isMobile ? 'text-lg text-center' : 'text-xl'} font-semibold mb-6`}>
-        {displayData.title || 'Meet your Host'}
+        {displayData.title || 'Conoce a tu anfitrión'}
       </h2>
 
+      {/* Check if all cards are hidden */}
+      {config.showHostIdCard === false && 
+       config.showBioCard === false && 
+       config.showDetailsStatsCard === false && 
+       config.showAttributesHobbiesCard === false ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No hay tarjetas de información del anfitrión habilitadas. Por favor, habilita al menos una tarjeta para mostrar la información del anfitrión.</p>
+        </div>
+      ) : (
       <div className="space-y-8">
         {/* Top section with host card and other info cards */}
         <div className={`${isMobile ? 'flex flex-col gap-6' : 'grid lg:grid-cols-2 gap-8'}`}>
           {/* Left column - Host cards stacked */}
           <div className={`flex flex-col gap-4 ${isMobile ? 'w-full' : ''}`}>
             {/* Host ID card */}
+            {config.showHostIdCard !== false && (
             <div 
               className="shadow-xl overflow-hidden flex-1"
               style={{ 
@@ -241,14 +256,14 @@ export default function PreviewRoomHostCard({
                   </div>
                   {isMobile ? (
                     <div className="ml-4 flex-1">
-                      <p className="text-xs font-bold text-gray-700 tracking-wide">HOST ID</p>
+                      <p className="text-xs font-bold text-gray-700 tracking-wide">ID ANFITRIÓN</p>
                       <h3 className="text-base font-bold mt-1" style={{ color: styles.cardTextColor }}>{displayData.hostName || 'Host'}</h3>
                       {displayData.isSuperhost && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full">SUPERHOST</span>
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full">SÚPER ANFITRIÓN</span>
                       )}
                     </div>
                   ) : (
-                    <p className="text-xs font-bold mt-3 text-gray-700 tracking-wide">HOST ID</p>
+                    <p className="text-xs font-bold mt-3 text-gray-700 tracking-wide">ID ANFITRIÓN</p>
                   )}
                 </div>
 
@@ -258,11 +273,11 @@ export default function PreviewRoomHostCard({
                   {!isMobile && (
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-xs font-medium" style={{ color: styles.cardTextColor, opacity: 0.7 }}>Certified Host</p>
+                        <p className="text-xs font-medium" style={{ color: styles.cardTextColor, opacity: 0.7 }}>Anfitrión Certificado</p>
                         <h3 className={`text-base font-bold ${styles.fontSize} ${styles.fontWeight}`} style={{ color: styles.cardTextColor }}>{displayData.hostName || 'Host'}</h3>
                       </div>
                       {displayData.isSuperhost && (
-                        <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full">SUPERHOST</span>
+                        <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold rounded-full">SÚPER ANFITRIÓN</span>
                       )}
                     </div>
                   )}
@@ -270,15 +285,15 @@ export default function PreviewRoomHostCard({
                   {/* Details Grid - No dividers */}
                   <div className={`grid grid-cols-3 ${isMobile ? 'gap-x-3' : 'gap-x-4'} gap-y-1 ${isMobile ? 'mt-0' : 'mt-2.5'}`}>
                     <div className={isMobile ? 'text-center' : ''}>
-                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Rating</p>
+                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Calificación</p>
                       <p className={`font-bold ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: styles.cardTextColor }}>{displayData.rating || 'N/A'} ⭐</p>
                     </div>
                     <div className={isMobile ? 'text-center' : ''}>
-                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Reviews</p>
+                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Reseñas</p>
                       <p className={`font-bold ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: styles.cardTextColor }}>{displayData.reviewCount || 0}</p>
                     </div>
                     <div className={isMobile ? 'text-center' : ''}>
-                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Since</p>
+                      <p className="text-xs" style={{ color: styles.cardTextColor, opacity: 0.6 }}>Desde</p>
                       <p className={`font-bold ${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: styles.cardTextColor }}>{displayData.hostSince || 'N/A'}</p>
                     </div>
                   </div>
@@ -289,7 +304,7 @@ export default function PreviewRoomHostCard({
                       {displayData.isVerified && (
                         <div className="flex items-center gap-1">
                           <Shield className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'} text-green-600`} />
-                          <span className={`${isMobile ? 'text-xs' : 'text-xs'} font-semibold text-green-600`}>VERIFIED</span>
+                          <span className={`${isMobile ? 'text-xs' : 'text-xs'} font-semibold text-green-600`}>VERIFICADO</span>
                         </div>
                       )}
                       <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400`}>ID: #{Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
@@ -298,8 +313,10 @@ export default function PreviewRoomHostCard({
                 </div>
               </div>
             </div>
+            )}
 
             {/* Bio Card - Matching height */}
+            {config.showBioCard !== false && (
             <div 
               className="shadow-xl overflow-hidden flex-1"
               style={{ 
@@ -309,7 +326,7 @@ export default function PreviewRoomHostCard({
                 border: `2px solid ${styles.cardBorderColor}`
               }}>
               <div className={`${isMobile ? 'p-4' : 'p-6'} h-full flex flex-col`}>
-                <h3 className={`font-bold ${isMobile ? 'mb-2 text-base text-center' : 'mb-3 text-lg'} ${styles.fontWeight}`} style={{ color: styles.cardTextColor }}>About {displayData.hostName}</h3>
+                <h3 className={`font-bold ${isMobile ? 'mb-2 text-base text-center' : 'mb-3 text-lg'} ${styles.fontWeight}`} style={{ color: styles.cardTextColor }}>Acerca de {displayData.hostName}</h3>
                 <div className="flex-1 overflow-y-auto">
                   {(displayData.bio || displayData.aboutMe) ? (
                     <>
@@ -322,18 +339,20 @@ export default function PreviewRoomHostCard({
                     </>
                   ) : (
                     <p className={`text-sm leading-relaxed ${styles.fontSize}`} style={{ color: styles.cardTextColor, opacity: 0.7 }}>
-                      {displayData.hostName} hasn't written a bio yet.
+                      {displayData.hostName} aún no ha escrito una biografía.
                     </p>
                   )}
                 </div>
               </div>
             </div>
+            )}
           </div>
 
           {/* Right column - Other info cards */}
           <div className={`flex flex-col gap-4 ${isMobile ? 'w-full' : ''}`}>
 
           {/* Details & Stats Card */}
+          {config.showDetailsStatsCard !== false && (
           <div className={`bg-gradient-to-br from-purple-50 via-white to-pink-50 rounded-xl shadow-xl ${isMobile ? 'p-4' : 'p-5'} flex-1`} style={{ minHeight: isMobile ? '150px' : '180px' }}>
             <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-2 gap-4'}`}>
               {/* Left Column - Personal Info */}
@@ -341,19 +360,19 @@ export default function PreviewRoomHostCard({
                 <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide`}>Personal</h4>
                 {displayData.location && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Location</p>
+                    <p className="text-gray-500 text-xs">Ubicación</p>
                     <p className="font-semibold text-gray-900">{displayData.location}</p>
                   </div>
                 )}
                 {displayData.work && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Work</p>
+                    <p className="text-gray-500 text-xs">Trabajo</p>
                     <p className="font-semibold text-gray-900">{displayData.work}</p>
                   </div>
                 )}
                 {displayData.languages && displayData.languages.length > 0 && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Languages</p>
+                    <p className="text-gray-500 text-xs">Idiomas</p>
                     <p className="font-semibold text-gray-900">
                       {Array.isArray(displayData.languages) 
                         ? displayData.languages.join(', ')
@@ -365,16 +384,16 @@ export default function PreviewRoomHostCard({
 
               {/* Right Column - Host Stats */}
               <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
-                <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide`}>Host Stats</h4>
+                <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide`}>Estadísticas</h4>
                 {displayData.acceptanceRate > 0 && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Response Rate</p>
+                    <p className="text-gray-500 text-xs">Tasa de Respuesta</p>
                     <p className="font-semibold text-gray-900">{displayData.acceptanceRate}%</p>
                   </div>
                 )}
                 {displayData.responseTime && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Response Time</p>
+                    <p className="text-gray-500 text-xs">Tiempo de Respuesta</p>
                     <p className="font-semibold text-gray-900">
                       {typeof displayData.responseTime === 'number' 
                         ? `${displayData.responseTime} min`
@@ -384,21 +403,23 @@ export default function PreviewRoomHostCard({
                 )}
                 {displayData.hostSince && (
                   <div className={`text-sm ${isMobile ? 'text-center' : ''}`}>
-                    <p className="text-gray-500 text-xs">Hosting Since</p>
+                    <p className="text-gray-500 text-xs">Anfitrión Desde</p>
                     <p className="font-semibold text-gray-900">{displayData.hostSince}</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
+          )}
 
             {/* Attributes & Hobbies Card */}
+            {config.showAttributesHobbiesCard !== false && (
             <div className={`bg-gradient-to-br from-yellow-50 via-white to-orange-50 rounded-xl shadow-xl ${isMobile ? 'p-4' : 'p-5'} flex-1`} style={{ minHeight: isMobile ? '150px' : '180px' }}>
                 {(displayData.attributes && displayData.attributes.length > 0) || (displayData.hobbies && displayData.hobbies.length > 0) ? (
                   <>
                     {displayData.attributes && displayData.attributes.length > 0 && (
                       <div className={`${isMobile ? 'mb-3' : 'mb-4'}`}>
-                        <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide mb-2`}>Attributes</h4>
+                        <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide mb-2`}>Atributos</h4>
                         <div className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : ''}`}>
                           {displayData.attributes.map((attr: string, index: number) => (
                             <span key={index} className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-sm'} bg-white/80 backdrop-blur rounded-full font-medium text-gray-700 shadow-sm`}>
@@ -410,7 +431,7 @@ export default function PreviewRoomHostCard({
                     )}
                     {displayData.hobbies && displayData.hobbies.length > 0 && (
                       <div>
-                        <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide mb-2`}>Hobbies</h4>
+                        <h4 className={`font-bold text-gray-900 ${isMobile ? 'text-sm text-center' : 'text-sm'} uppercase tracking-wide mb-2`}>Pasatiempos</h4>
                         <div className={`flex flex-wrap gap-2 ${isMobile ? 'justify-center' : ''}`}>
                           {displayData.hobbies.map((hobby: string, index: number) => (
                             <span key={index} className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-sm'} bg-blue-100/80 backdrop-blur text-blue-700 rounded-full font-medium shadow-sm`}>
@@ -423,10 +444,11 @@ export default function PreviewRoomHostCard({
                   </>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500 text-sm">No attributes or hobbies listed yet</p>
+                    <p className="text-gray-500 text-sm">No hay atributos o pasatiempos listados aún</p>
                   </div>
                 )}
               </div>
+              )}
 
           </div>
         </div>
@@ -445,19 +467,20 @@ export default function PreviewRoomHostCard({
                 }}
               >
                 <MessageSquare className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-                Message Host
+                Enviar Mensaje
               </button>
               
               <div className={`${isMobile ? 'mt-3 p-2' : 'mt-4 p-3'} bg-gray-50 rounded-lg`}>
                 <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-600 flex items-start gap-1 text-center`}>
                   <Shield className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                  <span>To protect your payment, never transfer money or communicate outside of the Airbnb website or app.</span>
+                  <span>Para proteger tu pago, nunca transfieras dinero ni te comuniques fuera del sitio web o la aplicación.</span>
                 </p>
               </div>
             </div>
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

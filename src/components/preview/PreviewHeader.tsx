@@ -229,13 +229,13 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
   // Normalize internal URLs for public site context
   const normalizeInternalPath = (url: string) => {
     if (!url) return url;
-    // Map editor-only or admin routes to public-facing slugs
-    const map: Record<string, string> = {
-      '/habitaciones-lista': '/habitaciones', // Public rooms listing slug
-      '/dashboard': '/home',
-      '/editor': '/home'
-    };
-    return map[url] || url;
+    // Normalize known slugs and editor/admin routes to public-facing paths
+    // Ensure rooms listing uses the correct public route
+    if (url === '/habitaciones' || url === 'habitaciones') return '/habitaciones-lista';
+    if (url === '/habitaciones-lista' || url === 'habitaciones-lista') return '/habitaciones-lista';
+    if (url === '/dashboard') return '/home';
+    if (url === '/editor') return '/home';
+    return url;
   };
 
   // Helper function to handle navigation
@@ -523,7 +523,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
             }}
           >
             <div className="py-2">
-              {item.subItems.map((child: any, childIndex: number) => {
+                      {item.subItems.map((child: any, childIndex: number) => {
                 const isChildInternal = isInternalUrl(child.url);
                 return isChildInternal ? (
                   <Link
@@ -538,7 +538,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                 ) : (
                   <a
                     key={child.id || `submenu-${item.id || item.label}-${childIndex}`}
-                    href={child.url || '#'}
+                    href={normalizeInternalPath(child.url || '#')}
                     className="block px-4 py-2 hover:bg-gray-50 transition-colors"
                     style={{ ...menuTypographyStyles, color: colorScheme?.text?.default || '#000000' }}
                     target={child.url && !child.url.startsWith('#') ? '_blank' : undefined}
@@ -595,6 +595,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                           height: isMobile ? (headerConfig.logo.mobileHeight || 30) : (headerConfig.logo.height || 40),
                           objectFit: 'contain'
                         }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     ) : (
                       <div className="text-xl font-bold self-center" style={{ color: colorScheme?.text?.default || '#000000' }}>
@@ -615,6 +616,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                         height: isMobile ? (headerConfig.logo.mobileHeight || 30) : (headerConfig.logo.height || 40),
                         objectFit: 'contain'
                       }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
                     <div className="text-xl font-bold self-center" style={{ color: colorScheme?.text?.default || '#000000' }}>
@@ -917,7 +919,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                         {item.url && item.url !== '#' ? (
                           isInternal ? (
                             <Link
-                              href={item.url}
+                              href={normalizeInternalPath(item.url)}
                               className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
                               style={{ 
                                 color: colorScheme?.text?.default || '#000000',
@@ -932,7 +934,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                             </Link>
                           ) : (
                             <a
-                              href={item.url}
+                              href={normalizeInternalPath(item.url)}
                               className="w-full flex items-center justify-between px-4 py-3 text-left rounded transition-colors"
                               style={{ 
                                 color: colorScheme?.text?.default || '#000000',
@@ -984,7 +986,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                     <div key={item.label}>
                       {isInternal ? (
                         <Link
-                          href={item.url || '#'}
+                          href={normalizeInternalPath(item.url || '#')}
                           className="w-full flex items-center px-4 py-3 text-left rounded transition-colors"
                           style={{ 
                             color: colorScheme?.text?.default || '#000000',
@@ -1006,7 +1008,7 @@ export default function PreviewHeader({ config, theme, deviceView, isEditor = fa
                         </Link>
                       ) : (
                         <a
-                          href={item.url || '#'}
+                          href={normalizeInternalPath(item.url || '#')}
                           className="w-full flex items-center px-4 py-3 text-left rounded transition-colors"
                           style={{ 
                             color: colorScheme?.text?.default || '#000000',

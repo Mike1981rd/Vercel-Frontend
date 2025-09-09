@@ -536,6 +536,25 @@ class CustomerAPI {
     return results;
   }
 
+  // Payments history by customerId via dedicated endpoint
+  async getCustomerPayments(customerId: number): Promise<Array<{ reservationId: number; amount: number; method: string; status: string; date: string; transactionId?: string }>> {
+    const response = await fetch(`${API_URL}/customers/${customerId}/payments-history`, { headers: this.getHeaders() });
+    if (!response.ok) {
+      // Fail gracefully returning empty list
+      return [];
+    }
+    const data = await response.json();
+    // Map backend DTO (camelCase via System.Text.Json) into the UI shape
+    return (data || []).map((p: any) => ({
+      reservationId: p.reservationId,
+      amount: p.amount,
+      method: p.paymentMethod,
+      status: p.status,
+      date: (p.paymentDate ? new Date(p.paymentDate).toISOString() : new Date().toISOString()),
+      transactionId: p.transactionId
+    }));
+  }
+
   async deletePaymentMethod(customerId: number, paymentMethodId: number): Promise<void> {
     const response = await fetch(`${API_URL}/customers/${customerId}/payment-methods/${paymentMethodId}`, {
       method: 'DELETE',

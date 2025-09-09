@@ -6,6 +6,7 @@ import { CustomerDetailDto } from '@/types/customer';
 import { AddressBillingFormData } from '../CustomerDetail';
 import { customerAPI } from '@/lib/api/customers';
 import { CountryFlag, countries } from '@/components/ui/CountryFlag';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface CustomerAddressBillingTabProps {
   customer: CustomerDetailDto | null;
@@ -29,16 +30,19 @@ export default function CustomerAddressBillingTab({
   setIsEditing
 }: CustomerAddressBillingTabProps) {
   const { t } = useI18n();
+  const { baseCurrency } = useCurrency();
   const [useSameAddress, setUseSameAddress] = useState(false);
   const [payments, setPayments] = useState<Array<{ reservationId: number; amount: number; method: string; status: string; date: string; transactionId?: string }>>([]);
+  const [showExportModal, setShowExportModal] = useState(false);
   const formatMoney = (amount?: number, currency?: string) => {
     if (amount === undefined || amount === null) return '-';
     try {
-      if (!currency) return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
-      return `${currency} ${formatted.replace(/[^0-9.,\s]/g, '').trim()}`;
+      const cur = currency || baseCurrency || 'DOP';
+      if (!cur) return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency: cur as any }).format(amount);
+      return `${cur} ${formatted.replace(/[^0-9.,\s]/g, '').trim()}`;
     } catch {
-      return `${currency || ''} ${amount.toFixed(2)}`.trim();
+      return `${currency || baseCurrency || ''} ${amount.toFixed(2)}`.trim();
     }
   };
   
@@ -111,19 +115,114 @@ export default function CustomerAddressBillingTab({
     }
   }, []); // Empty dependency array - only run once on mount
 
-  // Load payments history for this customer (by email)
+  // Load payments history for this customer (by customerId)
   useEffect(() => {
     (async () => {
       try {
-        if (customer?.email) {
-          const list = await customerAPI.getCustomerPaymentsByEmail(customer.email);
+        if (customer?.id) {
+          const list = await customerAPI.getCustomerPayments(customer.id);
           setPayments(list);
         }
       } catch (e) {
         // ignore
       }
     })();
-  }, [customer?.email]);
+  }, [customer?.id]);
+
+  // Export helpers for payments history
+  const exportPaymentsToCSV = () => {
+    try {
+      const headers = ['Fecha', 'Monto', 'Moneda', 'Método', 'Estado', 'Reserva', 'Transacción'];
+      const rows = payments.map(p => [
+        new Date(p.date).toLocaleString(),
+        (p.amount ?? 0).toFixed(2),
+        baseCurrency || 'DOP',
+        p.method || '',
+        p.status || '',
+        `#${p.reservationId}`,
+        p.transactionId || ''
+      ]);
+
+      let csv = '\uFEFF' + headers.join(',') + '\n';
+      rows.forEach(r => { csv += r.map(cell => `"${(cell ?? '').toString().replace(/"/g, '""')}"`).join(',') + '\n'; });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    } catch (e) { /* no-op */ }
+  };
+
+  const exportPaymentsToExcel = () => {
+    try {
+      let html = '<html xmlns:x="urn:schemas-microsoft-com:office:excel">';
+      html += '<head><meta charset="utf-8"><title>Payments Export</title></head>';
+      html += '<body><table border="1">';
+      html += '<tr style="background-color:#f0f0f0;font-weight:bold;">';
+      html += '<th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th></tr>';
+      payments.forEach(p => {
+        html += '<tr>';
+        html += `<td>${new Date(p.date).toLocaleString()}</td>`;
+        html += `<td>${(p.amount ?? 0).toFixed(2)}</td>`;
+        html += `<td>${baseCurrency || 'DOP'}</td>`;
+        html += `<td>${p.method || ''}</td>`;
+        html += `<td>${p.status || ''}</td>`;
+        html += `<td>#${p.reservationId}</td>`;
+        html += `<td>${p.transactionId || ''}</td>`;
+        html += '</tr>';
+      });
+      html += '</table></body></html>';
+
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `payments_${new Date().toISOString().split('T')[0]}.xls`;
+      link.click();
+    } catch (e) { /* no-op */ }
+  };
+
+  const exportPaymentsToPDF = () => {
+    try {
+      const w = window.open('', '_blank');
+      if (!w) { alert(t('rolesUsers.popupBlocked', 'Please allow popups to export PDF')); return; }
+      const rows = payments.map(p => `
+        <tr>
+          <td>${new Date(p.date).toLocaleString()}</td>
+          <td>${(p.amount ?? 0).toFixed(2)}</td>
+          <td>${baseCurrency || 'DOP'}</td>
+          <td>${p.method || ''}</td>
+          <td>${p.status || ''}</td>
+          <td>#${p.reservationId}</td>
+          <td>${p.transactionId || ''}</td>
+        </tr>`).join('');
+      const html = `<!DOCTYPE html>
+      <html><head><meta charset="utf-8"/>
+        <title>Payments Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 16px; }
+          h1 { font-size: 18px; margin-bottom: 12px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+          th { background-color: #f0f0f0; }
+        </style>
+      </head>
+      <body>
+        <h1>${t('customers.payments.history','Historial de Pagos')} - ${new Date().toLocaleDateString()}</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Monto</th><th>Moneda</th><th>Método</th><th>Estado</th><th>Reserva</th><th>Transacción</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body></html>`;
+      w.document.write(html);
+      w.document.close();
+      w.onload = () => w.print();
+    } catch (e) { /* no-op */ }
+  };
 
   return (
     <div className="relative min-h-screen pb-20 md:pb-6">
@@ -142,7 +241,7 @@ export default function CustomerAddressBillingTab({
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('customers.overview.totalSpent', 'Monto total gastado')}</p>
               <p className="text-gray-900 dark:text-white font-medium">
-                {formatMoney(customer?.totalSpent, customer?.preferredCurrency || 'DOP')}
+                {formatMoney(customer?.totalSpent, baseCurrency)}
               </p>
             </div>
           </div>
@@ -150,9 +249,22 @@ export default function CustomerAddressBillingTab({
         {/* Payments History */}
         {!isNewCustomer && (
           <div className="mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {t('customers.payments.history', 'Historial de Pagos')}
-            </h3>
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                {t('customers.payments.history', 'Historial de Pagos')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(true)}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                style={{ '--tw-ring-color': primaryColor } as any}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path d="M5 20h14v-2H5m14-9h-4V3H9v6H5l7 7 7-7Z"/>
+                </svg>
+                {t('customers.payments.export', 'Exportar')}
+              </button>
+            </div>
             {payments.length === 0 ? (
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 text-sm text-gray-600 dark:text-gray-300">
                 {t('customers.payments.noHistory', 'No se encontraron pagos para este cliente')}
@@ -173,7 +285,7 @@ export default function CustomerAddressBillingTab({
                     {payments.map((p, idx) => (
                       <tr key={idx}>
                         <td className="px-4 py-2">{new Date(p.date).toLocaleString()}</td>
-                        <td className="px-4 py-2">{formatMoney(p.amount, customer?.preferredCurrency || 'DOP')}</td>
+                        <td className="px-4 py-2">{formatMoney(p.amount, baseCurrency)}</td>
                         <td className="px-4 py-2">{p.method}</td>
                         <td className="px-4 py-2">{p.status}</td>
                         <td className="px-4 py-2">#{p.reservationId}</td>
@@ -183,6 +295,53 @@ export default function CustomerAddressBillingTab({
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-96 max-w-[90%] shadow-2xl">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {t('rolesUsers.exportData', 'Export Data')}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                {t('rolesUsers.selectFormat', 'Select the format you want to export')}
+              </p>
+              <div className="space-y-3">
+                <button onClick={() => { exportPaymentsToExcel(); setShowExportModal(false); }}
+                        className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-md bg-green-100 flex items-center justify-center text-green-600">XLS</div>
+                  <div className="text-left">
+                    <p className="font-medium">Excel</p>
+                    <p className="text-xs text-gray-500">.xls</p>
+                  </div>
+                </button>
+                <button onClick={() => { exportPaymentsToCSV(); setShowExportModal(false); }}
+                        className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-md bg-blue-100 flex items-center justify-center text-blue-600">CSV</div>
+                  <div className="text-left">
+                    <p className="font-medium">CSV</p>
+                    <p className="text-xs text-gray-500">.csv</p>
+                  </div>
+                </button>
+                <button onClick={() => { exportPaymentsToPDF(); setShowExportModal(false); }}
+                        className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-md bg-red-100 flex items-center justify-center text-red-600">PDF</div>
+                  <div className="text-left">
+                    <p className="font-medium">PDF</p>
+                    <p className="text-xs text-gray-500">Print/Save as PDF</p>
+                  </div>
+                </button>
+              </div>
+              <div className="mt-4 text-right">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                >
+                  {t('common.cancel', 'Cancelar')}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

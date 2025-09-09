@@ -31,13 +31,15 @@ interface PreviewRoomGalleryProps {
   deviceView?: 'desktop' | 'mobile' | 'tablet';
   isEditor?: boolean;
   theme?: any;
+  roomSlug?: string;
 }
 
 export default function PreviewRoomGallery({ 
   config, 
   deviceView, 
   isEditor = false,
-  theme 
+  theme,
+  roomSlug,
 }: PreviewRoomGalleryProps) {
   
   // Get theme config from store or prop
@@ -88,7 +90,7 @@ export default function PreviewRoomGallery({
       setLoading(true);
       try {
         // Use helper function that checks for slug
-        const roomData = await fetchRoomData(companyId);
+        const roomData = await fetchRoomData(companyId, roomSlug || undefined);
         if (roomData) {
           if (roomData?.images?.length > 0) {
             setImages(roomData.images.slice(0, 5));
@@ -307,6 +309,8 @@ export default function PreviewRoomGallery({
                 src={images[currentImageIndex]}
                 alt={`Room ${currentImageIndex + 1}`}
                 className="w-full object-cover"
+                loading="eager"
+                decoding="async"
                 style={{ height: `${scaledHeight}px` }}
               />
             </div>
@@ -359,12 +363,44 @@ export default function PreviewRoomGallery({
 
         {/* Mobile Layout - Always carousel */}
         {isMobile && config.layoutStyle !== 'carousel' && (
-          <div className="relative">
+          <div
+            className="relative select-none"
+            style={{ touchAction: 'pan-y' }}
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              ;(e.currentTarget as any)._swipeStartX = t.clientX;
+              ;(e.currentTarget as any)._swipeStartY = t.clientY;
+              ;(e.currentTarget as any)._swipeHandled = false;
+            }}
+            onTouchMove={(e) => {
+              const t = e.touches[0];
+              const startX = (e.currentTarget as any)._swipeStartX || 0;
+              const startY = (e.currentTarget as any)._swipeStartY || 0;
+              const dx = t.clientX - startX;
+              const dy = t.clientY - startY;
+              if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 24) {
+                (e.currentTarget as any)._swipeHandled = true;
+              }
+            }}
+            onTouchEnd={(e) => {
+              const startX = (e.currentTarget as any)._swipeStartX || 0;
+              const handled = (e.currentTarget as any)._swipeHandled;
+              const changed = e.changedTouches && e.changedTouches[0];
+              if (!changed) return;
+              const dx = changed.clientX - startX;
+              if (handled && Math.abs(dx) > 24) {
+                if (dx < 0) setCurrentImageIndex(prev => (prev + 1) % images.length);
+                else setCurrentImageIndex(prev => (prev - 1 + images.length) % images.length);
+              }
+            }}
+          >
             <div className="overflow-hidden">
               <img
                 src={images[currentImageIndex]}
                 alt={`Room ${currentImageIndex + 1}`}
                 className="w-full object-cover"
+                loading="eager"
+                decoding="async"
                 style={{ 
                   borderRadius: cornerRadius,
                   height: `${Math.round(300 * cardScale)}px`

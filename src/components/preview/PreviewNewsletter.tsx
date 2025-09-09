@@ -1,9 +1,13 @@
 // PreviewNewsletter.tsx - Newsletter Preview Component with Mobile View
 import React, { useState, useEffect } from 'react';
+import { NewsletterSubscribersAPI } from '@/lib/api/newsletter-subscribers';
+import toast from 'react-hot-toast';
 import { NewsletterConfig, defaultNewsletterConfig, createDefaultNewsletterBlocks } from '@/components/editor/modules/Newsletter/types';
 import { GlobalThemeConfig } from '@/types/theme';
 import useThemeConfigStore from '@/stores/useThemeConfigStore'; // SIN destructuring {}
 import { cn } from '@/lib/utils';
+import SubscriptionModal from '@/components/ui/SubscriptionModal';
+import { Loader2 } from 'lucide-react';
 
 interface PreviewNewsletterProps {
   config?: NewsletterConfig;
@@ -21,6 +25,12 @@ export default function PreviewNewsletter({
   // Patrón dual de theme
   const storeThemeConfig = useThemeConfigStore(state => state.config);
   const themeConfig = theme || storeThemeConfig;
+  
+  // Estados para el modal y loading
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [subscribedEmail, setSubscribedEmail] = useState('');
+  const [loadingButtonId, setLoadingButtonId] = useState<string | null>(null);
+  const [subscribedEmails, setSubscribedEmails] = useState<Set<string>>(new Set());
   
   // Valores por defecto para el editor
   const defaultConfig = {
@@ -277,6 +287,9 @@ export default function PreviewNewsletter({
         );
         
       case 'subscribe':
+        const isLoading = loadingButtonId === block.id;
+        const emailInputId = `newsletter-email-${block.id}`;
+        
         return (
           <div 
             key={block.id} 
@@ -285,6 +298,7 @@ export default function PreviewNewsletter({
               isMobile ? 'justify-center w-full' : (contentAlignment === 'center' ? 'justify-center' : '')
             )}
           >
+            {/* Solid style - input with inline button */}
             {block.inputStyle === 'solid' ? (
               // Solid style - input with button inside
               <div className={cn(
@@ -292,12 +306,16 @@ export default function PreviewNewsletter({
                 isMobile ? 'flex-col w-64 mx-auto gap-2' : 'rounded max-w-md w-full'
               )}>
                 <input
+                  id={emailInputId}
                   type="email"
+                  name="newsletterEmail"
                   placeholder={block.placeholder || 'Email address'}
+                  disabled={isLoading}
                   className={cn(
-                    'flex-1 text-center',
+                    'flex-1 text-center transition-all',
                     isMobile ? 'px-6 py-2.5 text-sm w-full rounded-lg' : 'px-4 py-3 text-left',
-                    'focus:outline-none'
+                    'focus:outline-none',
+                    isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                   style={{
                     backgroundColor: colorScheme.background,
@@ -307,18 +325,94 @@ export default function PreviewNewsletter({
                   }}
                 />
                 <button
+                  disabled={isLoading}
                   className={cn(
-                    'font-medium transition-colors',
+                    'font-medium transition-all flex items-center justify-center gap-2',
                     isMobile ? 'px-6 py-2.5 text-sm w-full rounded-lg' : 'px-6 py-3',
-                    'hover:opacity-90'
+                    isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:opacity-90 hover:scale-105'
                   )}
                   style={{
                     backgroundColor: colorScheme.solidButton,
                     color: colorScheme.solidButtonText,
                     fontFamily: typography.buttons?.fontFamily || 'inherit'
                   }}
+                  onClick={async (e) => {
+                    if (isLoading) return;
+                    
+                    try {
+                      const input = document.getElementById(emailInputId) as HTMLInputElement | null;
+                      const email = (input?.value || '').trim();
+                      
+                      // Validation
+                      if (!email) {
+                        toast.error('Please enter your email address');
+                        input?.focus();
+                        return;
+                      }
+                      
+                      // Email format validation
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      if (!emailRegex.test(email)) {
+                        toast.error('Please enter a valid email address');
+                        input?.focus();
+                        return;
+                      }
+                      
+                      // Check if already subscribed
+                      if (subscribedEmails.has(email.toLowerCase())) {
+                        toast.error('You are already subscribed with this email');
+                        return;
+                      }
+                      
+                      // Set loading state
+                      setLoadingButtonId(block.id);
+                      
+                      // API call
+                      await NewsletterSubscribersAPI.publicSubscribe({
+                        Email: email,
+                        AcceptedMarketing: true,
+                        AcceptedTerms: true,
+                        SourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                        Language: 'es'
+                      } as any);
+                      
+                      // Success handling
+                      setSubscribedEmail(email);
+                      setSubscribedEmails(prev => new Set(prev).add(email.toLowerCase()));
+                      setShowSuccessModal(true);
+                      
+                      // Clear input
+                      if (input) input.value = '';
+                      
+                      // Store in localStorage for persistence
+                      if (typeof window !== 'undefined') {
+                        const stored = localStorage.getItem('subscribedEmails') || '[]';
+                        const emails = JSON.parse(stored);
+                        emails.push(email.toLowerCase());
+                        localStorage.setItem('subscribedEmails', JSON.stringify(emails));
+                      }
+                      
+                    } catch (err: any) {
+                      // Handle duplicate email error
+                      if (err?.message?.includes('already') || err?.message?.includes('duplicate')) {
+                        toast.error('This email is already subscribed');
+                        setSubscribedEmails(prev => new Set(prev).add((document.getElementById(emailInputId) as HTMLInputElement)?.value?.toLowerCase() || ''));
+                      } else {
+                        toast.error(err?.message || 'Subscription failed. Please try again.');
+                      }
+                    } finally {
+                      setLoadingButtonId(null);
+                    }
+                  }}
                 >
-                  {block.buttonText || 'Subscribe'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Subscribing...</span>
+                    </>
+                  ) : (
+                    block.buttonText || 'Subscribe'
+                  )}
                 </button>
               </div>
             ) : (
@@ -328,12 +422,16 @@ export default function PreviewNewsletter({
                 isMobile ? 'flex-col w-64 mx-auto' : 'max-w-md w-full'
               )}>
                 <input
+                  id={emailInputId}
                   type="email"
+                  name="newsletterEmail"
                   placeholder={block.placeholder || 'Email address'}
+                  disabled={isLoading}
                   className={cn(
-                    'rounded-lg bg-transparent border-2 flex-1 text-center',
+                    'rounded-lg bg-transparent border-2 flex-1 text-center transition-all',
                     isMobile ? 'px-6 py-2.5 text-sm w-full' : 'px-4 py-2 text-left',
-                    'focus:outline-none focus:border-opacity-70'
+                    'focus:outline-none focus:border-opacity-70',
+                    isLoading && 'opacity-50 cursor-not-allowed'
                   )}
                   style={{
                     borderColor: colorScheme.outlineButton,
@@ -342,10 +440,11 @@ export default function PreviewNewsletter({
                   }}
                 />
                 <button
+                  disabled={isLoading}
                   className={cn(
-                    'rounded-lg font-medium transition-colors border-2',
+                    'rounded-lg font-medium transition-all border-2 flex items-center justify-center gap-2',
                     isMobile ? 'px-6 py-2.5 text-sm w-full' : 'px-6 py-2',
-                    'hover:opacity-90'
+                    isLoading ? 'opacity-75 cursor-not-allowed' : 'hover:opacity-90 hover:scale-105'
                   )}
                   style={{
                     backgroundColor: 'transparent',
@@ -353,8 +452,83 @@ export default function PreviewNewsletter({
                     borderColor: colorScheme.outlineButton,
                     fontFamily: typography.buttons?.fontFamily || 'inherit'
                   }}
+                  onClick={async (e) => {
+                    if (isLoading) return;
+                    
+                    try {
+                      const input = document.getElementById(emailInputId) as HTMLInputElement | null;
+                      const email = (input?.value || '').trim();
+                      
+                      // Validation
+                      if (!email) {
+                        toast.error('Please enter your email address');
+                        input?.focus();
+                        return;
+                      }
+                      
+                      // Email format validation
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      if (!emailRegex.test(email)) {
+                        toast.error('Please enter a valid email address');
+                        input?.focus();
+                        return;
+                      }
+                      
+                      // Check if already subscribed
+                      if (subscribedEmails.has(email.toLowerCase())) {
+                        toast.error('You are already subscribed with this email');
+                        return;
+                      }
+                      
+                      // Set loading state
+                      setLoadingButtonId(block.id);
+                      
+                      // API call
+                      await NewsletterSubscribersAPI.publicSubscribe({
+                        Email: email,
+                        AcceptedMarketing: true,
+                        AcceptedTerms: true,
+                        SourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                        Language: 'es'
+                      } as any);
+                      
+                      // Success handling
+                      setSubscribedEmail(email);
+                      setSubscribedEmails(prev => new Set(prev).add(email.toLowerCase()));
+                      setShowSuccessModal(true);
+                      
+                      // Clear input
+                      if (input) input.value = '';
+                      
+                      // Store in localStorage for persistence
+                      if (typeof window !== 'undefined') {
+                        const stored = localStorage.getItem('subscribedEmails') || '[]';
+                        const emails = JSON.parse(stored);
+                        emails.push(email.toLowerCase());
+                        localStorage.setItem('subscribedEmails', JSON.stringify(emails));
+                      }
+                      
+                    } catch (err: any) {
+                      // Handle duplicate email error
+                      if (err?.message?.includes('already') || err?.message?.includes('duplicate')) {
+                        toast.error('This email is already subscribed');
+                        setSubscribedEmails(prev => new Set(prev).add((document.getElementById(emailInputId) as HTMLInputElement)?.value?.toLowerCase() || ''));
+                      } else {
+                        toast.error(err?.message || 'Subscription failed. Please try again.');
+                      }
+                    } finally {
+                      setLoadingButtonId(null);
+                    }
+                  }}
                 >
-                  {block.buttonText || 'Subscribe'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Subscribing...</span>
+                    </>
+                  ) : (
+                    block.buttonText || 'Subscribe'
+                  )}
                 </button>
               </div>
             )}
@@ -366,8 +540,41 @@ export default function PreviewNewsletter({
     }
   };
   
+  // Load subscribed emails from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('subscribedEmails');
+      if (stored) {
+        try {
+          const emails = JSON.parse(stored);
+          setSubscribedEmails(new Set(emails));
+        } catch (e) {
+          console.error('Error loading subscribed emails:', e);
+        }
+      }
+    }
+  }, []);
+  
+  // Get primary color for modal
+  const primaryColor = typeof window !== 'undefined' 
+    ? localStorage.getItem('primaryColor') || '#22c55e'
+    : '#22c55e';
+  
   return (
-    <section
+    <>
+      {/* Success Modal */}
+      <SubscriptionModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        email={subscribedEmail}
+        theme={{
+          primaryColor,
+          textColor: colorScheme.text,
+          backgroundColor: colorScheme.background
+        }}
+      />
+      
+      <section
       className={containerClass}
       style={{
         backgroundColor: finalConfig.colorBackground ? colorScheme.background : 'transparent',
@@ -433,5 +640,6 @@ export default function PreviewNewsletter({
         <style dangerouslySetInnerHTML={{ __html: finalConfig.customCSS }} />
       )}
     </section>
+    </>
   );
 }

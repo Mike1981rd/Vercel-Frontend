@@ -250,8 +250,38 @@ export default function PreviewRoomsPage({ companyId = 1, deviceView, isEditor =
       {/* Hero Gallery Section */}
       <div className={`${isMobile ? 'relative' : 'container mx-auto px-6 pt-6'}`}>
         {isMobile ? (
-          // Mobile: Swipeable gallery
-          <div className="relative h-[300px] bg-gray-100">
+          // Mobile: Swipeable gallery (finger horizontal swipe)
+          <div
+            className="relative h-[300px] bg-gray-100 select-none"
+            style={{ touchAction: 'pan-y' }}
+            onTouchStart={(e) => {
+              const t = e.touches[0];
+              ;(e.currentTarget as any)._swipeStartX = t.clientX;
+              ;(e.currentTarget as any)._swipeStartY = t.clientY;
+              ;(e.currentTarget as any)._swipeHandled = false;
+            }}
+            onTouchMove={(e) => {
+              const t = e.touches[0];
+              const startX = (e.currentTarget as any)._swipeStartX || 0;
+              const startY = (e.currentTarget as any)._swipeStartY || 0;
+              const dx = t.clientX - startX;
+              const dy = t.clientY - startY;
+              if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 24) {
+                (e.currentTarget as any)._swipeHandled = true;
+              }
+            }}
+            onTouchEnd={(e) => {
+              const startX = (e.currentTarget as any)._swipeStartX || 0;
+              const handled = (e.currentTarget as any)._swipeHandled;
+              const changed = e.changedTouches && e.changedTouches[0];
+              if (!changed) return;
+              const dx = changed.clientX - startX;
+              if (handled && Math.abs(dx) > 24) {
+                if (dx < 0) setCurrentImageIndex(prev => prev < selectedRoom.images.length - 1 ? prev + 1 : 0);
+                else setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedRoom.images.length - 1);
+              }
+            }}
+          >
             <img
               src={getImageUrl(selectedRoom.images[currentImageIndex])}
               alt={selectedRoom.name}

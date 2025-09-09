@@ -45,8 +45,19 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
 
   useEffect(() => {
     const loadPageSections = async () => {
-      // Get company ID from localStorage if not provided
-      const effectiveCompanyId = companyId || parseInt(localStorage.getItem('companyId') || '1');
+      // Get company ID from cookie (set by middleware) or localStorage if not provided
+      let storedCompanyId: string | null = null;
+      if (typeof window !== 'undefined') {
+        const m = document.cookie.match(/(?:^|; )companyId=(\d+)/);
+        storedCompanyId = m ? m[1] : localStorage.getItem('companyId');
+      }
+      const effectiveCompanyId = companyId || parseInt(storedCompanyId || '1');
+      // Keep localStorage in sync for client components that read it
+      try {
+        if (typeof window !== 'undefined' && storedCompanyId) {
+          localStorage.setItem('companyId', storedCompanyId);
+        }
+      } catch {}
       if (!effectiveCompanyId) return;
 
       // If we have a roomSlug, store it in localStorage for room components to use
@@ -403,6 +414,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                   theme={theme}
                   deviceView={normalizedDeviceView}
                   isEditor={false}
+                  roomSlug={roomSlug}
                 />
               )}
               
@@ -412,6 +424,7 @@ export default function PreviewContent({ pageType, handle, theme, companyId, dev
                   theme={theme}
                   deviceView={normalizedDeviceView}
                   isEditor={false}
+                  roomSlug={roomSlug}
                 />
               )}
               

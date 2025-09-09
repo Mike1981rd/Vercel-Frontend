@@ -70,7 +70,8 @@ export default function LoginPage() {
 
     try {
       // Normalizar entradas
-      const emailNorm = (email || '').trim().toLowerCase();
+      // No forzar minúsculas: el backend compara el email exactamente contra lo almacenado.
+      const emailNorm = (email || '').trim();
       const passwordNorm = (password || '').trim();
 
       if (!emailNorm || !passwordNorm) {

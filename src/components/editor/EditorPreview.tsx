@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo } from 'react';
 import { useEditorStore } from '@/stores/useEditorStore';
 import { Section, SectionType, PageType } from '@/types/editor.types';
 import { NewsletterConfig } from '@/components/editor/modules/Newsletter/types';

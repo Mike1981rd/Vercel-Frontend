@@ -125,7 +125,7 @@ export default function PreviewFooter({
   } : {};
 
   const renderBlock = (block: any) => {
-    switch (block.type) {
+  switch (block.type) {
       case FooterBlockType.TEXT:
         return (
           <div>
@@ -293,6 +293,7 @@ export default function PreviewFooter({
             <div className="flex">
               <input
                 type="email"
+                name="newsletterEmail"
                 placeholder={block.settings?.placeholderText || "Email address"}
                 className={`flex-1 px-2.5 py-1.5 text-sm rounded-l-md focus:outline-none focus:ring-1 ${
                   block.settings?.inputStyle === 'outline' 
@@ -315,6 +316,26 @@ export default function PreviewFooter({
                 style={{ 
                   backgroundColor: colorScheme?.solidButton || '#0066cc',
                   color: colorScheme?.solidButtonText || '#ffffff'
+                }}
+                onClick={async (e) => {
+                  try {
+                    const wrap = (e.currentTarget.parentElement as HTMLElement) || undefined;
+                    const input = wrap?.querySelector('input[type="email"]') as HTMLInputElement | null;
+                    const email = (input?.value || '').trim();
+                    if (!email) { (await import('react-hot-toast')).toast.error('Enter a valid email'); return; }
+                    const { NewsletterSubscribersAPI } = await import('@/lib/api/newsletter-subscribers');
+                    await NewsletterSubscribersAPI.publicSubscribe({
+                      Email: email,
+                      AcceptedMarketing: true,
+                      AcceptedTerms: true,
+                      SourcePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+                      Language: 'es'
+                    } as any);
+                    (await import('react-hot-toast')).toast.success('Subscribed successfully');
+                    if (input) input.value = '';
+                  } catch (err: any) {
+                    (await import('react-hot-toast')).toast.error(err?.message || 'Subscription failed');
+                  }
                 }}
               >
                 {block.settings?.buttonText ? (
@@ -600,7 +621,12 @@ export default function PreviewFooter({
 
             {/* Tercera línea: Enlaces de políticas */}
             {config?.policyLinks?.showLinks && (
-              <div className="flex flex-wrap gap-4 justify-start">
+              <div className={isMobile ? "flex flex-col gap-2" : "flex flex-wrap gap-4 justify-start"}>
+                {isMobile && (
+                  <h4 className="text-sm font-semibold text-gray-300 mb-1" style={headingTypographyStyles}>
+                    Políticas
+                  </h4>
+                )}
                 {isEditor ? (
                   <>
                     <a href="#" className="text-gray-400 text-xs hover:text-gray-300 transition-colors cursor-pointer" style={bodyTypographyStyles} onClick={(e) => e.preventDefault()}>

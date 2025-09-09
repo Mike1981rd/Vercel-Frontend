@@ -86,7 +86,7 @@ export default function RoomThingsPreview({
   // Load real room data when syncing is enabled (default true in editor)
   useEffect(() => {
     const loadRoomData = async () => {
-      const companyId = localStorage.getItem('companyId') || '1';
+      const companyId = '1'; // Single-tenant: always company 1
       const currentSlug = localStorage.getItem('currentRoomSlug');
       
       console.log('=== ROOM THINGS TO KNOW DEBUG ===');
@@ -248,43 +248,72 @@ export default function RoomThingsPreview({
       } else if (Array.isArray(hr)) {
         rules.push(...hr.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof hr === 'object') {
-        // Order-aware iteration of rule toggles using houseRulesOrder if present
-        // Order from localStorage override (live editor) or backend
-        let order: string[] = [];
-        try {
-          const ls = localStorage.getItem('room_houseRulesOrder');
-          if (ls) order = JSON.parse(ls);
-        } catch {}
-        if (!Array.isArray(order) || order.length === 0) {
-          order = Array.isArray((roomData as any)?.houseRulesOrder)
-            ? ((roomData as any).houseRulesOrder as string[])
-            : [];
-        }
-        const orderedValues = [
-          ...order.filter((v) => houseRulesOptions.some(o => o.value === v)),
-          ...houseRulesOptions.map(o => o.value).filter(v => !order.includes(v))
-        ];
-        orderedValues.forEach((valueKey) => {
-          const opt = houseRulesOptions.find(o => o.value === valueKey) as any;
-          const value = readFlag(hr, String(valueKey));
-          if (value === true) {
-            rules.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
-          } else if (value === false && String(valueKey).includes('Allowed')) {
-            const noLabel = (opt?.label || String(valueKey))
-              .replace('Se permite', 'No se permite')
-              .replace('Se permiten', 'No se permiten')
-              .replace('Allowed', 'not allowed')
-              .replace('allowed', 'not allowed');
-            rules.push({ key: `no_${String(valueKey)}`, label: noLabel, icon: opt?.icon, iconType: opt?.iconType });
+        // If catalog options exist, respect order + labels; otherwise, fall back to object keys
+        const aliasMap: Record<string, string[]> = {
+          smokingAllowed: ['smokingAllowed', 'fumar', 'sePermiteFumar', 'smoking', 'smoking_allowed'],
+          petsAllowed: ['petsAllowed', 'mascotas', 'sePermitenMascotas', 'pets'],
+          eventsAllowed: ['eventsAllowed', 'eventos', 'sePermitenEventos', 'events'],
+          partiesAllowed: ['partiesAllowed', 'fiestas', 'sePermitenFiestas', 'party', 'parties_allowed'],
+          childrenAllowed: ['childrenAllowed', 'ninos', 'niños', 'sePermitenNinos', 'sePermitenNiños', 'children'],
+          visitorsAllowed: ['visitorsAllowed', 'visitantes', 'sePermitenVisitantes', 'visitors'],
+          loudMusicAllowed: ['loudMusicAllowed', 'musicaAlta', 'músicaAlta', 'sePermiteMusicaAlta', 'loud_music_allowed']
+        };
+        const readFlagAliased = (obj: any, key: string) => {
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const aliases = aliasMap[key] || [];
+          const candidates = [key, snake, pascal, lower, ...aliases];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
           }
-        });
+          return undefined;
+        };
+        if (houseRulesOptions.length > 0) {
+          let order: string[] = [];
+          try {
+            const ls = localStorage.getItem('room_houseRulesOrder');
+            if (ls) order = JSON.parse(ls);
+          } catch {}
+          if (!Array.isArray(order) || order.length === 0) {
+            order = Array.isArray((roomData as any)?.houseRulesOrder)
+              ? ((roomData as any).houseRulesOrder as string[])
+              : [];
+          }
+          const orderedValues = [
+            ...order.filter((v) => houseRulesOptions.some(o => o.value === v)),
+            ...houseRulesOptions.map(o => o.value).filter(v => !order.includes(v))
+          ];
+          orderedValues.forEach((valueKey) => {
+            const opt = houseRulesOptions.find(o => o.value === valueKey) as any;
+            const value = readFlagAliased(hr, String(valueKey));
+            if (value === true) {
+              rules.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
+            } else if (value === false && String(valueKey).includes('Allowed')) {
+              const noLabel = (opt?.label || String(valueKey))
+                .replace('Se permite', 'No se permite')
+                .replace('Se permiten', 'No se permiten')
+                .replace('Allowed', 'not allowed')
+                .replace('allowed', 'not allowed');
+              rules.push({ key: `no_${String(valueKey)}`, label: noLabel, icon: opt?.icon, iconType: opt?.iconType });
+            }
+          });
+        } else {
+          // Fallback: enumerate object keys and include truthy flags
+          Object.keys(hr).forEach((k) => {
+            const value = readFlag(hr, k);
+            if (value === true) {
+              rules.push({ key: k, label: k });
+            }
+          });
+        }
       }
     }
     // Debug current resolution path
     if (typeof window !== 'undefined') {
       try { console.debug('[RoomThingsPreview] Resolved house rules:', rules); } catch {}
     }
-    return rules.length > 0 ? rules : (actualConfig.houseRules || []);
+    return rules; // Do not fallback to config; show only real room data
   }, [roomData, houseRulesOptions, actualConfig.houseRules]);
 
   // Build Safety & Property from room data if available
@@ -309,25 +338,56 @@ export default function RoomThingsPreview({
       } else if (Array.isArray(sp)) {
         safety.push(...sp.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof sp === 'object') {
-        let order: string[] = [];
-        try {
-          const ls = localStorage.getItem('room_safetyAndPropertyOrder');
-          if (ls) order = JSON.parse(ls);
-        } catch {}
-        if (!Array.isArray(order) || order.length === 0) {
-          order = Array.isArray((roomData as any)?.safetyAndPropertyOrder)
-            ? ((roomData as any).safetyAndPropertyOrder as string[])
-            : [];
+        // Robust key resolution with aliases (ES/EN and variants)
+        const aliasMap: Record<string, string[]> = {
+          smokeAlarm: ['smokeAlarm', 'smoke_alarm', 'smokeDetector', 'detectorHumo', 'detector_de_humo', 'Detector de humo'],
+          carbonMonoxideAlarm: ['carbonMonoxideAlarm', 'carbon_monoxide_alarm', 'coAlarm', 'monoxidoCarbono', 'monóxidoDeCarbono', 'Detector de monóxido de carbono'],
+          firstAidKit: ['firstAidKit', 'first_aid_kit', 'botiquin', 'botiquín'],
+          fireExtinguisher: ['fireExtinguisher', 'fire_extinguisher', 'extintor'],
+          securityCamera: ['securityCamera', 'security_camera', 'camaraSeguridad', 'cámaraDeSeguridad', 'cámara_seguridad'],
+          safe: ['safe', 'cajaFuerte', 'caja_fuerte'],
+          emergencyExit: ['emergencyExit', 'emergency_exit', 'salidaEmergencia', 'salida_de_emergencia'],
+          balconyGuard: ['balconyGuard', 'balcony_guard', 'barandaBalcon', 'baranda_balcón'],
+          poolFence: ['poolFence', 'pool_fence', 'cercaPiscina', 'cerca_de_piscina']
+        };
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const aliases = aliasMap[key] || [];
+          const candidates = [key, snake, pascal, lower, ...aliases];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+          }
+          return undefined;
+        };
+        if (safetyOptions.length > 0) {
+          let order: string[] = [];
+          try {
+            const ls = localStorage.getItem('room_safetyAndPropertyOrder');
+            if (ls) order = JSON.parse(ls);
+          } catch {}
+          if (!Array.isArray(order) || order.length === 0) {
+            order = Array.isArray((roomData as any)?.safetyAndPropertyOrder)
+              ? ((roomData as any).safetyAndPropertyOrder as string[])
+              : [];
+          }
+          const orderedValues = [
+            ...order.filter((v) => safetyOptions.some(o => o.value === v)),
+            ...safetyOptions.map(o => o.value).filter(v => !order.includes(v))
+          ];
+          orderedValues.forEach((valueKey) => {
+            const opt = safetyOptions.find(o => o.value === valueKey) as any;
+            const value = readFlag(sp as any, String(valueKey));
+            if (value === true) safety.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
+          });
+        } else {
+          Object.keys(sp).forEach((k) => {
+            const value = readFlag(sp as any, k);
+            if (value === true) safety.push({ key: k, label: k });
+          });
         }
-        const orderedValues = [
-          ...order.filter((v) => safetyOptions.some(o => o.value === v)),
-          ...safetyOptions.map(o => o.value).filter(v => !order.includes(v))
-        ];
-        orderedValues.forEach((valueKey) => {
-          const opt = safetyOptions.find(o => o.value === valueKey) as any;
-          const value = (sp as any)[valueKey as keyof typeof sp];
-          if (value === true) safety.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
-        });
       }
     }
     // Additional custom safety text
@@ -335,7 +395,7 @@ export default function RoomThingsPreview({
       if (typeof roomData.safetyFeatures === 'string') safety.push(roomData.safetyFeatures);
       else if (Array.isArray(roomData.safetyFeatures)) safety.push(...roomData.safetyFeatures);
     }
-    return safety.length > 0 ? safety : (actualConfig.safetyProperty || []);
+    return safety; // Do not fallback to config; show only real room data
   }, [roomData, safetyOptions, actualConfig.safetyProperty]);
 
   // Build Cancellation Policy from room data if available
@@ -355,17 +415,44 @@ export default function RoomThingsPreview({
           ? ((roomData as any).cancellationPolicyOrder as string[])
           : [];
       }
-      const orderedValues = [
-        ...order.filter((v) => cancellationOptions.some(o => o.value === v)),
-        ...cancellationOptions.map(o => o.value).filter(v => !order.includes(v))
-      ];
-      orderedValues.forEach((valueKey) => {
-        const opt = cancellationOptions.find(o => o.value === valueKey) as any;
-        const value = (cp as any)[valueKey as keyof typeof cp];
-        if (value === true) policies.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
-      });
+      const aliasMap: Record<string, string[]> = {
+        freeCancellation: ['freeCancellation', 'free_cancellation', 'cancelacionGratuita', 'cancelaciónGratuita', 'free'],
+        partialRefund: ['partialRefund', 'partial_refund', 'reembolsoParcial'],
+        nonRefundable: ['nonRefundable', 'non_refundable', 'noReembolsable', 'no_reembolsable'],
+        flexible: ['flexible', 'flexible_policy', 'politicaFlexible', 'políticaFlexible'],
+        moderate: ['moderate', 'moderate_policy', 'politicaModerada', 'políticaModerada'],
+        strict: ['strict', 'strict_policy', 'politicaEstricta', 'políticaEstricta']
+      };
+      const readFlag = (obj: any, key: string) => {
+        if (!obj) return undefined;
+        const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+        const lower = key.toLowerCase();
+        const aliases = aliasMap[key] || [];
+        const candidates = [key, snake, pascal, lower, ...aliases];
+        for (const k of candidates) {
+          if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+        }
+        return undefined;
+      };
+      if (cancellationOptions.length > 0) {
+        const orderedValues = [
+          ...order.filter((v) => cancellationOptions.some(o => o.value === v)),
+          ...cancellationOptions.map(o => o.value).filter(v => !order.includes(v))
+        ];
+        orderedValues.forEach((valueKey) => {
+          const opt = cancellationOptions.find(o => o.value === valueKey) as any;
+          const value = readFlag(cp as any, String(valueKey));
+          if (value === true) policies.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
+        });
+      } else {
+        Object.keys(cp).forEach((k) => {
+          const value = readFlag(cp as any, k);
+          if (k !== 'type' && k !== 'description' && value === true) policies.push({ key: k, label: k });
+        });
+      }
     }
-    return policies.length > 0 ? policies : (actualConfig.cancellationPolicy || []);
+    return policies; // Do not fallback to config; show only real room data
   }, [roomData, cancellationOptions, actualConfig.cancellationPolicy]);
 
   // Check if any section has data

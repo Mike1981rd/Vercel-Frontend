@@ -148,6 +148,10 @@ export function FooterMenuBlock({ settings, isEditor, colorScheme, headingTypogr
             menuItems.map((item) => {
               // Auto-detect policy pages and assign correct URLs
               let finalUrl = item.url;
+              // Normalize known internal paths
+              if (finalUrl === 'habitaciones' || finalUrl === '/habitaciones') {
+                finalUrl = '/habitaciones-lista';
+              }
               if (!finalUrl || finalUrl === '#' || finalUrl === '') {
                 const titleLower = item.title?.toLowerCase() || '';
                 if (titleLower.includes('reembolso') || titleLower.includes('devoluc') || titleLower.includes('return')) {

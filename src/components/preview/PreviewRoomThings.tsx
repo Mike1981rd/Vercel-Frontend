@@ -65,7 +65,7 @@ export default function PreviewRoomThings({
   // Fetch room data
   useEffect(() => {
     const loadRoomData = async () => {
-      const companyId = localStorage.getItem('companyId') || '1';
+      const companyId = '1'; // Single-tenant: always company 1
       const currentSlug = localStorage.getItem('currentRoomSlug');
       
       console.log('=== ROOM THINGS TO KNOW DEBUG ===');
@@ -145,32 +145,44 @@ export default function PreviewRoomThings({
     console.log('typeof roomData?.houseRules:', typeof roomData?.houseRules);
     
     if (roomData?.houseRules) {
-      // If houseRules is a string (text from DB), split it
-      if (typeof roomData.houseRules === 'string') {
-        const items = roomData.houseRules.split(',').map((s: string) => s.trim()).filter((s: string) => s);
-        rules.push(...items);
-      } 
-      // If houseRules is an object (JSONB), process it
-      else if (typeof roomData.houseRules === 'object') {
-        console.log('houseRules is object:', JSON.stringify(roomData.houseRules));
+      let houseRulesData = roomData.houseRules;
+      
+      // If houseRules is a string, try to parse it as JSON first
+      if (typeof houseRulesData === 'string') {
+        try {
+          // Try to parse as JSON
+          houseRulesData = JSON.parse(houseRulesData);
+          console.log('Successfully parsed houseRules JSON:', houseRulesData);
+        } catch (e) {
+          // If not JSON, treat as comma-separated list
+          console.log('houseRules is not JSON, treating as comma-separated string');
+          const items = houseRulesData.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+          rules.push(...items);
+          return rules;
+        }
+      }
+      
+      // Now process as object (either originally object or parsed from JSON string)
+      if (typeof houseRulesData === 'object') {
+        console.log('Processing houseRules as object:', JSON.stringify(houseRulesData));
         
         // Add check-in/check-out times if available
-        if (roomData.houseRules.checkInTime) {
-          console.log('Adding check-in time:', roomData.houseRules.checkInTime);
-          rules.push(`Check-in: ${roomData.houseRules.checkInTime}`);
+        if (houseRulesData.checkInTime) {
+          console.log('Adding check-in time:', houseRulesData.checkInTime);
+          rules.push(`Check-in: ${houseRulesData.checkInTime}`);
         }
-        if (roomData.houseRules.checkOutTime) {
-          console.log('Adding check-out time:', roomData.houseRules.checkOutTime);
-          rules.push(`Check-out: ${roomData.houseRules.checkOutTime}`);
+        if (houseRulesData.checkOutTime) {
+          console.log('Adding check-out time:', houseRulesData.checkOutTime);
+          rules.push(`Check-out: ${houseRulesData.checkOutTime}`);
         }
-        if (roomData.houseRules.quietHours) {
-          console.log('Adding quiet hours:', roomData.houseRules.quietHours);
-          rules.push(`Quiet hours: ${roomData.houseRules.quietHours}`);
+        if (houseRulesData.quietHours) {
+          console.log('Adding quiet hours:', houseRulesData.quietHours);
+          rules.push(`Quiet hours: ${houseRulesData.quietHours}`);
         }
         
         // Add toggle rules based on catalog options
         houseRulesOptions.forEach(option => {
-          const value = roomData.houseRules[option.value];
+          const value = houseRulesData[option.value];
           if (value !== undefined && value !== null) {
             if (value === true) {
               rules.push(option.labelEs || option.value);
@@ -197,19 +209,57 @@ export default function PreviewRoomThings({
   const transformedSafetyProperty = useMemo(() => {
     const safety: string[] = [];
     
+    console.log('=== DEBUGGING SAFETY & PROPERTY ===');
+    console.log('roomData?.safetyAndProperty:', roomData?.safetyAndProperty);
+    console.log('typeof roomData?.safetyAndProperty:', typeof roomData?.safetyAndProperty);
+    
     if (roomData?.safetyAndProperty) {
-      // If it's a string (rich text), try to parse it as a list
-      if (typeof roomData.safetyAndProperty === 'string') {
-        const items = roomData.safetyAndProperty.split(',').map((s: string) => s.trim());
-        safety.push(...items);
-      } else if (typeof roomData.safetyAndProperty === 'object') {
-        // If it's an object with boolean flags
-        safetyOptions.forEach(option => {
-          const value = roomData.safetyAndProperty[option.value];
-          if (value === true) {
-            safety.push(option.labelEs || option.value);
+      let safetyData = roomData.safetyAndProperty;
+      
+      // If it's a string, try to parse it as JSON first
+      if (typeof safetyData === 'string') {
+        try {
+          // Try to parse as JSON
+          safetyData = JSON.parse(safetyData);
+          console.log('Successfully parsed safetyAndProperty JSON:', safetyData);
+        } catch (e) {
+          // If not JSON, treat as comma-separated list
+          console.log('safetyAndProperty is not JSON, treating as comma-separated string');
+          const items = safetyData.split(',').map((s: string) => s.trim()).filter((s: string) => s);
+          safety.push(...items);
+          return safety;
+        }
+      }
+      
+      // Now process as object (either originally object or parsed from JSON string)
+      if (typeof safetyData === 'object') {
+        console.log('Processing safetyAndProperty as object:', JSON.stringify(safetyData));
+        
+        // Process boolean flags based on catalog options with robust key matching
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const candidates = [key, snake, pascal, lower];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
           }
-        });
+          return undefined;
+        };
+        if (safetyOptions.length > 0) {
+          safetyOptions.forEach(option => {
+            const value = readFlag(safetyData, option.value);
+            if (value === true) {
+              safety.push(option.labelEs || option.value);
+            }
+          });
+        } else {
+          Object.keys(safetyData).forEach((k) => {
+            const value = readFlag(safetyData, k);
+            if (value === true) safety.push(k);
+          });
+        }
       }
     }
     
@@ -222,6 +272,9 @@ export default function PreviewRoomThings({
       }
     }
     
+    console.log('Final safety array:', safety);
+    console.log('=== END DEBUGGING SAFETY & PROPERTY ===');
+    
     // Return only room data, no fallback to config
     return safety;
   }, [roomData, safetyOptions]);
@@ -229,31 +282,70 @@ export default function PreviewRoomThings({
   const transformedCancellationPolicy = useMemo(() => {
     const policies: string[] = [];
     
+    console.log('=== DEBUGGING CANCELLATION POLICY ===');
+    console.log('roomData?.cancellationPolicy:', roomData?.cancellationPolicy);
+    console.log('typeof roomData?.cancellationPolicy:', typeof roomData?.cancellationPolicy);
+    
     if (roomData?.cancellationPolicy) {
-      // Add policy type if available
-      if (roomData.cancellationPolicy.type) {
-        const typeMap: { [key: string]: string } = {
-          'flexible': language === 'es' ? 'Política flexible' : 'Flexible policy',
-          'moderate': language === 'es' ? 'Política moderada' : 'Moderate policy',
-          'strict': language === 'es' ? 'Política estricta' : 'Strict policy',
-          'super_strict': language === 'es' ? 'Política súper estricta' : 'Super strict policy'
-        };
-        policies.push(typeMap[roomData.cancellationPolicy.type] || roomData.cancellationPolicy.type);
-      }
+      let policyData = roomData.cancellationPolicy;
       
-      // Add policy description if available
-      if (roomData.cancellationPolicy.description) {
-        policies.push(roomData.cancellationPolicy.description);
-      }
-      
-      // Add policy options based on catalog
-      cancellationOptions.forEach(option => {
-        const value = roomData.cancellationPolicy[option.value];
-        if (value === true) {
-          policies.push(option.labelEs || option.value);
+      // If it's a string, try to parse it as JSON first
+      if (typeof policyData === 'string') {
+        try {
+          // Try to parse as JSON
+          policyData = JSON.parse(policyData);
+          console.log('Successfully parsed cancellationPolicy JSON:', policyData);
+        } catch (e) {
+          // If not JSON, treat as plain text description
+          console.log('cancellationPolicy is not JSON, treating as plain text');
+          policies.push(policyData);
+          return policies;
         }
-      });
+      }
+      
+      // Now process as object (either originally object or parsed from JSON string)
+      if (typeof policyData === 'object') {
+        console.log('Processing cancellationPolicy as object:', JSON.stringify(policyData));
+        
+        // Do not add policy type automatically; only show explicit user-provided info
+        
+        // Add policy description if available
+        if (policyData.description) {
+          policies.push(policyData.description);
+        }
+        
+        // Add policy options based on catalog; only include those explicitly enabled
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const candidates = [key, snake, pascal, lower];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+          }
+          return undefined;
+        };
+        if (cancellationOptions.length > 0) {
+          cancellationOptions.forEach(option => {
+            const value = readFlag(policyData, option.value);
+            if (value === true) {
+              policies.push(option.labelEs || option.value);
+            }
+          });
+        } else {
+          // Fallback when catalog is empty: list truthy keys from object (excluding type/description)
+          Object.keys(policyData).forEach((k) => {
+            if (k === 'type' || k === 'description') return;
+            const value = readFlag(policyData, k);
+            if (value === true) policies.push(k);
+          });
+        }
+      }
     }
+    
+    console.log('Final policies array:', policies);
+    console.log('=== END DEBUGGING CANCELLATION POLICY ===');
     
     // Return only room data, no fallback to config
     return policies;

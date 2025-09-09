@@ -5,15 +5,16 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/Avatar';
 import { DateRangeSelector } from '@/components/ui/DateRangeSelector';
+import { useDateRange } from '@/contexts/DateRangeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
 import {
   MenuToggleIcon,
   TranslationIcon,
   ThemeIcon,
-  NotificationIcon,
   SettingsIcon
 } from '@/components/ui/Icons';
+import AppNotificationsBell from '@/components/notifications/AppNotificationsBell';
 
 interface NavbarProps {
   onSidebarToggle?: () => void;
@@ -35,11 +36,7 @@ export function Navbar({
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
-  const [selectedDateRange, setSelectedDateRange] = useState({
-    startDate: new Date(2025, 6, 6), // 6 de julio 2025
-    endDate: new Date(2025, 7, 4),   // 4 de agosto 2025
-  });
-  const [selectedQuickOption, setSelectedQuickOption] = useState<string>('last30days');
+  const { range, setRange, quickOption, setQuickOption } = useDateRange();
   
   const userMenuRef = useRef<HTMLDivElement>(null);
   const languageMenuRef = useRef<HTMLDivElement>(null);
@@ -84,13 +81,7 @@ export function Navbar({
     role: 'Administrator'
   };
 
-  const notifications = [
-    { id: 1, title: 'Nueva reservación', message: 'Habitación deluxe reservada', time: '5 min ago', unread: true },
-    { id: 2, title: 'Producto agotado', message: 'Stock bajo en producto #123', time: '1 hora ago', unread: true },
-    { id: 3, title: 'Nuevo cliente', message: 'Cliente registrado exitosamente', time: '2 horas ago', unread: false },
-  ];
-
-  const unreadCount = notifications.filter(n => n.unread).length;
+  // Notifications UI is now handled by AppNotificationsBell component (fetches from backend)
 
   // Quick options for display names
   const quickOptionsLabels = {
@@ -108,16 +99,16 @@ export function Navbar({
   // Format date range for display
   const formatDateRange = () => {
     // If a quick option is selected, show the friendly name
-    if (selectedQuickOption && quickOptionsLabels[selectedQuickOption as keyof typeof quickOptionsLabels]) {
-      return quickOptionsLabels[selectedQuickOption as keyof typeof quickOptionsLabels];
+    if (quickOption && quickOptionsLabels[quickOption as keyof typeof quickOptionsLabels]) {
+      return quickOptionsLabels[quickOption as keyof typeof quickOptionsLabels];
     }
     
     // Otherwise show the date range
-    const start = selectedDateRange.startDate.toLocaleDateString('es-ES', { 
+    const start = range.startDate.toLocaleDateString('es-ES', { 
       day: 'numeric', 
       month: 'short' 
     });
-    const end = selectedDateRange.endDate.toLocaleDateString('es-ES', { 
+    const end = range.endDate.toLocaleDateString('es-ES', { 
       day: 'numeric', 
       month: 'short',
       year: 'numeric'
@@ -126,10 +117,10 @@ export function Navbar({
   };
 
   // Handle date range change
-  const handleDateRangeChange = (range: { startDate: Date; endDate: Date }, quickOption?: string) => {
-    setSelectedDateRange(range);
-    setSelectedQuickOption(quickOption || ''); // Clear quick option if custom range
-    console.log('Date range changed:', range, 'Quick option:', quickOption);
+  const handleDateRangeChange = (newRange: { startDate: Date; endDate: Date }, newQuickOption?: string) => {
+    setRange(newRange);
+    setQuickOption(newQuickOption || null);
+    console.log('Date range changed:', newRange, 'Quick option:', newQuickOption);
   };
 
   // Handle logout with loading state
@@ -280,61 +271,8 @@ export function Navbar({
             <ThemeIcon size={20} />
           </button>
 
-          {/* Notifications */}
-          <div className="relative" ref={notificationsRef}>
-            <button
-              onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              title={t('common.notifications', 'Notifications')}
-            >
-              <NotificationIcon size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-error-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            {/* Notifications Dropdown */}
-            {notificationsOpen && (
-              <div className="absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-900">{t('common.notifications', 'Notifications')}</h3>
-                  <span className="text-xs text-gray-500">{unreadCount} {t('common.new', 'new')}</span>
-                </div>
-                
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={cn(
-                        'px-4 py-3 hover:bg-gray-50 border-l-4 transition-colors',
-                        notification.unread ? 'border-l-primary-500 bg-primary-50/30' : 'border-l-transparent'
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          'w-2 h-2 rounded-full mt-2 flex-shrink-0',
-                          notification.unread ? 'bg-primary-500' : 'bg-gray-300'
-                        )} />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
-                          <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
-                          <p className="text-gray-400 text-xs mt-2">{notification.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="border-t border-gray-100 px-4 py-2">
-                  <button className="text-primary-600 text-sm font-medium hover:text-primary-700 transition-colors">
-                    {t('common.viewAll', 'View All')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Notifications (real-time from backend) */}
+          <AppNotificationsBell />
 
           {/* Customize Sidebar */}
           <button
@@ -399,8 +337,8 @@ export function Navbar({
       {/* Date Range Selector Modal */}
       <DateRangeSelector
         isOpen={dateRangeOpen}
-        value={selectedDateRange}
-        onChange={(range, quickOption) => handleDateRangeChange(range, quickOption)}
+        value={range}
+        onChange={(r, q) => handleDateRangeChange(r, q)}
         onClose={() => setDateRangeOpen(false)}
       />
     </header>
