@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Star, Heart, Smile, ThumbsUp, X, ImagePlus, Loader2, Check, AlertCircle } from 'lucide-react';
 import { createReview, uploadReviewMedia } from '@/lib/api/reviews';
 import type { ColorScheme } from '@/types/theme/colorSchemes';
@@ -43,6 +43,31 @@ export default function WriteReviewModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      
+      // Prevent body scroll
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore body scroll
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -211,11 +236,12 @@ export default function WriteReviewModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
-        className="rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: bgColor }}
-      >
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div 
+          className="relative rounded-lg max-w-2xl w-full my-8"
+          style={{ backgroundColor: bgColor }}
+        >
         {/* Header */}
         <div 
           className="flex items-center justify-between p-6"
@@ -492,6 +518,7 @@ export default function WriteReviewModal({
             )}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
