@@ -289,29 +289,28 @@ export default function PreviewRoomThings({
       if (typeof policyData === 'object') {
         console.log('Processing cancellationPolicy as object:', JSON.stringify(policyData));
         
-        // Add policy type if available
-        if (policyData.type) {
-          const typeMap: { [key: string]: string } = {
-            'flexible': language === 'es' ? 'Política flexible' : 'Flexible policy',
-            'moderate': language === 'es' ? 'Política moderada' : 'Moderate policy',
-            'strict': language === 'es' ? 'Política estricta' : 'Strict policy',
-            'super_strict': language === 'es' ? 'Política súper estricta' : 'Super strict policy'
-          };
-          policies.push(typeMap[policyData.type] || policyData.type);
-        }
+        // Do not add policy type automatically; only show explicit user-provided info
         
         // Add policy description if available
         if (policyData.description) {
           policies.push(policyData.description);
         }
         
-        // Add policy options based on catalog
-        cancellationOptions.forEach(option => {
-          const value = policyData[option.value];
-          if (value === true) {
-            policies.push(option.labelEs || option.value);
-          }
-        });
+        // Add policy options based on catalog; only include those explicitly enabled
+        if (cancellationOptions.length > 0) {
+          cancellationOptions.forEach(option => {
+            const value = policyData[option.value];
+            if (value === true) {
+              policies.push(option.labelEs || option.value);
+            }
+          });
+        } else {
+          // Fallback when catalog is empty: list truthy keys from object (excluding type/description)
+          Object.keys(policyData).forEach((k) => {
+            if (k === 'type' || k === 'description') return;
+            if (policyData[k] === true) policies.push(k);
+          });
+        }
       }
     }
     

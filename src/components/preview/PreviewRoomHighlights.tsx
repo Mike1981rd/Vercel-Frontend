@@ -148,26 +148,24 @@ export default function PreviewRoomHighlights({
   }, [roomData]);
   
   const commonSpaces = useMemo(() => {
-    // Common spaces are actually inside sleepingArrangements.commonSpaces
-    if (!roomData?.sleepingArrangements) {
-      console.log('⚠️ No sleepingArrangements in roomData');
-      return null;
-    }
-    
+    // Prefer sleepingArrangements.commonSpaces; fallback to top-level CommonSpaces
     try {
-      // Parse sleepingArrangements if it's a string
-      const sleepingArrangements = typeof roomData.sleepingArrangements === 'string' 
-        ? JSON.parse(roomData.sleepingArrangements) 
-        : roomData.sleepingArrangements;
-      
-      console.log('📊 Full sleepingArrangements object:', sleepingArrangements);
-      
-      const spaces = sleepingArrangements?.commonSpaces;
-      console.log('🏠 Common spaces from parsed sleepingArrangements:', spaces);
-      console.log('🔑 Common spaces keys:', spaces ? Object.keys(spaces) : 'null');
-      console.log('✅ Common spaces values:', spaces ? Object.entries(spaces).filter(([k, v]) => v === true).map(([k]) => k) : 'null');
-      
-      return spaces;
+      let spaces: any = null;
+      if (roomData?.sleepingArrangements) {
+        const sa = typeof roomData.sleepingArrangements === 'string' 
+          ? JSON.parse(roomData.sleepingArrangements) 
+          : roomData.sleepingArrangements;
+        spaces = sa?.commonSpaces || null;
+        if (spaces) return spaces;
+      }
+      // Fallback: some datasets may store this under dedicated CommonSpaces
+      if (roomData?.commonSpaces) {
+        const cs = typeof roomData.commonSpaces === 'string'
+          ? JSON.parse(roomData.commonSpaces)
+          : roomData.commonSpaces;
+        return cs || null;
+      }
+      return null;
     } catch (error) {
       console.error('❌ Error accessing commonSpaces:', error);
       return null;
@@ -217,7 +215,7 @@ export default function PreviewRoomHighlights({
       }
     }
     
-    // THEN: Generate highlights from common spaces using catalog options
+    // THEN: Generate highlights from common spaces using catalog options (or fallback)
     if (commonSpaces && commonSpacesOptions.length > 0) {
       console.log('🎯 Generating highlights from common spaces:', commonSpaces);
       console.log('📚 Available common space options:', commonSpacesOptions);
@@ -316,6 +314,19 @@ export default function PreviewRoomHighlights({
             icon: spaceOption.icon || 'home',
             title: spaceLabel,
             description: description
+          });
+        }
+      });
+    } else if (commonSpaces && commonSpacesOptions.length === 0) {
+      // Fallback: no catalog options returned; create simple text highlights from truthy keys
+      Object.keys(commonSpaces).forEach((key) => {
+        if (commonSpaces[key]) {
+          const title = key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+          highlights.push({
+            id: `cs-${key}`,
+            icon: 'home',
+            title,
+            description: ''
           });
         }
       });
