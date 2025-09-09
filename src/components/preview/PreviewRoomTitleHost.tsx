@@ -979,6 +979,10 @@ export default function PreviewRoomTitleHost({
                           ? parsedHighlights
                               .filter((h: any) => h.isActive !== false)
                               .sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                              .map((h: any, index: number) => ({
+                                ...h,
+                                id: h.id || `highlight_${index}` // Ensure all highlights have an id
+                              }))
                           : [];
                       } catch (e) {
                         console.error('Error parsing room highlights:', e);
@@ -1011,7 +1015,10 @@ export default function PreviewRoomTitleHost({
                     const displayHighlights = roomHighlights.length > 0 
                       ? roomHighlights
                       : (config.highlights && config.highlights.length > 0 
-                        ? config.highlights 
+                        ? config.highlights.map((h: any, index: number) => ({
+                            ...h,
+                            id: h.id || `config_highlight_${index}` // Ensure config highlights have IDs
+                          }))
                         : defaultHighlights);
 
                     return (

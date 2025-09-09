@@ -526,7 +526,12 @@ export function HeaderEditor({ value, onChange }: HeaderEditorProps) {
           <div className="flex items-center justify-between">
             <label className="text-xs font-medium text-gray-700">Show cart icon</label>
             <button
-              onClick={() => handleChange('showCartIcon', !getValue('showCartIcon'))}
+              onClick={() => {
+                const currentValue = getValue('showCartIcon');
+                // Si es undefined, asumimos true como default, entonces lo cambiamos a false
+                const newValue = currentValue === undefined ? false : !currentValue;
+                handleChange('showCartIcon', newValue);
+              }}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                 getValue('showCartIcon') !== false ? 'bg-blue-500' : 'bg-gray-300'
               }`}

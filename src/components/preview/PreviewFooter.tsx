@@ -621,7 +621,12 @@ export default function PreviewFooter({
 
             {/* Tercera línea: Enlaces de políticas */}
             {config?.policyLinks?.showLinks && (
-              <div className="flex flex-wrap gap-4 justify-start">
+              <div className={isMobile ? "flex flex-col gap-2" : "flex flex-wrap gap-4 justify-start"}>
+                {isMobile && (
+                  <h4 className="text-sm font-semibold text-gray-300 mb-1" style={headingTypographyStyles}>
+                    Políticas
+                  </h4>
+                )}
                 {isEditor ? (
                   <>
                     <a href="#" className="text-gray-400 text-xs hover:text-gray-300 transition-colors cursor-pointer" style={bodyTypographyStyles} onClick={(e) => e.preventDefault()}>

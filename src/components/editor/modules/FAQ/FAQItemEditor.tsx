@@ -204,7 +204,7 @@ export default function FAQItemEditor({ sectionId, itemId }: FAQItemEditorProps)
                   contentEditable
                   className="min-h-[150px] text-sm outline-none"
                   dangerouslySetInnerHTML={{ __html: localItem.source }}
-                  onBlur={(e) => handleChange('source', e.currentTarget.innerHTML)}
+                  onInput={(e) => handleChange('source', e.currentTarget.innerHTML)}
                   suppressContentEditableWarning={true}
                 />
               </div>

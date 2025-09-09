@@ -12,7 +12,11 @@
 import React from 'react';
 import { 
   Star, Heart, Check, Zap, Award, Flag, ThumbsUp, ShoppingCart, Truck, Gift, Percent, Tag, Lock, CreditCard, Phone, Mail, HelpCircle, ScanLine, ChevronLeft, ChevronRight,
-  Settings, Search, Eye, EyeOff, User, ThumbsDown, Lightbulb, Trash2, FileText, Copy, Share2, Plus, Minus, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ChevronUp, ChevronDown
+  Settings, Search, Eye, EyeOff, User, ThumbsDown, Lightbulb, Trash2, FileText, Copy, Share2, Plus, Minus, X, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ChevronUp, ChevronDown,
+  // Hotel & Services icons
+  Wifi, Shield, Bed, Coffee, Car, Utensils, Users, MapPin, Calendar, Clock, DollarSign, Home, Building, Mountain, Trees, Waves, Umbrella, Gamepad2, Music, Tv,
+  // Social Media icons
+  Facebook, Twitter, Instagram, Linkedin, Youtube, Github, Globe, MessageCircle, Send, Camera, Video, Mic, Headphones, Radio, Bookmark, Bell, Hash, AtSign, Link, Share
 } from 'lucide-react';
 import { MulticolumnsConfig } from '@/components/editor/modules/Multicolumns/types';
 import useThemeConfigStore from '@/stores/useThemeConfigStore';
@@ -74,6 +78,48 @@ const iconMap: Record<string, any> = {
   'phone': Phone,
   'mail': Mail,
   'help-circle': HelpCircle,
+  // Hotel & Services icons
+  'wifi': Wifi,
+  'shield': Shield,
+  'bed': Bed,
+  'coffee': Coffee,
+  'car': Car,
+  'utensils': Utensils,
+  'users': Users,
+  'map-pin': MapPin,
+  'calendar': Calendar,
+  'clock': Clock,
+  'dollar-sign': DollarSign,
+  'home': Home,
+  'building': Building,
+  'mountain': Mountain,
+  'trees': Trees,
+  'waves': Waves,
+  'umbrella': Umbrella,
+  'gamepad-2': Gamepad2,
+  'music': Music,
+  'tv': Tv,
+  // Social Media icons
+  'facebook': Facebook,
+  'twitter': Twitter,
+  'instagram': Instagram,
+  'linkedin': Linkedin,
+  'youtube': Youtube,
+  'github': Github,
+  'globe': Globe,
+  'message-circle': MessageCircle,
+  'send': Send,
+  'camera': Camera,
+  'video': Video,
+  'mic': Mic,
+  'headphones': Headphones,
+  'radio': Radio,
+  'bookmark': Bookmark,
+  'bell': Bell,
+  'hash': Hash,
+  'at-sign': AtSign,
+  'link': Link,
+  'share': Share
 };
 
 export default function PreviewMulticolumns({ 

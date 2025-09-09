@@ -125,6 +125,32 @@ export default function NavigationMenuForm({ menuId }: Props) {
     }
   }, [menuId]);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside of any dropdown
+      const dropdownElement = document.querySelector('[data-link-dropdown]');
+      const buttonElement = document.querySelector('[data-link-button]');
+      
+      if (showLinkPicker && 
+          dropdownElement && 
+          !dropdownElement.contains(event.target as Node) &&
+          buttonElement &&
+          !buttonElement.contains(event.target as Node)) {
+        setShowLinkPicker(null);
+        setSearchTerm('');
+      }
+    };
+
+    if (showLinkPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showLinkPicker]);
+
   // Fetch de datos dinámicos
   const fetchCollections = async () => {
     try {
@@ -572,7 +598,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
     const options = [
       { icon: <Home className="w-4 h-4" />, label: t('menus.links.homePage'), value: '/' },
       { icon: <Search className="w-4 h-4" />, label: t('menus.links.search'), value: '/search' },
-      { icon: <Bed className="w-4 h-4" />, label: 'Lista de Habitaciones', value: '/habitaciones-lista' },
+      { icon: <Bed className="w-4 h-4" />, label: 'Lista de Habitaciones', value: '/habitaciones' },
     ];
 
     // Agregar colecciones
@@ -755,6 +781,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
                   setSearchTerm('');
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                data-link-button
               >
                 <Link2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
@@ -767,6 +794,7 @@ export default function NavigationMenuForm({ menuId }: Props) {
                       ? 'bottom-full mb-1 right-0' 
                       : 'top-full mt-1 right-0'
                   }`}
+                  data-link-dropdown
                 >
                   <div className="p-3 sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
@@ -796,6 +824,10 @@ export default function NavigationMenuForm({ menuId }: Props) {
                         key={idx}
                         onClick={() => {
                           handleUpdateItem(item.id!, 'link', option.value);
+                          // Si el usuario no ha personalizado el label, actualizarlo con el de la opción
+                          if (!item.label || item.label === 'Menu Item') {
+                            handleUpdateItem(item.id!, 'label', option.label);
+                          }
                           setShowLinkPicker(null);
                           setSearchTerm('');
                         }}

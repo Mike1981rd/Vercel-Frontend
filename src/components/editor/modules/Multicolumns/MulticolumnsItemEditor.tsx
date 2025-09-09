@@ -65,6 +65,55 @@ const ICON_CATEGORIES = [
       { value: 'mail', label: 'Email', icon: Icons.Mail },
       { value: 'help-circle', label: 'Support', icon: Icons.HelpCircle },
     ]
+  },
+  {
+    name: 'Hotel & Services',
+    icons: [
+      { value: 'wifi', label: 'WiFi', icon: Icons.Wifi },
+      { value: 'lock', label: 'Seguridad 24/7', icon: Icons.Shield },
+      { value: 'hot-water', label: 'Agua Caliente', icon: Icons.Droplets },
+      { value: 'parking', label: 'Estacionamiento', icon: Icons.Car },
+      { value: 'pool', label: 'Piscina', icon: Icons.Waves },
+      { value: 'gym', label: 'Gimnasio', icon: Icons.Dumbbell },
+      { value: 'restaurant', label: 'Restaurante', icon: Icons.Utensils },
+      { value: 'room-service', label: 'Servicio a Habitación', icon: Icons.Bell },
+      { value: 'laundry', label: 'Lavandería', icon: Icons.Shirt },
+      { value: 'pet-friendly', label: 'Pet Friendly', icon: Icons.Heart },
+      { value: 'ac', label: 'Aire Acondicionado', icon: Icons.Wind },
+      { value: 'tv', label: 'TV Cable', icon: Icons.Tv },
+      { value: 'minibar', label: 'Minibar', icon: Icons.Wine },
+      { value: 'safe', label: 'Caja Fuerte', icon: Icons.Lock },
+      { value: 'coffee', label: 'Cafetera', icon: Icons.Coffee },
+      { value: 'spa', label: 'Spa', icon: Icons.Sparkles },
+      { value: 'airport-shuttle', label: 'Transporte Aeropuerto', icon: Icons.Plane },
+      { value: 'concierge', label: 'Concierge', icon: Icons.UserCheck },
+      { value: 'conference-room', label: 'Sala de Conferencias', icon: Icons.Presentation },
+      { value: 'business-center', label: 'Centro de Negocios', icon: Icons.Briefcase }
+    ]
+  },
+  {
+    name: 'Social Media',
+    icons: [
+      { value: 'instagram', label: 'Instagram', icon: Icons.Instagram },
+      { value: 'facebook', label: 'Facebook', icon: Icons.Facebook },
+      { value: 'twitter', label: 'Twitter', icon: Icons.Twitter },
+      { value: 'youtube', label: 'YouTube', icon: Icons.Youtube },
+      { value: 'linkedin', label: 'LinkedIn', icon: Icons.Linkedin },
+      { value: 'pinterest', label: 'Pinterest', icon: Icons.Circle },
+      { value: 'tiktok', label: 'TikTok', icon: Icons.Music },
+      { value: 'snapchat', label: 'Snapchat', icon: Icons.Ghost },
+      { value: 'reddit', label: 'Reddit', icon: Icons.MessageCircle },
+      { value: 'whatsapp', label: 'WhatsApp', icon: Icons.MessageCircle },
+      { value: 'telegram', label: 'Telegram', icon: Icons.Send },
+      { value: 'discord', label: 'Discord', icon: Icons.MessageSquare },
+      { value: 'twitch', label: 'Twitch', icon: Icons.Tv },
+      { value: 'spotify', label: 'Spotify', icon: Icons.Music2 },
+      { value: 'soundcloud', label: 'SoundCloud', icon: Icons.CloudRain },
+      { value: 'medium', label: 'Medium', icon: Icons.BookOpen },
+      { value: 'github', label: 'GitHub', icon: Icons.Github },
+      { value: 'behance', label: 'Behance', icon: Icons.Grid },
+      { value: 'dribbble', label: 'Dribbble', icon: Icons.Dribbble }
+    ]
   }
 ];
 

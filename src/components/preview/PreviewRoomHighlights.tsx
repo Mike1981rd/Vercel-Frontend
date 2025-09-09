@@ -146,11 +146,16 @@ export default function PreviewRoomHighlights({
   
   const commonSpaces = useMemo(() => {
     // Common spaces are actually inside sleepingArrangements.commonSpaces
-    if (!roomData?.sleepingArrangements?.commonSpaces) return null;
+    if (!roomData?.sleepingArrangements) return null;
     
     try {
-      const spaces = roomData.sleepingArrangements.commonSpaces;
-      console.log('Common spaces from sleepingArrangements:', spaces);
+      // Parse sleepingArrangements if it's a string
+      const sleepingArrangements = typeof roomData.sleepingArrangements === 'string' 
+        ? JSON.parse(roomData.sleepingArrangements) 
+        : roomData.sleepingArrangements;
+      
+      const spaces = sleepingArrangements?.commonSpaces;
+      console.log('Common spaces from parsed sleepingArrangements:', spaces);
       return spaces;
     } catch (error) {
       console.error('Error accessing commonSpaces:', error);
@@ -212,74 +217,84 @@ export default function PreviewRoomHighlights({
         if (commonSpaces[spaceOption.value]) {
           const spaceLabel = language === 'es' ? spaceOption.labelEs : spaceOption.labelEn;
           
-          // Generate descriptions based on the space type
+          // Use description from catalog if available, otherwise generate a default one
           let description = '';
-          switch(spaceOption.value) {
-            case 'kitchen':
-              description = language === 'es' 
-                ? 'Cocina totalmente equipada para preparar comidas'
-                : 'Fully equipped kitchen for preparing meals';
-              break;
-            case 'library':
-              description = language === 'es'
-                ? 'Biblioteca con colección de libros para lectura'
-                : 'Library with book collection for reading';
-              break;
-            case 'pool':
-              description = language === 'es'
-                ? 'Acceso a área de piscina'
-                : 'Access to swimming pool area';
-              break;
-            case 'gym':
-              description = language === 'es'
-                ? 'Gimnasio moderno con equipo de ejercicio'
-                : 'Modern gym with exercise equipment';
-              break;
-            case 'garden':
-              description = language === 'es'
-                ? 'Hermoso espacio de jardín para relajación'
-                : 'Beautiful garden space for relaxation';
-              break;
-            case 'parking':
-              description = language === 'es'
-                ? 'Espacio de estacionamiento gratuito disponible'
-                : 'Complimentary parking space available';
-              break;
-            case 'livingRoom':
-              description = language === 'es'
-                ? 'Sala de estar compartida con asientos cómodos'
-                : 'Shared living room with comfortable seating';
-              break;
-            case 'diningRoom':
-              description = language === 'es'
-                ? 'Área de comedor para comidas'
-                : 'Dining area for meals';
-              break;
-            case 'balcony':
-              description = language === 'es'
-                ? 'Acceso a balcón privado o compartido'
-                : 'Private or shared balcony access';
-              break;
-            case 'terrace':
-              description = language === 'es'
-                ? 'Terraza al aire libre con área de asientos'
-                : 'Outdoor terrace with seating area';
-              break;
-            case 'spa':
-              description = language === 'es'
-                ? 'Acceso a spa y centro de bienestar'
-                : 'Spa and wellness center access';
-              break;
-            case 'Cafe':
-            case 'cafe':
-              description = language === 'es'
-                ? 'Servicio de café disponible en las instalaciones'
-                : 'Coffee service available on premises';
-              break;
-            default:
-              description = language === 'es'
-                ? `${spaceLabel} disponible`
-                : `${spaceLabel} available`;
+          
+          // Check if the catalog option has a description
+          if (spaceOption.descriptionEs && language === 'es') {
+            description = spaceOption.descriptionEs;
+          } else if (spaceOption.descriptionEn && language === 'en') {
+            description = spaceOption.descriptionEn;
+          } else {
+            // Fallback descriptions for known common spaces
+            switch(spaceOption.value) {
+              case 'kitchen':
+                description = language === 'es' 
+                  ? 'Cocina totalmente equipada para preparar comidas'
+                  : 'Fully equipped kitchen for preparing meals';
+                break;
+              case 'library':
+                description = language === 'es'
+                  ? 'Biblioteca con colección de libros para lectura'
+                  : 'Library with book collection for reading';
+                break;
+              case 'pool':
+                description = language === 'es'
+                  ? 'Acceso a área de piscina'
+                  : 'Access to swimming pool area';
+                break;
+              case 'gym':
+                description = language === 'es'
+                  ? 'Gimnasio moderno con equipo de ejercicio'
+                  : 'Modern gym with exercise equipment';
+                break;
+              case 'garden':
+                description = language === 'es'
+                  ? 'Hermoso espacio de jardín para relajación'
+                  : 'Beautiful garden space for relaxation';
+                break;
+              case 'parking':
+                description = language === 'es'
+                  ? 'Espacio de estacionamiento gratuito disponible'
+                  : 'Complimentary parking space available';
+                break;
+              case 'livingRoom':
+                description = language === 'es'
+                  ? 'Sala de estar compartida con asientos cómodos'
+                  : 'Shared living room with comfortable seating';
+                break;
+              case 'diningRoom':
+                description = language === 'es'
+                  ? 'Área de comedor para comidas'
+                  : 'Dining area for meals';
+                break;
+              case 'balcony':
+                description = language === 'es'
+                  ? 'Acceso a balcón privado o compartido'
+                  : 'Private or shared balcony access';
+                break;
+              case 'terrace':
+                description = language === 'es'
+                  ? 'Terraza al aire libre con área de asientos'
+                  : 'Outdoor terrace with seating area';
+                break;
+              case 'spa':
+                description = language === 'es'
+                  ? 'Acceso a spa y centro de bienestar'
+                  : 'Spa and wellness center access';
+                break;
+              case 'Cafe':
+              case 'cafe':
+                description = language === 'es'
+                  ? 'Servicio de café disponible en las instalaciones'
+                  : 'Coffee service available on premises';
+                break;
+              default:
+                // For new/custom common spaces, create a generic description
+                description = language === 'es'
+                  ? `${spaceLabel} disponible en las instalaciones`
+                  : `${spaceLabel} available on premises`;
+            }
           }
           
           highlights.push({
