@@ -145,9 +145,21 @@ export function useConfigOptions(type: string) {
       
       const token = localStorage.getItem('token');
       if (!token) {
-        // Si no hay token, usar opciones hardcodeadas
-        const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-        setOptions(fallbackOptions);
+        // No token means not authenticated - show empty
+        console.warn(`⚠️ No authentication token found for ConfigOptions/${type}`);
+        // Temporary: Return ONLY the 3 actual catalog items for common_spaces
+        if (type === 'common_spaces') {
+          const actualCatalog = [
+            { value: 'pool', label: language === 'es' ? 'Piscina' : 'Pool', icon: '🏊' },
+            { value: 'lobby', label: 'Lobby', icon: '🏛️' },
+            { value: 'terrace', label: language === 'es' ? 'Terraza' : 'Terrace', icon: '☀️' }
+          ];
+          setOptions(transformFallbackOptions(actualCatalog));
+          console.log('📋 Using temporary catalog (Pool, Lobby, Terrace) until auth is fixed');
+        } else {
+          setOptions([]);
+        }
+        setError('Not authenticated');
         return;
       }
 
@@ -158,10 +170,26 @@ export function useConfigOptions(type: string) {
       });
 
       if (!response.ok) {
-        // Si hay cualquier error (404, 401, 500, etc), usar opciones hardcodeadas
-        console.log(`Using fallback options for ${type} (API returned ${response.status})`);
-        const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-        setOptions(fallbackOptions);
+        // Log the actual error for debugging
+        console.error(`❌ API call failed for ConfigOptions/${type}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          endpoint: getApiEndpoint(`/ConfigOptions/type/${type}`)
+        });
+        // Temporary: Return ONLY the 3 actual catalog items for common_spaces
+        if (type === 'common_spaces') {
+          const actualCatalog = [
+            { value: 'pool', label: language === 'es' ? 'Piscina' : 'Pool', icon: '🏊' },
+            { value: 'lobby', label: 'Lobby', icon: '🏛️' },
+            { value: 'terrace', label: language === 'es' ? 'Terraza' : 'Terrace', icon: '☀️' }
+          ];
+          setOptions(transformFallbackOptions(actualCatalog));
+          console.log('📋 Using temporary catalog (Pool, Lobby, Terrace) due to API error');
+        } else {
+          setOptions([]);
+        }
+        setError(`Failed to load catalog options (${response.status})`);
         return;
       }
 
@@ -179,10 +207,21 @@ export function useConfigOptions(type: string) {
 
       setOptions(mappedOptions);
     } catch (err) {
-      // En caso de error, usar opciones hardcodeadas silenciosamente
-      console.log(`Using fallback options for ${type} (network error)`);
-      const fallbackOptions = transformFallbackOptions(getFallbackOptions());
-      setOptions(fallbackOptions);
+      // Log the actual network error for debugging
+      console.error(`❌ Network error fetching ConfigOptions for ${type}:`, err);
+      // Temporary: Return ONLY the 3 actual catalog items for common_spaces
+      if (type === 'common_spaces') {
+        const actualCatalog = [
+          { value: 'pool', label: language === 'es' ? 'Piscina' : 'Pool', icon: '🏊' },
+          { value: 'lobby', label: 'Lobby', icon: '🏛️' },
+          { value: 'terrace', label: language === 'es' ? 'Terraza' : 'Terrace', icon: '☀️' }
+        ];
+        setOptions(transformFallbackOptions(actualCatalog));
+        console.log('📋 Using temporary catalog (Pool, Lobby, Terrace) due to network error');
+      } else {
+        setOptions([]);
+      }
+      setError(`Network error loading catalog options`);
     } finally {
       setLoading(false);
     }
