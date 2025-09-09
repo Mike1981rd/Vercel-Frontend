@@ -338,12 +338,25 @@ export default function RoomThingsPreview({
       } else if (Array.isArray(sp)) {
         safety.push(...sp.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof sp === 'object') {
+        // Robust key resolution with aliases (ES/EN and variants)
+        const aliasMap: Record<string, string[]> = {
+          smokeAlarm: ['smokeAlarm', 'smoke_alarm', 'smokeDetector', 'detectorHumo', 'detector_de_humo', 'Detector de humo'],
+          carbonMonoxideAlarm: ['carbonMonoxideAlarm', 'carbon_monoxide_alarm', 'coAlarm', 'monoxidoCarbono', 'monóxidoDeCarbono', 'Detector de monóxido de carbono'],
+          firstAidKit: ['firstAidKit', 'first_aid_kit', 'botiquin', 'botiquín'],
+          fireExtinguisher: ['fireExtinguisher', 'fire_extinguisher', 'extintor'],
+          securityCamera: ['securityCamera', 'security_camera', 'camaraSeguridad', 'cámaraDeSeguridad', 'cámara_seguridad'],
+          safe: ['safe', 'cajaFuerte', 'caja_fuerte'],
+          emergencyExit: ['emergencyExit', 'emergency_exit', 'salidaEmergencia', 'salida_de_emergencia'],
+          balconyGuard: ['balconyGuard', 'balcony_guard', 'barandaBalcon', 'baranda_balcón'],
+          poolFence: ['poolFence', 'pool_fence', 'cercaPiscina', 'cerca_de_piscina']
+        };
         const readFlag = (obj: any, key: string) => {
           if (!obj) return undefined;
           const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
           const pascal = key.charAt(0).toUpperCase() + key.slice(1);
           const lower = key.toLowerCase();
-          const candidates = [key, snake, pascal, lower];
+          const aliases = aliasMap[key] || [];
+          const candidates = [key, snake, pascal, lower, ...aliases];
           for (const k of candidates) {
             if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
           }
@@ -402,12 +415,21 @@ export default function RoomThingsPreview({
           ? ((roomData as any).cancellationPolicyOrder as string[])
           : [];
       }
+      const aliasMap: Record<string, string[]> = {
+        freeCancellation: ['freeCancellation', 'free_cancellation', 'cancelacionGratuita', 'cancelaciónGratuita', 'free'],
+        partialRefund: ['partialRefund', 'partial_refund', 'reembolsoParcial'],
+        nonRefundable: ['nonRefundable', 'non_refundable', 'noReembolsable', 'no_reembolsable'],
+        flexible: ['flexible', 'flexible_policy', 'politicaFlexible', 'políticaFlexible'],
+        moderate: ['moderate', 'moderate_policy', 'politicaModerada', 'políticaModerada'],
+        strict: ['strict', 'strict_policy', 'politicaEstricta', 'políticaEstricta']
+      };
       const readFlag = (obj: any, key: string) => {
         if (!obj) return undefined;
         const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
         const pascal = key.charAt(0).toUpperCase() + key.slice(1);
         const lower = key.toLowerCase();
-        const candidates = [key, snake, pascal, lower];
+        const aliases = aliasMap[key] || [];
+        const candidates = [key, snake, pascal, lower, ...aliases];
         for (const k of candidates) {
           if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
         }

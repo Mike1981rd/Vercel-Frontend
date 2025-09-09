@@ -69,7 +69,7 @@ export default function PreviewRoomReviews({
     return () => window.removeEventListener('resize', onResize);
   }, [deviceView]);
 
-  // Fetch first active room ID when needed (editor or no roomId provided in live)
+  // Fetch first active room ID when needed (only in live mode when no roomId provided)
   useEffect(() => {
     const loadRoomData = async () => {
       const companyId = localStorage.getItem('companyId') || '1';
@@ -86,20 +86,22 @@ export default function PreviewRoomReviews({
     };
 
     const configRoomId = (config as any)?.roomId as number | undefined;
-    // Fetch when enabled and either in editor OR no room id is provided in live
-    if (config.enabled && (isEditor || (!roomId && !configRoomId))) {
+    // Only fetch in live mode when no room id is provided
+    // In editor, we'll just show a placeholder
+    if (config.enabled && !isEditor && !roomId && !configRoomId) {
       loadRoomData();
     }
-  }, [isEditor, config.enabled, roomId, config]);
+  }, [isEditor, config.enabled, roomId]);
 
   // Load reviews when roomId (prop or config) is available or when we have firstActiveRoomId
   useEffect(() => {
     const roomIdFromConfig = (config as any)?.roomId as number | undefined;
     const effectiveRoomId = roomId || roomIdFromConfig || firstActiveRoomId;
-    if (effectiveRoomId) {
+    // Only load reviews if we have a roomId (don't load in editor without roomId)
+    if (effectiveRoomId && (!isEditor || roomId || roomIdFromConfig)) {
       loadReviews(effectiveRoomId);
     }
-  }, [roomId, firstActiveRoomId, isEditor, config]);
+  }, [roomId, firstActiveRoomId, isEditor]);
 
   // Listen to cross-tab updates (from backoffice approvals) and reload
   useEffect(() => {
@@ -724,12 +726,10 @@ export default function PreviewRoomReviews({
       {isEditor && !isLoading && reviews.length === 0 && (
         <div className="border-2 border-dashed rounded-lg p-8 text-center" style={{ borderColor }}>
           <p className="text-sm opacity-70" style={{ color: textColor }}>
-            {firstActiveRoomId 
-              ? "No reviews yet for this room. Reviews will appear here when customers submit them."
-              : "No active room found. Please create and activate a room first."}
+            Room Reviews Section
           </p>
           <p className="text-xs opacity-50 mt-2" style={{ color: textColor }}>
-            This is a preview showing data from the first active room.
+            Reviews will be displayed here in the live site
           </p>
         </div>
       )}
