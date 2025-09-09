@@ -318,6 +318,17 @@ export default function RoomThingsPreview({
       } else if (Array.isArray(sp)) {
         safety.push(...sp.filter((s: any) => typeof s === 'string' && s.trim()).map((s: string) => s.trim()));
       } else if (typeof sp === 'object') {
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const candidates = [key, snake, pascal, lower];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+          }
+          return undefined;
+        };
         if (safetyOptions.length > 0) {
           let order: string[] = [];
           try {
@@ -335,12 +346,12 @@ export default function RoomThingsPreview({
           ];
           orderedValues.forEach((valueKey) => {
             const opt = safetyOptions.find(o => o.value === valueKey) as any;
-            const value = (sp as any)[valueKey as keyof typeof sp];
+            const value = readFlag(sp as any, String(valueKey));
             if (value === true) safety.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
           });
         } else {
           Object.keys(sp).forEach((k) => {
-            const value = (sp as any)[k];
+            const value = readFlag(sp as any, k);
             if (value === true) safety.push({ key: k, label: k });
           });
         }
@@ -371,6 +382,17 @@ export default function RoomThingsPreview({
           ? ((roomData as any).cancellationPolicyOrder as string[])
           : [];
       }
+      const readFlag = (obj: any, key: string) => {
+        if (!obj) return undefined;
+        const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+        const lower = key.toLowerCase();
+        const candidates = [key, snake, pascal, lower];
+        for (const k of candidates) {
+          if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+        }
+        return undefined;
+      };
       if (cancellationOptions.length > 0) {
         const orderedValues = [
           ...order.filter((v) => cancellationOptions.some(o => o.value === v)),
@@ -378,12 +400,12 @@ export default function RoomThingsPreview({
         ];
         orderedValues.forEach((valueKey) => {
           const opt = cancellationOptions.find(o => o.value === valueKey) as any;
-          const value = (cp as any)[valueKey as keyof typeof cp];
+          const value = readFlag(cp as any, String(valueKey));
           if (value === true) policies.push({ key: String(valueKey), label: opt?.label || String(valueKey), icon: opt?.icon, iconType: opt?.iconType });
         });
       } else {
         Object.keys(cp).forEach((k) => {
-          const value = (cp as any)[k];
+          const value = readFlag(cp as any, k);
           if (k !== 'type' && k !== 'description' && value === true) policies.push({ key: k, label: k });
         });
       }

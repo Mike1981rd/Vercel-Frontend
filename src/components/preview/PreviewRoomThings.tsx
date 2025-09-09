@@ -235,13 +235,31 @@ export default function PreviewRoomThings({
       if (typeof safetyData === 'object') {
         console.log('Processing safetyAndProperty as object:', JSON.stringify(safetyData));
         
-        // Process boolean flags based on catalog options
-        safetyOptions.forEach(option => {
-          const value = safetyData[option.value];
-          if (value === true) {
-            safety.push(option.labelEs || option.value);
+        // Process boolean flags based on catalog options with robust key matching
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const candidates = [key, snake, pascal, lower];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
           }
-        });
+          return undefined;
+        };
+        if (safetyOptions.length > 0) {
+          safetyOptions.forEach(option => {
+            const value = readFlag(safetyData, option.value);
+            if (value === true) {
+              safety.push(option.labelEs || option.value);
+            }
+          });
+        } else {
+          Object.keys(safetyData).forEach((k) => {
+            const value = readFlag(safetyData, k);
+            if (value === true) safety.push(k);
+          });
+        }
       }
     }
     
@@ -297,9 +315,20 @@ export default function PreviewRoomThings({
         }
         
         // Add policy options based on catalog; only include those explicitly enabled
+        const readFlag = (obj: any, key: string) => {
+          if (!obj) return undefined;
+          const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+          const lower = key.toLowerCase();
+          const candidates = [key, snake, pascal, lower];
+          for (const k of candidates) {
+            if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+          }
+          return undefined;
+        };
         if (cancellationOptions.length > 0) {
           cancellationOptions.forEach(option => {
-            const value = policyData[option.value];
+            const value = readFlag(policyData, option.value);
             if (value === true) {
               policies.push(option.labelEs || option.value);
             }
@@ -308,7 +337,8 @@ export default function PreviewRoomThings({
           // Fallback when catalog is empty: list truthy keys from object (excluding type/description)
           Object.keys(policyData).forEach((k) => {
             if (k === 'type' || k === 'description') return;
-            if (policyData[k] === true) policies.push(k);
+            const value = readFlag(policyData, k);
+            if (value === true) policies.push(k);
           });
         }
       }

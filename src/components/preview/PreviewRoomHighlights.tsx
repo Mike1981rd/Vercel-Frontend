@@ -222,10 +222,22 @@ export default function PreviewRoomHighlights({
       console.log('🔍 Checking each option against commonSpaces object...');
       
       // Iterate through each common space option from the catalog
+      const readFlag = (obj: any, key: string) => {
+        if (!obj) return undefined;
+        const snake = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+        const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+        const lower = key.toLowerCase();
+        const candidates = [key, snake, pascal, lower];
+        for (const k of candidates) {
+          if (Object.prototype.hasOwnProperty.call(obj, k)) return obj[k];
+        }
+        return undefined;
+      };
       commonSpacesOptions.forEach((spaceOption: any) => {
-        console.log(`  Checking ${spaceOption.value}:`, commonSpaces[spaceOption.value]);
+        const enabled = readFlag(commonSpaces, spaceOption.value);
+        console.log(`  Checking ${spaceOption.value}:`, enabled);
         // Check if this common space is enabled for the room
-        if (commonSpaces[spaceOption.value]) {
+        if (enabled) {
           console.log(`    ✅ ${spaceOption.value} is enabled!`);
           const spaceLabel = language === 'es' ? spaceOption.labelEs : spaceOption.labelEn;
           
