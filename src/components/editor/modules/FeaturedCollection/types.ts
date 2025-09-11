@@ -86,6 +86,8 @@ export interface FeaturedCollectionConfig {
   // Spacing
   topSpacing: number;
   bottomSpacing: number;
+  mobileTopSpacing?: number;
+  mobileBottomSpacing?: number;
   headingSpacing?: number;
 }
 
@@ -139,5 +141,7 @@ export function getDefaultFeaturedCollectionConfig(): FeaturedCollectionConfig {
     enableOverlay: false,
     topSpacing: 40,
     bottomSpacing: 40,
+    mobileTopSpacing: 20,
+    mobileBottomSpacing: 20,
   };
 }

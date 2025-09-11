@@ -248,8 +248,8 @@ export default function PreviewImageBanner({ config, isEditor = false, deviceVie
     <section 
       className={`relative overflow-hidden`}
       style={{
-        paddingTop: `${isMobile ? 20 : configWithDefaults.topPadding}px`,
-        paddingBottom: `${isMobile ? 20 : configWithDefaults.bottomPadding}px`,
+        paddingTop: `${isMobile ? (configWithDefaults.mobileTopPadding ?? 20) : configWithDefaults.topPadding}px`,
+        paddingBottom: `${isMobile ? (configWithDefaults.mobileBottomPadding ?? 20) : configWithDefaults.bottomPadding}px`,
         ...(configWithDefaults.colorBackground ? { backgroundColor: colorScheme.background } : {})
       }}
     >

@@ -56,4 +56,6 @@ export interface ImageBannerConfig {
   addSidePaddings: boolean;
   topPadding: number;
   bottomPadding: number;
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
 }

@@ -27,6 +27,8 @@ export interface ContactFormConfig {
   addSidePaddings?: boolean;
   topPadding?: number;
   bottomPadding?: number;
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
   
   // Custom CSS
   customCss?: string;
@@ -63,6 +65,8 @@ export function getDefaultContactFormConfig(): ContactFormConfig {
     addSidePaddings: true,
     topPadding: 96,
     bottomPadding: 96,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     
     // Custom CSS
     customCss: '',

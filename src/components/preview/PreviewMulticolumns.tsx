@@ -462,8 +462,8 @@ export default function PreviewMulticolumns({
       <section 
         style={{ 
           backgroundColor: colorScheme?.background || '#ffffff',
-          paddingTop: `${isMobile ? 20 : (config.topPadding || 40)}px`,
-          paddingBottom: `${isMobile ? 20 : (config.bottomPadding || 40)}px`,
+          paddingTop: `${isMobile ? (config.mobileTopPadding ?? 20) : (config.topPadding || 40)}px`,
+          paddingBottom: `${isMobile ? (config.mobileBottomPadding ?? 20) : (config.bottomPadding || 40)}px`,
           paddingLeft: config.addSidePaddings ? '20px' : '0',
           paddingRight: config.addSidePaddings ? '20px' : '0',
           minHeight: config.containerHeight && config.containerHeight > 0 ? `${config.containerHeight}px` : 'auto',

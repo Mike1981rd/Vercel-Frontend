@@ -57,6 +57,8 @@ export interface ImageWithTextConfig {
   addSidePaddings: boolean;
   topPadding: number;
   bottomPadding: number;
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
   
   // CSS personalizado
   customCss?: string;
@@ -94,6 +96,8 @@ export function getDefaultImageWithTextConfig(): ImageWithTextConfig {
     addSidePaddings: false,
     topPadding: 48,
     bottomPadding: 80,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     
     customCss: ''
   };

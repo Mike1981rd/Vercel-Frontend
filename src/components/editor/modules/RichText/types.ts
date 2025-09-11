@@ -66,6 +66,8 @@ export interface RichTextConfig {
   contentAlignment: 'left' | 'center' | 'right';
   paddingTop: number;
   paddingBottom: number;
+  mobilePaddingTop?: number;
+  mobilePaddingBottom?: number;
   customCSS?: string;
   blocks: RichTextBlock[];
 }
@@ -77,6 +79,8 @@ export const defaultRichTextConfig: RichTextConfig = {
   contentAlignment: 'center',
   paddingTop: 64,
   paddingBottom: 64,
+  mobilePaddingTop: 20,
+  mobilePaddingBottom: 20,
   customCSS: '',
   blocks: []
 };

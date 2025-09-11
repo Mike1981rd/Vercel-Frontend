@@ -578,8 +578,8 @@ export default function PreviewNewsletter({
       className={containerClass}
       style={{
         backgroundColor: finalConfig.colorBackground ? colorScheme.background : 'transparent',
-        paddingTop: `${isMobile ? 20 : finalConfig.paddingTop}px`,
-        paddingBottom: `${isMobile ? 20 : finalConfig.paddingBottom}px`,
+        paddingTop: `${isMobile ? (finalConfig.mobilePaddingTop ?? 20) : finalConfig.paddingTop}px`,
+        paddingBottom: `${isMobile ? (finalConfig.mobilePaddingBottom ?? 20) : finalConfig.paddingBottom}px`,
         paddingLeft: finalConfig.addSidePaddings ? (isMobile ? '1rem' : '2rem') : 0,
         paddingRight: finalConfig.addSidePaddings ? (isMobile ? '1rem' : '2rem') : 0
       }}

@@ -95,6 +95,8 @@ export interface NewsletterConfig {
   addSidePaddings: boolean;
   paddingTop: number;
   paddingBottom: number;
+  mobilePaddingTop?: number;
+  mobilePaddingBottom?: number;
   
   // Custom CSS
   customCSS?: string;
@@ -130,6 +132,8 @@ export const defaultNewsletterConfig: NewsletterConfig = {
   addSidePaddings: true,
   paddingTop: 10,
   paddingBottom: 85,
+  mobilePaddingTop: 20,
+  mobilePaddingBottom: 20,
   customCSS: '',
   blocks: []
 };

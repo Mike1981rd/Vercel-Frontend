@@ -40,6 +40,8 @@ export interface FAQConfig {
   addSidePaddings: boolean;
   topPadding: number; // px value
   bottomPadding: number; // px value
+  mobileTopPadding?: number; // px value for mobile
+  mobileBottomPadding?: number; // px value for mobile
   
   // CSS personalizado
   customCss?: string;
@@ -102,6 +104,8 @@ export function getDefaultFAQConfig(): FAQConfig {
     addSidePaddings: false,
     topPadding: 96,
     bottomPadding: 96,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     items: [],
     categories: []
   };

@@ -229,8 +229,8 @@ export default function PreviewRichText({ config, deviceView = 'desktop', isEdit
       style={{
         backgroundColor,
         color: textColor,
-        paddingTop: `${isMobile ? 20 : (safeConfig.paddingTop || 64)}px`,
-        paddingBottom: `${isMobile ? 20 : (safeConfig.paddingBottom || 64)}px`,
+        paddingTop: `${isMobile ? (safeConfig.mobilePaddingTop ?? 20) : (safeConfig.paddingTop || 64)}px`,
+        paddingBottom: `${isMobile ? (safeConfig.mobilePaddingBottom ?? 20) : (safeConfig.paddingBottom || 64)}px`,
       }}
     >
       <div className={`${getWidthClass()} px-4`}>

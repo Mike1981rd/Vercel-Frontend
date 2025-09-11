@@ -84,6 +84,8 @@ export interface SlideshowConfig {
   addSidePaddings: boolean;
   topPadding: number; // 0-120px
   bottomPadding: number; // 0-120px
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
   
   // Slides
   slides: SlideConfig[];
@@ -107,6 +109,8 @@ export function getDefaultSlideshowConfig(): SlideshowConfig {
     addSidePaddings: false,
     topPadding: 48,
     bottomPadding: 48,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     slides: []
   };
 }

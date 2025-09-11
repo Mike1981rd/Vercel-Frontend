@@ -48,6 +48,8 @@ export interface TestimonialsConfig {
   addSidePaddings: boolean;
   topPadding: number;
   bottomPadding: number;
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
   
   // Custom CSS
   customCss?: string;
@@ -99,6 +101,8 @@ export function getDefaultTestimonialsConfig(): TestimonialsConfig {
     addSidePaddings: true,
     topPadding: 96,
     bottomPadding: 30,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     items: []
   };
 }

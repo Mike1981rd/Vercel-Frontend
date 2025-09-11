@@ -54,6 +54,8 @@ export interface MulticolumnsConfig {
   addSidePaddings: boolean;
   topPadding: number;
   bottomPadding: number;
+  mobileTopPadding?: number;
+  mobileBottomPadding?: number;
   containerHeight: number; // Min height in pixels, 0 = auto
   
   // CSS personalizado
@@ -144,6 +146,8 @@ export function getDefaultMulticolumnsConfig(): MulticolumnsConfig {
     addSidePaddings: false,
     topPadding: 0,
     bottomPadding: 0,
+    mobileTopPadding: 20,
+    mobileBottomPadding: 20,
     containerHeight: 0,
     customCSS: '',
     items: [
