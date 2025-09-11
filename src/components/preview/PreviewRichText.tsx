@@ -15,6 +15,24 @@ export default function PreviewRichText({ config, deviceView = 'desktop', isEdit
   const { colorSchemes } = useColorSchemes();
   const themeConfig = useThemeConfigStore((state) => state.config);
   
+  // Mobile detection
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    if (deviceView !== undefined) return deviceView === 'mobile';
+    if (typeof window !== 'undefined') return window.innerWidth < 768;
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (deviceView !== undefined) {
+      setIsMobile(deviceView === 'mobile');
+      return;
+    }
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [deviceView]);
+  
   // Ensure config has blocks array
   const safeConfig = {
     ...config,
@@ -211,8 +229,8 @@ export default function PreviewRichText({ config, deviceView = 'desktop', isEdit
       style={{
         backgroundColor,
         color: textColor,
-        paddingTop: `${safeConfig.paddingTop || 64}px`,
-        paddingBottom: `${safeConfig.paddingBottom || 64}px`,
+        paddingTop: `${isMobile ? 20 : (safeConfig.paddingTop || 64)}px`,
+        paddingBottom: `${isMobile ? 20 : (safeConfig.paddingBottom || 64)}px`,
       }}
     >
       <div className={`${getWidthClass()} px-4`}>

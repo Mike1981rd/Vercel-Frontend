@@ -395,8 +395,8 @@ export default function PreviewImageWithText({ config, isEditor = false, deviceV
       style={{
         backgroundColor: background,
         color: textColor,
-        paddingTop: `${config.topPadding}px`,
-        paddingBottom: `${config.bottomPadding}px`,
+        paddingTop: `${isMobile ? 20 : config.topPadding}px`,
+        paddingBottom: `${isMobile ? 20 : config.bottomPadding}px`,
         paddingLeft: config.addSidePaddings ? '20px' : '0',
         paddingRight: config.addSidePaddings ? '20px' : '0',
       }}

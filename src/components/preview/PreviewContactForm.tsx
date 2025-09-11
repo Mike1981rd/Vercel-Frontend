@@ -256,8 +256,8 @@ export default function PreviewContactForm({
       style={{
         backgroundColor: finalConfig.cardStyle === 'none' ? colorScheme?.background : 'transparent',
         color: colorScheme?.text,
-        paddingTop: `${finalConfig.topPadding || 96}px`,
-        paddingBottom: `${finalConfig.bottomPadding || 96}px`
+        paddingTop: `${isMobile ? 20 : (finalConfig.topPadding || 96)}px`,
+        paddingBottom: `${isMobile ? 20 : (finalConfig.bottomPadding || 96)}px`
       }}
     >
       <style jsx>{`

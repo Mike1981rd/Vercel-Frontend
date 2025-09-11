@@ -928,8 +928,8 @@ export default function PreviewFeaturedCollection({
         finalConfig.width === 'full' ? 'w-full' : 'container mx-auto px-4'
       )}
       style={{
-        paddingTop: `${finalConfig.topSpacing ?? 40}px`,
-        paddingBottom: `${finalConfig.bottomSpacing ?? 40}px`,
+        paddingTop: `${isMobile ? 20 : (finalConfig.topSpacing ?? 40)}px`,
+        paddingBottom: `${isMobile ? 20 : (finalConfig.bottomSpacing ?? 40)}px`,
         backgroundColor: colorScheme?.background || '#ffffff',
       }}
     >

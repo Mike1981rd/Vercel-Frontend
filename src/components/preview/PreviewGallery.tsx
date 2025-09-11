@@ -131,7 +131,7 @@ export default function PreviewGallery({
       className={cn(
         "relative",
         config.fullPageWidth ? "w-full" : "container mx-auto",
-        hasSectionSpacing ? (isMobile ? "py-8" : "py-16") : "",
+        isMobile ? "py-5" : "py-10",  // Always apply padding: py-5 (20px) mobile, py-10 (40px) desktop
         config.animateTextAndImagesOnScroll ? "animate-fade-in" : ""
       )}
       style={{

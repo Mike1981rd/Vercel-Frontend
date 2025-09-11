@@ -215,8 +215,8 @@ export default function PreviewTestimonials({
   return (
     <section
       style={{
-        paddingTop: `${config.topPadding}px`,
-        paddingBottom: `${config.bottomPadding}px`,
+        paddingTop: `${isMobile ? 20 : config.topPadding}px`,
+        paddingBottom: `${isMobile ? 20 : config.bottomPadding}px`,
         backgroundColor: config.colorBackground ? colorScheme.background : 'transparent',
         backgroundImage: config.backgroundImage ? `url(${config.backgroundImage})` : undefined,
         backgroundSize: 'cover',

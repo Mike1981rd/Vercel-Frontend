@@ -386,8 +386,8 @@ export default function PreviewFAQ({
     <section
       className={`${config.addSidePaddings ? containerClass : ''}`}
       style={{
-        paddingTop: `${config.topPadding}px`,
-        paddingBottom: `${config.bottomPadding}px`,
+        paddingTop: `${isMobile ? 20 : config.topPadding}px`,
+        paddingBottom: `${isMobile ? 20 : config.bottomPadding}px`,
         backgroundColor: config.colorBackground ? (colorScheme.background || '#FFFFFF') : 'transparent',
       }}
     >

@@ -222,8 +222,8 @@ export default function PreviewSlideshow({
     <div 
       className={`slideshow-container ${widthClass}`}
       style={{
-        paddingTop: `${settings.topPadding || 0}px`,
-        paddingBottom: `${settings.bottomPadding || 0}px`,
+        paddingTop: `${isMobile ? 20 : (settings.topPadding || 0)}px`,
+        paddingBottom: `${isMobile ? 20 : (settings.bottomPadding || 0)}px`,
         paddingLeft: settings.addSidePaddings ? '20px' : '0',
         paddingRight: settings.addSidePaddings ? '20px' : '0',
       }}
