@@ -201,7 +201,7 @@ export default function PreviewPage({ pageType, handle, roomSlug }: PreviewPageP
   // });
 
   return (
-    <div className="min-h-screen" style={{...themeStyles, overflowY: 'auto', height: '100vh'}}>
+    <div className="min-h-screen" style={{...themeStyles}}>
       {/* Announcement Bar - if configured and should show on this page */}
       {structuralComponents.announcementBar && (
         <PreviewAnnouncementBar 
