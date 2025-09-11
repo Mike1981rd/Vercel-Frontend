@@ -399,6 +399,34 @@ export default function TestimonialsEditor({ sectionId }: TestimonialsEditorProp
                     className="w-full"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Mobile top padding: {localConfig.mobileTopPadding ?? 20}px
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    value={localConfig.mobileTopPadding ?? 20}
+                    onChange={(e) => handleUpdate({ mobileTopPadding: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Mobile bottom padding: {localConfig.mobileBottomPadding ?? 20}px
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    value={localConfig.mobileBottomPadding ?? 20}
+                    onChange={(e) => handleUpdate({ mobileBottomPadding: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                </div>
               </div>
             )}
           </div>

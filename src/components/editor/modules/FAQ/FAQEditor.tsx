@@ -532,6 +532,36 @@ export default function FAQEditor({ sectionId }: FAQEditorProps) {
                   className="w-full"
                 />
               </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-gray-600 dark:text-gray-400">Mobile top padding</label>
+                  <span className="text-xs text-gray-500">{localConfig.mobileTopPadding ?? 20}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobileTopPadding ?? 20}
+                  onChange={(e) => handleChange('mobileTopPadding', Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-gray-600 dark:text-gray-400">Mobile bottom padding</label>
+                  <span className="text-xs text-gray-500">{localConfig.mobileBottomPadding ?? 20}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobileBottomPadding ?? 20}
+                  onChange={(e) => handleChange('mobileBottomPadding', Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
             </div>
           )}
         </div>

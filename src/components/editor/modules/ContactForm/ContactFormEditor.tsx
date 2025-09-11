@@ -474,6 +474,60 @@ export default function ContactFormEditor({ sectionId }: ContactFormEditorProps)
                     </div>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Mobile top padding
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="80"
+                      value={localConfig.mobileTopPadding ?? 20}
+                      onChange={(e) => handleUpdate({ mobileTopPadding: parseInt(e.target.value) })}
+                      className="flex-1 min-w-0"
+                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="80"
+                        value={localConfig.mobileTopPadding ?? 20}
+                        onChange={(e) => handleUpdate({ mobileTopPadding: parseInt(e.target.value) })}
+                        className="w-16 px-2 py-1 border rounded"
+                      />
+                      <span className="text-sm text-gray-500">px</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Mobile bottom padding
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="0"
+                      max="80"
+                      value={localConfig.mobileBottomPadding ?? 20}
+                      onChange={(e) => handleUpdate({ mobileBottomPadding: parseInt(e.target.value) })}
+                      className="flex-1 min-w-0"
+                    />
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        max="80"
+                        value={localConfig.mobileBottomPadding ?? 20}
+                        onChange={(e) => handleUpdate({ mobileBottomPadding: parseInt(e.target.value) })}
+                        className="w-16 px-2 py-1 border rounded"
+                      />
+                      <span className="text-sm text-gray-500">px</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

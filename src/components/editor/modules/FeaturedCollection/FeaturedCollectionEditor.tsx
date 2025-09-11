@@ -1171,6 +1171,48 @@ export default function FeaturedCollectionEditor({ sectionId }: FeaturedCollecti
                   <span>120</span>
                 </div>
               </div>
+
+              {/* Mobile Top Spacing */}
+              <div>
+                <label className="text-xs text-gray-600 dark:text-gray-400">
+                  Mobile top spacing: {localConfig.mobileTopSpacing ?? 20}px
+                </label>
+                <input
+                  type="range"
+                  className="w-full mt-1"
+                  min="0"
+                  max="80"
+                  step="10"
+                  value={localConfig.mobileTopSpacing ?? 20}
+                  onChange={(e) => handleChange('mobileTopSpacing', parseInt(e.target.value))}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0</span>
+                  <span>40</span>
+                  <span>80</span>
+                </div>
+              </div>
+
+              {/* Mobile Bottom Spacing */}
+              <div>
+                <label className="text-xs text-gray-600 dark:text-gray-400">
+                  Mobile bottom spacing: {localConfig.mobileBottomSpacing ?? 20}px
+                </label>
+                <input
+                  type="range"
+                  className="w-full mt-1"
+                  min="0"
+                  max="80"
+                  step="10"
+                  value={localConfig.mobileBottomSpacing ?? 20}
+                  onChange={(e) => handleChange('mobileBottomSpacing', parseInt(e.target.value))}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0</span>
+                  <span>40</span>
+                  <span>80</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
