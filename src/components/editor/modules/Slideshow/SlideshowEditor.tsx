@@ -443,6 +443,38 @@ export default function SlideshowEditor({ sectionId }: SlideshowEditorProps) {
                   className="w-full mt-1"
                 />
               </div>
+
+              {/* Mobile Top Padding */}
+              <div>
+                <label className="text-xs text-gray-600 dark:text-gray-400">
+                  Mobile top padding: {localConfig.mobileTopPadding ?? 20}px
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  step="8"
+                  value={localConfig.mobileTopPadding ?? 20}
+                  onChange={(e) => handleChange('mobileTopPadding', parseInt(e.target.value))}
+                  className="w-full mt-1"
+                />
+              </div>
+
+              {/* Mobile Bottom Padding */}
+              <div>
+                <label className="text-xs text-gray-600 dark:text-gray-400">
+                  Mobile bottom padding: {localConfig.mobileBottomPadding ?? 20}px
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  step="8"
+                  value={localConfig.mobileBottomPadding ?? 20}
+                  onChange={(e) => handleChange('mobileBottomPadding', parseInt(e.target.value))}
+                  className="w-full mt-1"
+                />
+              </div>
             </div>
           )}
         </div>

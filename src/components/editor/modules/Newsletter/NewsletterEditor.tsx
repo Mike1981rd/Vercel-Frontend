@@ -662,6 +662,38 @@ export default function NewsletterEditor({
                   className="flex-1 min-w-0"
                 />
               </div>
+
+              {/* Mobile Top padding */}
+              <div>
+                <label className="flex items-center justify-between text-sm mb-2">
+                  <span>Mobile top padding</span>
+                  <span className="text-gray-500">{localConfig.mobilePaddingTop ?? 20} px</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobilePaddingTop ?? 20}
+                  onChange={(e) => handleChange({ mobilePaddingTop: parseInt(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+              </div>
+
+              {/* Mobile Bottom padding */}
+              <div>
+                <label className="flex items-center justify-between text-sm mb-2">
+                  <span>Mobile bottom padding</span>
+                  <span className="text-gray-500">{localConfig.mobilePaddingBottom ?? 20} px</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobilePaddingBottom ?? 20}
+                  onChange={(e) => handleChange({ mobilePaddingBottom: parseInt(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+              </div>
             </div>
           )}
         </div>
