@@ -606,6 +606,36 @@ export default function MulticolumnsEditor({ sectionId }: MulticolumnsEditorProp
               </div>
               
               <div>
+                <label className="text-xs text-gray-600">Mobile top padding</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    value={localConfig.mobileTopPadding ?? 20}
+                    onChange={(e) => handleChange('mobileTopPadding', parseInt(e.target.value))}
+                    className="flex-1 min-w-0"
+                  />
+                  <span className="text-xs flex-shrink-0 text-right">{localConfig.mobileTopPadding ?? 20}px</span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-600">Mobile bottom padding</label>
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="range"
+                    min="0"
+                    max="80"
+                    value={localConfig.mobileBottomPadding ?? 20}
+                    onChange={(e) => handleChange('mobileBottomPadding', parseInt(e.target.value))}
+                    className="flex-1 min-w-0"
+                  />
+                  <span className="text-xs flex-shrink-0 text-right">{localConfig.mobileBottomPadding ?? 20}px</span>
+                </div>
+              </div>
+              
+              <div>
                 <label className="text-xs text-gray-600">Container height</label>
                 <div className="flex items-center gap-2 mt-1">
                   <input
