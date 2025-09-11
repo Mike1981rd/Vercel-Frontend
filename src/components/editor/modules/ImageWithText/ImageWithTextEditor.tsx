@@ -506,6 +506,34 @@ export default function ImageWithTextEditor({ sectionId }: ImageWithTextEditorPr
                   className="flex-1 min-w-0"
                 />
               </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 dark:text-gray-400 flex-shrink-0">
+                  Mobile Top: {localConfig.mobileTopPadding ?? 20}px
+                </label>
+                <input 
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobileTopPadding ?? 20}
+                  onChange={(e) => handleUpdate({ mobileTopPadding: parseInt(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-600 dark:text-gray-400 flex-shrink-0">
+                  Mobile Bottom: {localConfig.mobileBottomPadding ?? 20}px
+                </label>
+                <input 
+                  type="range"
+                  min="0"
+                  max="80"
+                  value={localConfig.mobileBottomPadding ?? 20}
+                  onChange={(e) => handleUpdate({ mobileBottomPadding: parseInt(e.target.value) })}
+                  className="flex-1 min-w-0"
+                />
+              </div>
             </div>
           )}
         </div>
